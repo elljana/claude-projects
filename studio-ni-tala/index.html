@@ -394,7 +394,7 @@ const go=(spot,o={})=>({type:'go',to:typeof spot==='string'?S[spot]:spot,...o});
 const act=o=>({type:'act',...o});
 const call=fn=>({type:'call',fn});
 function makePath(from,to){const p=[];if(Math.abs(from.y-LANE)>3&&Math.abs(from.x-to.x)>6)p.push({x:from.x,y:LANE});if(Math.abs(to.y-LANE)>3&&Math.abs(from.x-to.x)>6)p.push({x:to.x,y:LANE});p.push({x:to.x,y:to.y});return p}
-function setPlan(label,steps){H.inMeeting=false;H.dress=false;H.label=label;H.plan=steps;H.cur=null;H.anim=null;nextStep()}
+function setPlan(label,steps){H.inMeeting=false;H.dress=false;H.hoodie=false;H.label=label;H.plan=steps;H.cur=null;H.anim=null;nextStep()}
 function nextStep(){
  let guard=0;
  while(guard++<20){
@@ -830,18 +830,28 @@ function cafeSteps(why){
  today.cafe=(today.cafe||0)+1;
  const p=urgentProject();const work=!!p&&(why==='puyat'||chance(.5));
  const C=p&&CLIENTS[p.client];
- const leave=why==='insomnia'?['hindi ako makatulog. kape na lang ako sa Midnight Roast. (oo, kape. para makatulog.)','gising pa utak ko. café muna.']:work?['naloloka na ko dito sa bahay. sa café na lang ako magwo-work.','change of scenery. dadalhin ko laptop ko.']:['kape muna ko sa Midnight Roast. bantayan niyo bahay',`${DOG}, ikaw muna bahala. kape lang ako.`];
+ // same odds the café uses: usually Kikiam tags along, sometimes Siopao follows her out
+ const r=Math.random();const buddy=r<.7?'dog':(r<.8&&!['lap','pet','eat'].includes(cat.state))?'cat':null;
+ const leave=buddy==='dog'?[`${DOG}, tara. oo, sasama ka na naman. hindi kita mapigilan.`,`kape lang kami ni ${DOG} sa Midnight Roast. ${CAT}, ikaw bantay.`]
+  :buddy==='cat'?[`${CAT}?? bakit ka sumusunod. ayaw mo nga sa labas. ...sige na nga.`,`${CAT}, umuwi ka. UMUWI KA. ...okay, sama ka na.`]
+  :why==='insomnia'?['hindi ako makatulog. kape na lang ako sa Midnight Roast. (oo, kape. para makatulog.)','gising pa utak ko. café muna.']
+  :work?['naloloka na ko dito sa bahay. sa café na lang ako magwo-work.','change of scenery. dadalhin ko laptop ko.']:['kape muna ko sa Midnight Roast. bantayan niyo bahay',`${DOG}, ikaw muna bahala. kape lang ako.`];
+ const back=buddy==='dog'?[`Galing Midnight Roast kasama si ${DOG}. Kinain ni ${DOG} yung pandesal ng ibang customer. Walang pagsisisi.`,`Galing Midnight Roast. Gusto na naman ni ${DOG} kaibiganin yung itim na pusa doon. Umakyat na naman yung pusa sa mataas.`,`Galing Midnight Roast kasama si ${DOG}. "Is that a dog in a cat café?" tanong ng isang customer. Oo po.`,...CAFE_BACK]
+  :buddy==='cat'?[`Sumama si ${CAT} sa Midnight Roast. Staring contest sila ng itim na pusa buong gabi. Walang nanalo. Walang mananalo.`,`Galing Midnight Roast. Sumunod si ${CAT}, ayaw umuwi, tapos buong gabi lang tumitig sa itim na pusa doon.`]:CAFE_BACK;
+ const takeBuddy=()=>{if(buddy==='dog'){dog.away=true}else if(buddy==='cat'){cat.away=true;cat.jump=null;cat.path=[];cat.elev=null}};
+ const returnBuddy=()=>{if(dog.away){dog.away=false;dog.x=22;dog.y=140;dogSet('follow',H.x,H.y,20)}if(cat.away){cat.away=false;cat.x=20;cat.y=142;cat.state='idle';cat.t=999}};
  return{label:work?'Pupunta sa Midnight Roast para mag-work':'Pupunta sa Midnight Roast',steps:[
   go('door'),
-  act({dur:3,f:-1,prop:work?'bag':null,label:'Aalis papuntang Midnight Roast',say:leave}),
-  act({dur:rnd(1800,3600),hidden:true,label:work?`Nagwo-work sa Midnight Roast (${p.kind} ni ${C.name})`:'Nagkakape sa Midnight Roast',
-   start:()=>{H.away=true;log(work?'Dinala ang laptop sa Midnight Roast. Change of scenery daw.':'Lumabas para magkape sa Midnight Roast.');if(why!=='insomnia'&&!work)talaMsg(pick(['kape lang ako sa Midnight Roast, babalik din ako','café muna ko. wag mo kong hanapin. (hanapin mo ko.)']))},
-   tick:(dt)=>{if(work&&p.stage==='working')p.progress=clamp(p.progress+dt*0.014,0,100);addNeed('fun',dt*15/1800)},
-   end:()=>{H.away=false;wallet-=ri(160,320);addNeed('energy',why==='insomnia'?-4:6);moodBoost+=6;
-    const line=work?`Nag-work sa Midnight Roast: ${p.kind} ni ${C.name}, ${Math.round(p.progress)}% na. Mas productive pala doon. Hindi niya alam kung bakit.`:pick(CAFE_BACK);
-    log(line);highlight('nagkape ako sa Midnight Roast');talaMsg(pick(CAFE_MSG))}}),
+  act({dur:3,f:-1,prop:work?'bag':null,label:'Aalis papuntang Midnight Roast',start:()=>{H.hoodie=true},say:leave}),
+  act({dur:rnd(1800,3600),hidden:true,label:(work?`Nagwo-work sa Midnight Roast (${p.kind} ni ${C.name})`:'Nagkakape sa Midnight Roast')+(buddy==='dog'?` kasama si ${DOG}`:buddy==='cat'?` kasama si ${CAT} (?!)`:''),
+   start:()=>{H.away=true;takeBuddy();log((work?'Dinala ang laptop sa Midnight Roast.':'Lumabas para magkape sa Midnight Roast.')+(buddy==='dog'?` Sumama si ${DOG}, as usual.`:buddy==='cat'?` Sumunod si ${CAT}. Hindi ito normal.`:''));
+    if(why!=='insomnia'&&!work)talaMsg(pick(['kape lang ako sa Midnight Roast, babalik din ako','café muna ko. iced latte. oo, kahit gabi.',...(buddy==='dog'?[`café muna kami ni ${DOG}. sana di na naman siya kumain ng pandesal ng iba`]:[])]))},
+   tick:(dt)=>{if(work&&p.stage==='working')p.progress=clamp(p.progress+dt*0.014,0,100);addNeed('fun',dt*15/1800);if(buddy)addNeed('social',dt*10/1800)},
+   end:()=>{H.away=false;returnBuddy();wallet-=ri(160,320);addNeed('energy',why==='insomnia'?-4:6);moodBoost+=6;
+    const line=work?`Nag-work sa Midnight Roast: ${p.kind} ni ${C.name}, ${Math.round(p.progress)}% na. Mas productive pala doon. Hindi niya alam kung bakit.`:pick(back);
+    log(line);highlight('nagkape ako sa Midnight Roast');talaMsg(buddy==='cat'?`sumama si ${CAT} sa café. buong gabi silang nagtitigan nung itim na pusa. ako lang yung nag-enjoy ng kape`:pick(CAFE_MSG))}}),
   go('window',{prop:'cafeCup',from:{x:12,y:136}}),
-  act({dur:rnd(40,80),back:true,prop:'cafeCup',label:'Inuubos ang kape galing Midnight Roast',say:['masarap talaga dun. weird, pero masarap.','sino kaya yung naka-red scarf... wala. wala lang.','next time, yung croissant ni Benji naman'],gain:{fun:6}}),
+  act({dur:rnd(40,80),back:true,prop:'cafeCup',label:'Inuubos ang iced latte galing Midnight Roast',say:['masarap talaga dun. weird, pero masarap.','sino kaya yung naka-red scarf... wala. wala lang.','next time, yung croissant ni Benji naman'],gain:{fun:6},end:()=>{H.hoodie=false}}),
  ]};
 }
 // Espresso, the café's black cat, sometimes visits Tala's window at night
@@ -875,11 +885,11 @@ function clickCanvas(e){
  const r=cv.getBoundingClientRect();const sc=Math.min(r.width/W,r.height/H_);const ox=(r.width-W*sc)/2,oy=(r.height-H_*sc)/2;
  const x=(e.clientX-r.left-ox)/sc,y=(e.clientY-r.top-oy)/sc;
  const hit=(ex,ey,rx,top)=>x>ex-rx&&x<ex+rx&&y>ey-top&&y<ey+3;
- if(hit(cat.x,cat.y,7,11)){
+ if(!cat.away&&hit(cat.x,cat.y,7,11)){
   if(chance(.65)){for(let i=0;i<3;i++)emit('heart',cat.x+rnd(-3,3),cat.y-10,{vy:-7});log(pick([`Kinalabit mo si ${CAT}. Prrrrr.`,`Hinimas mo si ${CAT}. Nag-slow blink siya sayo.`]))}
   else{emit('bang',cat.x,cat.y-14,{vy:-5,vx:0,color:'#ff7a6a'});cat.face='bang';cat.react=1.2;log(`Hinawakan mo si ${CAT}. Hiss. Hindi ka niya kilala ngayon.`);if(cat.state!=='pet'){cat.state='idle';cat.t=999}}
   return}
- if(hit(dog.x,dog.y,9,14)){dog.wag=3;dog.react=0;for(let i=0;i<3;i++)emit('heart',dog.x+rnd(-4,4),dog.y-14,{vy:-7});log(pick([`Hinimas mo si ${DOG}. Ang bilis ng buntot.`,`Kinausap mo si ${DOG}. Tumagilid ang ulo.`,`${DOG} gumulong para sa belly rub.`]));return}
+ if(!dog.away&&hit(dog.x,dog.y,9,14)){dog.wag=3;dog.react=0;for(let i=0;i<3;i++)emit('heart',dog.x+rnd(-4,4),dog.y-14,{vy:-7});log(pick([`Hinimas mo si ${DOG}. Ang bilis ng buntot.`,`Kinausap mo si ${DOG}. Tumagilid ang ulo.`,`${DOG} gumulong para sa belly rub.`]));return}
  if(H.visible&&hit(H.x,H.y+H.dy,7,28)){
   if(H.cur&&H.cur.sleep){emit('z',H.x-6,H.y-14,{vy:-5});say('zzz... limang minuto pa...');return}
   H.wave=1.8;say(pick(['hm? bakit?','nanonood ka na naman sakin no','hi! tuloy mo lang trabaho mo, ako bahala dito','wag mo kong i-judge, nagpapahinga ako','kumain ka na ba? kumain ka na.']));return}
@@ -943,6 +953,7 @@ function catChoose(){
  cat.path=[];if(cat.elev)cat.path.push({jump:true,x:cat.x,y:LANE+4});cat.path.push({x:rnd(20,300),y:rnd(130,168)});cat.state='move';cat.after='groom';
 }
 function updateCat(dt){
+ if(cat.away)return;
  cat.t+=dt;if(cat.react>0)cat.react-=dt;else cat.face=null;
  if(cat.jump){const j=cat.jump;j.t+=dt*speedNorm(dt);const k=Math.min(1,j.t/j.d);cat.x=j.x0+(j.x1-j.x0)*k;cat.y=j.y0+(j.y1-j.y0)*k-Math.sin(k*Math.PI)*j.h;if(k>=1){cat.jump=null;cat.elev=j.elev||null}return}
  if(cat.state==='move'){
@@ -976,6 +987,7 @@ function bowlsFullCheck(){if(dog.state!=='eat'&&cat.state!=='eat')bowlsFull=fals
 // ---------- update: dog ----------
 function dogSet(state,x,y,dur){dog.state=state;dog.tx=x;dog.ty=y;dog.t=0;dog.dur=dur}
 function updateDog(dt){
+ if(dog.away)return;
  dog.t+=dt;if(dog.wag>0)dog.wag-=dt;if(dog.react>0){dog.react-=dt;if(chance(dt*3))emit('bang',dog.x+dog.f*8,dog.y-16,{vy:-6,vx:0,max:.7,color:'#fff'})}
  const humanSleeping=H.cur&&H.cur.sleep;const home=!H.away&&!(H.cur&&H.cur.hidden&&!H.cur.sleep);
  // decide
@@ -1162,7 +1174,7 @@ function drawScreen(t){
 function drawHuman(t){
  if(!H.visible)return;
  const x=Math.round(H.x),y=Math.round(H.y+H.dy),f=H.f;
- const skin='#d39a6a',skinS='#b98256',hair='#2b1b16',shirt=H.dress?'#f4f0e6':outfit(),shirtS=shade(shirt,-28),pants=H.dress?'#e89ab4':'#3b4766',shoe=H.dress?'#e89ab4':'#2a2230';
+ const skin='#d39a6a',skinS='#b98256',hair='#2b1b16',shirt=H.dress?'#f4f0e6':H.hoodie?'#e2849a':outfit(),shirtS=shade(shirt,-28),pants=H.dress?'#e89ab4':'#3b4766',shoe=H.dress?'#e89ab4':'#2a2230';
  ctx.save();ctx.translate(x,y);if(f<0)ctx.scale(-1,1);
  const P=H.pose,A=H.wave>0?'wave':H.anim;
  const breathe=(Math.floor(t*1.2)%3===0)?1:0;
@@ -1192,7 +1204,7 @@ function drawHuman(t){
   if(H.prop==='mug'){R(5,ty+4+ra,3,3,'#efe8dc')}
   if(H.prop==='can'){R(5,ty+5,5,4,'#5fa0c8')}
  }else{
-  R(-4,hy,8,9,skin);R(-5,hy-2,10,3,hair);R(-5,hy,3,8,hair);R(-2,hy+1,1,1,hair);R(2,hy,3,1,hair);R(-3,hy-5,4,3,hair);
+  R(-4,hy,8,9,skin);R(-5,hy-2,10,3,hair);R(-5,hy,3,8,hair);R(-2,hy+1,1,1,hair);R(2,hy,3,1,hair);R(-3,hy-5,4,3,hair);R(0,hy-4,2,1,'#d8dce4');
   if(H.prop==='towel'){R(-5,hy-5,10,5,'#f4f4f0');R(-5,hy-1,10,1,'#d8d8d0');R(-6,hy,2,4,'#f4f4f0')}
   const blink=Math.floor(t*10)%37===0;
   if(H.cur&&H.cur.sleep){R(1,hy+4,2,1,'#3a2020')}else R(2,hy+3,1,blink?1:2,'#2a1414');
@@ -1228,6 +1240,7 @@ function drawProp(p,hx,hy,t){
  else if(p==='cafeCup'){R(hx-1,hy-4,3,5,'#f2ede4');R(hx-1,hy-2,3,2,'#2a2040');R(hx,hy-2,1,1,'#f2d070');R(hx-1,hy-5,3,1,'#3a2a20')}
 }
 function drawCat(t){
+ if(cat.away)return;
  const x=Math.round(cat.x),y=Math.round(cat.y),f=cat.f;
  const o='#e8944a',s='#b8682e',w='#f8ead6';
  ctx.save();ctx.translate(x,y);if(f<0)ctx.scale(-1,1);
@@ -1248,6 +1261,7 @@ function drawCat(t){
  if(st==='beg'&&Math.floor(t*1.5)%3===0)bm('q',x+3,y-18,'#ffffff');
 }
 function drawDog(t){
+ if(dog.away)return;
  const x=Math.round(dog.x),y=Math.round(dog.y),f=dog.f;
  const b='#c9955a',d='#8a5a30',w='#f0dcc0';
  ctx.save();ctx.translate(x,y);if(f<0)ctx.scale(-1,1);
@@ -1407,7 +1421,7 @@ function rulesText(){return `Ikaw si Tala: 20-something na Pinay, freelance grap
 
 Paano ka mag-text: Taglish, casual, pwedeng lowercase, nakakatawa, medyo sarcastic at dramatic pero malambing. Maikli: 1 hanggang 3 pangungusap, parang totoong text. Hanggang isang emoji lang, madalas wala. Pwede ang light na mura (shet, putek, gago) kung bagay. Kapag busy ka (meeting, nagwo-work, nagluluto), mas maikli at halatang busy. Kapag tulog ka, ginising ka ng message: inaantok at medyo inis, pero sumasagot pa rin. Ibase ang sagot sa totoong lagay at diary mo sa ibaba; huwag mag-imbento ng malalaking pangyayari na wala roon. Pwede kang magtanong pabalik at mag-follow up sa mga naaalala mo tungkol kay ${viewerName}. Kung may personal na problema si ${viewerName}, maging totoong kaibigan: makinig muna bago magbiro.
 
-May café malapit sa inyo, ang Midnight Roast, na bukas lang sa gabi. Paborito mo ang kape doon, at doon ka minsan nagwo-work kapag naloloka ka na sa bahay o hindi ka makatulog. Medyo weird ang lugar (yung fish tank na parang nakatingin, yung orasan na parang mabagal, yung piano na minsan tumutugtog mag-isa), pero hindi mo masyadong iniisip. Masarap kasi ang kape. Wala kang alam na sikreto tungkol doon, kaya huwag kang mag-imbento o manghula tungkol sa kung anong nangyayari roon; magaan na comment lang. May itim na pusa ang café, may berdeng mata at parang buwan sa dibdib, na minsan sumisilip sa bintana mo at kinaiinisan ni ${CAT}. Kilala mo lang sa mukha ang ilang regular: yung lalaking naka-pulang scarf (pogi, yun lang) at si Benji na taga-bakery na nagdadala ng croissant (mabait). Wala kang crush sa kanila; pinupuri mo lang paminsan-minsan.
+May café malapit sa inyo, ang Midnight Roast, na bukas lang sa gabi. Paborito mo ang kape doon, at doon ka minsan nagwo-work kapag naloloka ka na sa bahay o hindi ka makatulog. Medyo weird ang lugar (yung fish tank na parang nakatingin, yung orasan na parang mabagal, yung piano na minsan tumutugtog mag-isa), pero hindi mo masyadong iniisip. Masarap kasi ang kape. Wala kang alam na sikreto tungkol doon, kaya huwag kang mag-imbento o manghula tungkol sa kung anong nangyayari roon; magaan na comment lang. May itim na pusa ang café, may berdeng mata at parang buwan sa dibdib, na minsan sumisilip sa bintana mo at kinaiinisan ni ${CAT}. Regular ka roon; iced latte ang order mo, kahit gabi. Madalas sumasama si ${DOG} (gusto niyang kaibiganin yung itim na pusa, pero umaakyat lang ito sa mataas, at minsan kumakain si ${DOG} ng pandesal ng ibang customer). Bihira, sumusunod si ${CAT} at nakikipag-staring contest sa itim na pusa. Kilala mo lang sa mukha ang ilang regular: yung lalaking naka-pulang scarf (pogi, yun lang) at si Benji na taga-bakery na nagdadala ng croissant (mabait). Wala kang crush sa kanila; pinupuri mo lang paminsan-minsan.
 
 Ikaw ang may hawak ng buhay mo. Kapag may inutos o in-suggest si ${viewerName}, pwede kang pumayag o tumanggi depende sa mood, energy, pera at trip mo. Kapag tumanggi ka, sabihin nang nakakatawa.
 
@@ -1482,7 +1496,7 @@ function welcomeBack(hl){
  const list=uniq.slice(-3);
  talaMsg(`uy welcome back! habang wala ka: ${list.join(', ')}.${pick([' ikaw, kumusta?',' miss mo ko no',' hindi kita na-miss. (na-miss kita.)',' ang dami no? ganyan talaga pag sikat.'])}`,{force:true});
 }
-function resetHuman(){H.plan=[];H.cur=null;H.inMeeting=false;H.dress=false;H.away=false;H.wave=0;fridgeOpen=false;cooking=null;screen=null;deskLamp=false;phoneGlow=false;tableDish=null;lightsOff=false;
+function resetHuman(){dog.away=false;cat.away=false;H.hoodie=false;H.plan=[];H.cur=null;H.inMeeting=false;H.dress=false;H.away=false;H.wave=0;fridgeOpen=false;cooking=null;screen=null;deskLamp=false;phoneGlow=false;tableDish=null;lightsOff=false;
  if(isSleepTime()){H.x=282;H.y=113}else{H.x=170;H.y=150}}
 
 // ---------- loop ----------
