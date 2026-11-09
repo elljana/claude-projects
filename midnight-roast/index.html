@@ -606,7 +606,7 @@
   };
   REGS.tala={name:"Tala", tag:"freelance designer · usually brings Kikiam", kind:"normal", cat:"neutral", minServed:30,
     look:{coat:"#e8899a",skin:"#d39a6a",hair:"#2b1b16",acc:["clawbun","stylus"]},
-    catNote:c=>`${c} tolerates Tala. Kikiam keeps trying to be her friend, so she retreats to higher ground every single time. On the rare nights Siopao comes, nobody blinks.`,
+    catNote:c=>`When Tala comes alone, ${c} sits beside her the whole time. When Kikiam comes, ${c} retreats to higher ground. On the rare nights Siopao comes, nobody blinks.`,
     lines:[
       "hi! sorry, hinanap ko talaga kung may bukas pang kape. si Kikiam, sumama. lagi siyang sumasama. hindi ko siya mapigilan.",
       "freelance life: deadline bukas, client said “make it pop,” and I'm here. drinking. avoiding.",
@@ -1011,7 +1011,7 @@
       if(pool.length) assignReg(wpick(pool));
     }
     if(!g.reg){ const r=Math.random(); g.opinion=r<0.2?"love":(r<0.3?"hate":"neutral"); g.star=!isMyst(g)&&Math.random()<0.18; }
-    if(g.reg==="tala"){ const r=Math.random(); g.kikiam=r<0.7; g.siopao=!g.kikiam&&r<0.8; g.opinion=g.siopao?"hate":"neutral"; }
+    if(g.reg==="tala"){ const r=Math.random(); g.kikiam=r<0.7; g.siopao=!g.kikiam&&r<0.8; g.opinion=g.siopao?"hate":(g.kikiam?"neutral":"love"); }
     guests.push(g);
     if(g.kikiam) kikiamArrives(g);
     if(g.opinion==="hate") catGrump(g);
