@@ -996,7 +996,7 @@
     const seat=freeSeat(); if(seat<0) return;
     const present=new Set(guests.map(g=>g.reg).filter(Boolean));
     let g={id:uid++,x:DOOR_X,footY:FLOOR_Y,seat,type:"normal",col:pick(COATS),acc:[],reg:null,opinion:"neutral",
-      state:"in",t:0,waitDur:brewTime()*rnd(0.85,1.3),drinkDur:rnd(4,7),tipped:false,special:false,phase:Math.random()*6.28,paid:false,leave:false,lines:null,li:0,talkCool:0};
+      state:"in",t:0,waitDur:brewTime()*rnd(0.85,1.3),drinkDur:S.quiet?rnd(16,32):rnd(5,9),act:S.quiet&&Math.random()<0.45?"book":null,tipped:false,special:false,phase:Math.random()*6.28,paid:false,leave:false,lines:null,li:0,talkCool:0};
     const assignReg=id=>{ const r=REGS[id]; g.reg=id; g.opinion=regOpinion(id); g.col={coat:r.look.coat,skin:r.look.skin,hair:r.look.hair}; g.acc=r.look.acc; lastVisit[id]=nowS(); if(S.quiet) digestAdd(r.name+" stopped by"); };
     const okReg=id=>!present.has(id) && nowS()-(lastVisit[id]??-1e9)>regCooldown(id);
     const rp=["rowan","benji"].filter(id=>okReg(id)&&(id==="rowan"?S.flags.rowanInside:S.served>=REGS.benji.minServed));
@@ -1305,6 +1305,9 @@
   }
   function drawSeating(){
     for(const sx of [250,282]){ px(sx-4,170,2,15,"#241810"); px(sx+2,170,2,15,"#241810"); px(sx-4,180,8,1,"#241810"); orect(sx-6,166,12,3,"#7a4a2a"); px(sx-6,166,12,1,"#9a6a3a"); }
+    const chair=x=>{ const W1="#4a2e1e", W2="#6a4a2e"; px(x-11,150,2,35,W1); px(x+9,150,2,35,W1); orect(x-11,150,22,3,W2); px(x-11,150,22,1,"#8a6a44"); orect(x-10,174,20,3,W2); px(x-10,174,20,1,"#8a6a44"); px(x-9,177,2,8,W1); px(x+7,177,2,8,W1); };
+    if(S.seats>=1){ chair(86); chair(122); }
+    if(S.seats>=2){ chair(162); chair(198); }
     if(S.seats>=1) drawTable(104,170);
     if(S.seats>=2) drawTable(180,170);
     if(S.seats>=3){
@@ -1427,11 +1430,12 @@
 
   // ---- characters ----
   function rim(x,fy){ const side=x<160?1:-1; b.globalAlpha=0.45; px(x+(side>0?7:-8),fy-37,1,26,"#ffe3b0"); b.globalAlpha=1; }
+  function bookInHand(x,fy,t){ orect(x-5,fy-19,10,7,"#c0485a"); px(x-4,fy-18,8,5,"#efe6d0"); px(x,fy-18,1,5,"#a03848"); if(!REDUCED&&Math.floor((t+fy)/6)%5===0) px(x+1,fy-18,3,5,"#ffffff"); }
   function cupInHand(x,fy,t){ orect(x+6,fy-19,5,5,"#efe9db"); px(x+7,fy-18,3,1,"#8a5a3a"); if(!REDUCED){ const s=(t*6)%4; b.globalAlpha=0.6*(1-s/4); px(x+8,fy-22-s,1,2,P.steam); b.globalAlpha=1; } }
-  function drawPerson(x,fy,g,moving,t){
+  function drawPerson(x,fy,g,moving,t,sit){
     const c=g.col, acc=g.acc||[];
-    orect(x-6,fy-11,5,11,"#2a2230"); orect(x+1,fy-11,5,11,"#2a2230");
-    px(x-6,fy-2,5,2,"#14101c"); px(x+1,fy-2,5,2,"#14101c");
+    if(sit){ orect(x-6,fy-11,5,7,"#2a2230"); orect(x+1,fy-11,5,7,"#2a2230"); px(x-6,fy-11,5,1,"#3a3048"); px(x+1,fy-11,5,1,"#3a3048"); px(x-6,fy-5,5,2,"#14101c"); px(x+1,fy-5,5,2,"#14101c"); }
+    else { orect(x-6,fy-11,5,11,"#2a2230"); orect(x+1,fy-11,5,11,"#2a2230"); px(x-6,fy-2,5,2,"#14101c"); px(x+1,fy-2,5,2,"#14101c"); }
     orect(x-9,fy-25,3,12,shade(c.coat,0.85)); orect(x+6,fy-25,3,12,shade(c.coat,0.85));
     px(x-9,fy-14,3,2,c.skin); px(x+6,fy-14,3,2,c.skin);
     orect(x-7,fy-27,14,17,c.coat); px(x-7,fy-27,14,2,shade(c.coat,1.2));
@@ -1453,7 +1457,7 @@
     px(x-1,fy-29,2,1,"#7a4a4a"); px(x-4,fy-31,1,1,shade(c.skin,0.85)); px(x+3,fy-31,1,1,shade(c.skin,0.85));
     if(acc.includes("flour")){ b.globalAlpha=0.65; px(x-5,fy-30,2,1,"#f08a8a"); px(x+3,fy-30,2,1,"#f08a8a"); b.globalAlpha=1; px(x-5,fy-37,2,1,"#ffffff"); }
     if(acc.includes("laptop") && seated(g)){ orect(x-7,fy-21,14,9,"#aab0bc"); px(x-1,fy-18,2,2,"#eef0f6"); }
-    else if(g.state==="drink") cupInHand(x,fy,t);
+    else if(g.state==="drink"){ if(g.act==="book") bookInHand(x,fy,t); else cupInHand(x,fy,t); }
     rim(x,fy);
   }
   function drawHooded(x,fy){
@@ -1489,14 +1493,15 @@
     else { b.fillStyle="#7c5cc4"; b.font="9px 'Silkscreen', monospace"; b.textAlign="center"; b.fillText("✦",x,y-2); b.textAlign="left"; }
   }
   function dots(x,y,t){ const on=REDUCED?1:(Math.floor(t*2)%2); for(let k=0;k<3;k++){ orect(x-5+k*4,y,2,2,on||k===1?"#f3e8cf":"#8a7ea6"); } }
+  const SEAT_DY=[-7,-7,4,4,4,4,4,-7];
   function drawGuests(t){
     const sorted=[...guests].sort((a,c)=>(SEATS[a.seat].x>200)-(SEATS[c.seat].x>200));
     for(const g of sorted){
-      const moving=g.state==="in"||g.state==="out", bob=moving?Math.sin(t*9+g.phase)*1.1:0, y=g.footY+bob;
+      const moving=g.state==="in"||g.state==="out", bob=moving?Math.sin(t*9+g.phase)*1.1:0, sit=seated(g)&&g.type==="normal", y=g.footY+bob+(sit?SEAT_DY[g.seat]:0);
       if(g.type==="ghost") drawGhost(g.x,y-2,t,g);
       else if(g.type==="hooded") drawHooded(g.x,y);
       else if(g.type==="witch") drawWitch(g.x,y);
-      else drawPerson(g.x,y,g,moving,t);
+      else drawPerson(g.x,y,g,moving,t,sit);
       if(g.siopao) drawSiopao(g.x+13,g.footY,t,cat.grump>0);
       if(g.kikiam) drawKikiam(g.x+13,g.footY,t,g.state==="drink"&&Math.floor(t/5)%2===1);
       const bk=bubbleKind(g);
@@ -1707,7 +1712,8 @@
   }
   function setQuiet(v){
     S.quiet=v; arrivalT=Math.min(arrivalT,arrivalGap());
-    if(v) toast("lore","🌙 Quiet hours","The sign on the door flips. Fewer guests, no pop-ups. Anything that happens gets saved for later.");
+    if(v) for(const g of guests) if(seated(g)){ g.drinkDur=Math.max(g.drinkDur,g.t+rnd(16,32)); if(!g.act&&!g.reg&&!isMyst(g)&&Math.random()<0.45) g.act="book"; }
+    if(v) toast("lore","🌙 Quiet hours","The sign on the door flips. Fewer guests, and the ones here settle in for a while. No pop-ups. Anything that happens gets saved for later.");
     else { const d=S.digest; toast("gold","☕ Back open",d.length?("While it was quiet: "+d.slice(-5).join(" · ")+(d.length>5?" · and "+(d.length-5)+" more":"")+"."):"Nothing much happened. Just rain and coffee."); S.digest=[]; }
     renderUI(); save();
   }
