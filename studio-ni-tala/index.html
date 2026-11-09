@@ -1,0 +1,1136 @@
+<!doctype html>
+<html lang="tl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Studio ni Tala</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&family=Nunito:wght@400;600;700&display=swap">
+<style>
+/* Layout: the pixel room is the hero on the left; a lived-in "house notebook" panel sits on the right and stacks under it on phones. Zen mode hides everything but the room. */
+:root{
+  --bg:#1c1824; --panel:#25202e; --panel-2:#2f2839; --line:#3b3347;
+  --ink:#f2e8d8; --muted:#aa9fb4; --accent:#f2b544; --jade:#74c6a4; --rose:#e8808a; --sky:#8fb8e8;
+  --display:"Pixelify Sans","Courier New",monospace;
+  --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start;box-sizing:border-box;min-height:100%;
+  padding-block:18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1500px;margin:0 auto}
+@media (max-width:900px){.app{grid-template-columns:minmax(0,1fr)}}
+.stage-col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:600;font-size:28px;line-height:1;margin:0;color:var(--accent);letter-spacing:.5px;text-wrap:balance}
+.sub{color:var(--muted);font-size:13px}
+.clock{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.clock b{font-family:var(--display);font-weight:600;font-size:22px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.stage{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;background:#0d0b12;border-radius:8px;overflow:hidden;box-shadow:0 0 0 1px var(--line),0 18px 40px -20px rgba(0,0,0,.7)}
+.stage canvas{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges;object-fit:contain;cursor:pointer;background:#0d0b12}
+.bubble{position:absolute;left:0;top:0;transform:translate(-50%,-100%);max-width:min(240px,60%);background:#fffaf0;color:#2a2230;font-family:var(--display);font-size:13px;line-height:1.25;padding:6px 9px;border-radius:4px;box-shadow:0 2px 0 #2a2230,0 0 0 2px #2a2230;pointer-events:none;text-align:center;white-space:normal;transition:opacity .25s}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-7px;width:8px;height:8px;background:#fffaf0;transform:translateX(-50%) rotate(45deg);box-shadow:2px 2px 0 #2a2230}
+.bubble.fade{opacity:0}
+.stage-tools{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));right:calc(8px + env(safe-area-inset-right,0px));display:flex;gap:6px;opacity:.35;transition:opacity .2s}
+.stage:hover .stage-tools,.stage-tools:focus-within{opacity:1}
+@media (hover:none){.stage-tools{opacity:.85}}
+button{font-family:var(--display);font-size:14px;color:var(--ink);background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:7px 12px;cursor:pointer;box-shadow:0 2px 0 #14111a}
+button:hover{background:#3a3146}
+button:active{transform:translateY(1px);box-shadow:0 1px 0 #14111a}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stage-tools button{background:rgba(28,24,36,.85);font-size:12px;padding:5px 9px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.actions .primary{background:var(--accent);color:#2a1d08;border-color:#c48d26}
+.actions .primary:hover{background:#ffc75e}
+.speed{display:inline-flex;margin-left:auto;border:1px solid var(--line);border-radius:5px;overflow:hidden;box-shadow:0 2px 0 #14111a}
+.speed button{border:0;border-radius:0;box-shadow:none;background:var(--panel);padding:7px 10px;font-variant-numeric:tabular-nums}
+.speed button+button{border-left:1px solid var(--line)}
+.speed button.on{background:var(--jade);color:#10241c}
+.hint{margin:0;color:var(--muted);font-size:13px}
+.panel{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
+.eyebrow{font-family:var(--display);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.activity{font-family:var(--display);font-size:20px;line-height:1.15;color:var(--ink);text-wrap:balance}
+.thought{margin-top:6px;color:var(--muted);font-style:italic;min-height:1.4em}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);color:var(--ink)}
+.chip.mood{background:#3a2f1a;border-color:#6a5222;color:var(--accent)}
+.chip.crave{background:#1d3329;border-color:#2f5a48;color:var(--jade)}
+.needs{display:grid;gap:8px}
+.need{display:grid;grid-template-columns:92px minmax(0,1fr) 30px;gap:8px;align-items:center;font-size:13px}
+.need span:last-child{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px}
+.bar{height:8px;background:#17141d;border-radius:2px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
+.bar i{display:block;height:100%;background:var(--jade);transition:width .6s}
+.bar i.mid{background:var(--accent)}
+.bar i.low{background:var(--rose)}
+.fridge{display:flex;flex-wrap:wrap;gap:5px}
+.fridge .chip{font-weight:600}
+.fridge .chip.out{opacity:.4;text-decoration:line-through}
+.traits{color:var(--ink);font-size:13px}
+.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto}
+.log li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:6px;font-size:13px}
+.log time{font-family:var(--display);color:var(--accent);font-variant-numeric:tabular-nums}
+body.zen .app{display:block;padding:0;max-width:none;height:100%}
+body.zen .stage-col{height:100%;gap:0}
+body.zen .topbar,body.zen .actions,body.zen .hint,body.zen .panel{display:none}
+body.zen .stage{aspect-ratio:auto;height:100%;border-radius:0;box-shadow:none}
+.stage:fullscreen{aspect-ratio:auto;width:100%;height:100%;border-radius:0}
+@media (prefers-reduced-motion:reduce){.bubble,.bar i{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <section class="stage-col">
+    <header class="topbar">
+      <div>
+        <h1>Studio ni Tala</h1>
+        <div class="sub" id="sub">Day 1 kasama mo</div>
+      </div>
+      <div class="clock"><b id="clock">--:--</b><span class="sub" id="weather">—</span></div>
+    </header>
+    <div class="stage" id="stage">
+      <canvas id="c" width="320" height="180" aria-label="Pixel art na studio apartment kung saan nakatira si Tala kasama ang pusang si Siopao at asong si Kikiam"></canvas>
+      <div class="bubble fade" id="bubble"></div>
+      <div class="stage-tools">
+        <button id="zenBtn" type="button">Zen mode</button>
+        <button id="fsBtn" type="button">Fullscreen</button>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="knockBtn" type="button">Kumatok sa bintana</button>
+      <button id="giftBtn" type="button" class="primary">Mag-iwan ng meryenda</button>
+      <div class="speed" role="group" aria-label="Bilis ng oras">
+        <button type="button" data-speed="1" class="on">1×</button>
+        <button type="button" data-speed="4">4×</button>
+        <button type="button" data-speed="12">12×</button>
+      </div>
+    </div>
+    <p class="hint">I-click si Tala, si Siopao (pusa) o si Kikiam (aso). Naka-sync ang araw at gabi sa totoong oras mo. Ang Zen mode ay para sa second monitor.</p>
+  </section>
+
+  <aside class="panel" id="panel">
+    <div class="card">
+      <div class="eyebrow">Ginagawa ngayon</div>
+      <div class="activity" id="activity">Nag-iisip kung ano gagawin</div>
+      <div class="thought" id="thought"></div>
+      <div class="chips"><span class="chip mood" id="mood">chill</span><span class="chip crave" id="craving">craving: —</span></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Lagay ni Tala</div>
+      <div class="needs" id="needs"></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Laman ng ref</div>
+      <div class="fridge" id="fridge"></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Ugali</div>
+      <div class="traits" id="traits"></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Diary ng bahay</div>
+      <ol class="log" id="log"></ol>
+    </div>
+  </aside>
+</div>
+
+<script>
+(()=>{
+"use strict";
+// ---------- basics ----------
+const W=320,H_=180;
+const cv=document.getElementById('c');const ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+const lc=document.createElement('canvas');lc.width=W;lc.height=H_;const lctx=lc.getContext('2d');
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const ri=(a,b)=>Math.floor(rnd(a,b+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const chance=p=>Math.random()<p;
+function wpick(items){let t=0;for(const i of items)t+=Math.max(0,i[1]);if(t<=0)return items.length?items[0][0]:null;let r=Math.random()*t;for(const [it,w] of items){r-=Math.max(0,w);if(r<=0)return it}return items[items.length-1][0]}
+function R(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),w,h)}
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+function hex2rgb(h){const n=parseInt(h.slice(1),16);return[(n>>16)&255,(n>>8)&255,n&255]}
+function rgb2hex(r,g,b){return'#'+[r,g,b].map(v=>clamp(Math.round(v),0,255).toString(16).padStart(2,'0')).join('')}
+function shade(h,a){const[r,g,b]=hex2rgb(h);return rgb2hex(r+a,g+a,b+a)}
+function mix(a,b,t){const A=hex2rgb(a),B=hex2rgb(b);return rgb2hex(A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t,A[2]+(B[2]-A[2])*t)}
+
+const NAME='Tala',CAT='Siopao',DOG='Kikiam';
+let speed=1;let timeOffset=0;let catchingUp=false;
+const nowDate=()=>new Date(Date.now()+timeOffset);
+function hourF(){const d=nowDate();return d.getHours()+d.getMinutes()/60+d.getSeconds()/3600}
+const dateKey=()=>{const d=nowDate();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+const hhmm=()=>{const d=nowDate();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+
+// ---------- persistent state ----------
+const saved=store.get('tala-studio-v1',null)||{};
+const traits=saved.traits||{neat:Math.random(),foodie:Math.random(),owl:chance(.4),drama:Math.random()};
+const firstVisit=saved.firstVisit||Date.now();
+const needs=Object.assign({hunger:70,energy:80,fun:65,hygiene:80,social:60},saved.needs||{});
+const inv=Object.assign({manok:2,baboy:2,baka:1,itlog:6,gulay:3,canton:4,tablea:1,delata:2,kape:8,chichirya:2,icecream:1,pandesal:4},saved.inv||{});
+let mess=saved.mess||[];
+let logEntries=saved.log||[];
+let recent=saved.recent||[];
+let favs=saved.favs||null;
+let craving=saved.craving||null,cravingUntil=saved.cravingUntil||0;
+let plantWater=saved.plantWater??70;
+let today=saved.today&&saved.today.date===dateKey()?saved.today:{date:dateKey(),ate:{},coffee:false,shower:false,fed:{},woke:false,snoozed:false};
+let weather=saved.weather&&saved.weather.until>Date.now()?saved.weather:null;
+let moodBoost=0;
+function save(){store.set('tala-studio-v1',{traits,firstVisit,needs,inv,mess,log:logEntries.slice(0,60),recent:recent.slice(0,8),favs,craving,cravingUntil,plantWater,today,weather,lastSave:Date.now()})}
+
+const DISHES=[
+ {id:'adobo',name:'adobong manok',need:{manok:1},meal:['lunch','dinner'],c:'#6b3a1e'},
+ {id:'sinigang',name:'sinigang na baboy',need:{baboy:1,gulay:1},meal:['lunch','dinner'],c:'#b9a36a',rainy:1.8},
+ {id:'tinola',name:'tinolang manok',need:{manok:1,gulay:1},meal:['lunch','dinner'],c:'#d8c27a',rainy:1.6},
+ {id:'sisig',name:'sisig',need:{baboy:1,itlog:1},meal:['lunch','dinner','midnight'],c:'#8a4b2a'},
+ {id:'tapsilog',name:'tapsilog',need:{baka:1,itlog:1},meal:['breakfast','lunch'],c:'#7a3b22'},
+ {id:'sinangag',name:'sinangag at itlog',need:{itlog:1},meal:['breakfast'],c:'#f0d070'},
+ {id:'spamsilog',name:'spamsilog',need:{delata:1,itlog:1},meal:['breakfast','lunch','midnight'],c:'#d86a5a'},
+ {id:'canton',name:'pancit canton',need:{canton:1},meal:['midnight','lunch','dinner','snack'],c:'#e8b04a',lazy:2},
+ {id:'champorado',name:'champorado',need:{tablea:1},meal:['breakfast','snack'],c:'#4a2a1a',rainy:2.6},
+ {id:'arrozcaldo',name:'arroz caldo',need:{manok:1},meal:['breakfast','dinner'],c:'#e8d39a',rainy:2.3},
+ {id:'torta',name:'tortang talong',need:{itlog:1,gulay:1},meal:['lunch','dinner','breakfast'],c:'#a8743a'},
+ {id:'giniling',name:'giniling',need:{baka:1,gulay:1},meal:['lunch','dinner'],c:'#8a5030'},
+];
+if(!favs){favs=[];while(favs.length<2){const d=pick(DISHES).id;if(!favs.includes(d))favs.push(d)}}
+const DELIVERY=['fried chicken na may gravy','milk tea at siomai','pizza (para sa isa, promise)','lechon kawali','shawarma rice','burger at fries','lomi','pares'];
+const GIFTS=['turon','banana cue','taho','kwek-kwek','bibingka','puto bumbong','ensaymada','buko pie'];
+const INV_LABEL={manok:'manok',baboy:'baboy',baka:'baka',itlog:'itlog',gulay:'gulay',canton:'pancit canton',tablea:'tablea',delata:'de lata',kape:'kape',chichirya:'chichirya',icecream:'ice cream',pandesal:'pandesal'};
+
+// ---------- log & speech ----------
+const logEl=document.getElementById('log');
+function log(text){if(catchingUp&&logEntries.length&&logEntries[0].text===text)return;logEntries.unshift({t:hhmm(),text});if(logEntries.length>60)logEntries.length=60;renderLog()}
+function renderLog(){logEl.innerHTML='';for(const e of logEntries.slice(0,40)){const li=document.createElement('li');const tm=document.createElement('time');tm.textContent=e.t;const sp=document.createElement('span');sp.textContent=e.text;li.append(tm,sp);logEl.append(li)}}
+const bubbleEl=document.getElementById('bubble');let bubbleT=0,bubbleOwner='human';let thoughtText='';
+function say(text,owner='human'){if(catchingUp||!text)return;bubbleEl.textContent=text;bubbleEl.classList.remove('fade');bubbleT=5.5;bubbleOwner=owner;if(owner==='human'){thoughtText='“'+text+'”'}}
+
+// ---------- spots ----------
+const LANE=134;
+const S={
+ door:{x:12,y:136,f:-1},fridge:{x:32,y:136,f:-1},sink:{x:56,y:134},stove:{x:82,y:134},counter:{x:64,y:134},bowls:{x:56,y:138,f:-1},
+ window:{x:121,y:133},table:{x:121,y:147},shelf:{x:157,y:134},plant:{x:166,y:134,f:1},desk:{x:198,y:130},
+ sofa:{x:236,y:132},rug:{x:238,y:148},bed:{x:283,y:134},bath:{x:312,y:134,f:1},center:{x:170,y:150},
+};
+
+// ---------- entities ----------
+const H={x:170,y:150,f:1,pose:'stand',prop:null,back:false,dy:0,visible:true,inBed:false,anim:null,plan:[],cur:null,label:'Nag-iisip kung ano gagawin',walkT:0,wave:0,icon:null,iconT:0,lineT:20,away:false};
+const cat={x:124,y:92,elev:'sill',f:1,state:'sleep',t:0,dur:60,path:[],jump:null,walkT:0,react:0,face:null};
+const dog={x:160,y:163,f:1,state:'sleep',t:0,dur:40,tx:160,ty:163,walkT:0,wag:0,react:0};
+let fridgeOpen=false,cooking=null,tableDish=null,screen=null,gift=null,bowlsFull=false,ball=null,windowShake=0,doorbell=0,fallingCup=null,lightsOff=false,deskLamp=false,phoneGlow=false,kettle=0,flash=0;
+const particles=[];
+function emit(type,x,y,o={}){if(catchingUp)return;particles.push(Object.assign({type,x,y,vx:rnd(-3,3),vy:-8,life:0,max:1.6},o))}
+
+// ---------- needs & mood ----------
+const DECAY={hunger:100/(3.6*3600),energy:100/(16*3600),fun:100/(48*60),hygiene:100/(14*3600),social:100/(85*60)};
+function addNeed(k,v){needs[k]=clamp(needs[k]+v,0,100)}
+function messCount(){return mess.length}
+function tidiness(){return clamp(100-mess.length*14,0,100)}
+function moodScore(){return (needs.hunger+needs.energy+needs.fun+needs.hygiene+needs.social+tidiness())/6+moodBoost}
+function moodLabel(){
+ if(H.inBed&&H.cur&&H.cur.sleep)return'tulog, wag istorbohin';
+ if(H.away)return'wala sa bahay';
+ if(needs.hunger<18)return'gutom na gutom';
+ if(needs.energy<18)return'antok na antok';
+ if(needs.fun<15)return'bored to death';
+ if(needs.hygiene<22)return'medyo amoy-araw';
+ if(needs.social<18)return'lonely';
+ const m=moodScore();
+ if(m>80)return'masaya';if(m>64)return'chill';if(m>48)return'meh';return'emo';
+}
+function mealSlot(hf){if(hf>=6.5&&hf<10)return'breakfast';if(hf>=11.5&&hf<14)return'lunch';if(hf>=18&&hf<21)return'dinner';if(hf>=22||hf<3)return'midnight';return null}
+function bedtime(){const base=traits.owl?24.6:23.1;return base+((today.date.length*7)%5-2)*0.15}
+function wakeTime(){const base=traits.owl?8.6:7.0;return base+((today.date.length*3)%5-2)*0.15}
+function isSleepTime(hf=hourF()){const h=hf<12?hf+24:hf;return h>=bedtime()&&h<wakeTime()+24}
+function outfit(){const pal=['#e27d60','#5fb3ae','#e8a87c','#c38d9e','#41a38f','#e9c46a','#7a6fbf','#ef8f6f','#5d8fd0'];const d=nowDate();return pal[(d.getDate()+d.getMonth()*3)%pal.length]}
+function dayNum(){const a=new Date(firstVisit);a.setHours(0,0,0,0);return Math.floor((nowDate()-a)/86400000)+1}
+
+// ---------- weather ----------
+function rollWeather(){const m=nowDate().getMonth();const rainy=(m>=5&&m<=10)?0.3:0.15;const r=Math.random();const type=r<rainy?'ulan':r<rainy+0.3?'maulap':'araw';weather={type,until:Date.now()+rnd(25,70)*60000}}
+if(!weather)rollWeather();
+const WEATHER_LABEL={araw:'maaraw',maulap:'maulap',ulan:'umuulan'};
+
+// ---------- plan helpers ----------
+const go=(spot,o={})=>({type:'go',to:typeof spot==='string'?S[spot]:spot,...o});
+const act=o=>({type:'act',...o});
+const call=fn=>({type:'call',fn});
+function makePath(from,to){const p=[];if(Math.abs(from.y-LANE)>3&&Math.abs(from.x-to.x)>6)p.push({x:from.x,y:LANE});if(Math.abs(to.y-LANE)>3&&Math.abs(from.x-to.x)>6)p.push({x:to.x,y:LANE});p.push({x:to.x,y:to.y});return p}
+function setPlan(label,steps){H.label=label;H.plan=steps;H.cur=null;H.anim=null;nextStep()}
+function nextStep(){
+ let guard=0;
+ while(guard++<20){
+  H.cur=H.plan.shift()||null;
+  if(!H.cur){H.anim=null;chooseNext();return}
+  const s=H.cur;s.t=0;
+  if(s.type==='call'){s.fn();continue}
+  if(s.type==='go'){H.pose='walk';if('prop' in s)H.prop=s.prop;H.back=false;H.dy=0;H.visible=true;H.inBed=false;H.anim=null;
+   if(s.from){H.x=s.from.x;H.y=s.from.y}
+   s.path=makePath(H,s.to);return}
+  if(s.type==='act'){H.pose=s.pose||'stand';H.prop=s.prop||null;H.back=!!s.back;H.dy=s.dy||0;H.visible=!s.hidden;H.inBed=!!s.inBed;H.anim=s.anim||null;
+   if(s.x!=null)H.x=s.x;if(s.y!=null)H.y=s.y;if(s.f)H.f=s.f;
+   if(s.label)H.label=s.label;
+   if(s.icon){H.icon=s.icon;H.iconT=4}
+   s.start&&s.start(s);
+   if(s.say)say(typeof s.say==='function'?s.say():pick(s.say));
+   H.lineT=rnd(18,35);return}
+ }
+}
+
+// ---------- dish logic ----------
+const canMake=d=>Object.entries(d.need).every(([k,v])=>(inv[k]||0)>=v);
+const canCookAny=()=>DISHES.some(canMake);
+function useIng(d){for(const [k,v] of Object.entries(d.need))inv[k]=Math.max(0,inv[k]-v)}
+function lowStock(){return (inv.manok+inv.baboy+inv.baka)<2||inv.itlog<2||inv.gulay<1||DISHES.filter(canMake).length<3}
+function chooseDish(){
+ const slot=mealSlot(hourF())||'snack';const rain=weather.type==='ulan';
+ const opts=DISHES.filter(canMake).map(d=>{let w=1;
+  w*=d.meal.includes(slot)?2.4:0.45;if(rain&&d.rainy)w*=d.rainy;if(needs.energy<35&&d.lazy)w*=d.lazy;
+  if(favs.includes(d.id))w*=1.5+traits.foodie;if(craving===d.id)w*=3.2;
+  const i=recent.indexOf(d.id);if(i===0)w*=0.06;else if(i>0&&i<4)w*=0.35;return[d,w]});
+ return opts.length?wpick(opts):null;
+}
+const hasSnack=()=>inv.chichirya+inv.icecream+inv.pandesal>0;
+
+// ---------- the brain ----------
+function chooseNext(){
+ H.away=false;
+ const hf=hourF();
+ if(isSleepTime(hf))return planSleep();
+ const n=needs,slot=mealSlot(hf),rain=weather.type==='ulan',mealDue=slot&&slot!=='midnight'&&!today.ate[slot];
+ const C=[];const add=(id,score,fn)=>{if(score>0)C.push([id,score,fn])};
+ const hd=100-n.hunger,fd=100-n.fun,sd=100-n.social,ed=100-n.energy;
+ add('gift',gift?140:0,planGift);
+ add('cook',(hd*1.2+(mealDue?55:0)-20)*(n.energy>22?1:0.35)*(canCookAny()?1:0),planCook);
+ add('delivery',(hd*0.9+(mealDue?35:0)-25)*(n.energy<35?1.7:0.45)*(canCookAny()?0.6:1.6),planDelivery);
+ add('snack',(hd*0.6-10)*(hasSnack()?1:0)*(mealDue?0.4:1),planSnack);
+ add('grocery',(lowStock()?55:4)*(hf>8&&hf<21?1:0)*(n.energy>30?1:0.3),planGrocery);
+ add('coffee',((hf<11&&!today.coffee)?80:ed*0.3)*(inv.kape>0?1:0)*(hf>19?0.1:1),planCoffee);
+ add('feed',((hf>=6.5&&hf<11&&!today.fed.am)||(hf>=17&&hf<21&&!today.fed.pm))?75:0,planFeedPets);
+ add('nap',(ed-35)*1.6*(hf>12&&hf<18?1.3:0.7),planNap);
+ add('read',fd*0.75+5,planRead);
+ add('desk',fd*0.65+(hf>9&&hf<17?28:5),planDesk);
+ add('drama',fd*0.8*(hf>17?1.4:1)*(0.6+traits.drama),planDrama);
+ add('videoke',fd*0.45*(n.energy>45?1:0.3)*(hf>21.5||hf<8?0.05:1),planVideoke);
+ add('dance',fd*0.35*(n.energy>45?1:0.3),planDance);
+ add('yoga',(hf<10?28:10)*(n.energy>40?1:0.3),planYoga);
+ add('window',10+(rain?32:0)+(n.fun<40?10:0),planWindow);
+ add('journal',8+(hf>20?18:0),planJournal);
+ add('plants',(100-plantWater)*0.9-15,planPlants);
+ add('petcat',sd*0.75+5,planPetCat);
+ add('playdog',sd*0.65*(n.energy>30?1:0.4)+5,planPlayDog);
+ add('call',sd*0.55*(hf>9&&hf<23?1:0),planCall);
+ add('shower',(100-n.hygiene-25)*1.6+((hf<10&&!today.shower)?35:0),planShower);
+ const dishes=mess.filter(m=>m.type==='dish'||m.type==='box').length,other=mess.length-dishes;
+ add('dishes',dishes*24*(0.4+traits.neat),planDishes);
+ add('tidy',other*16*(0.4+traits.neat),planTidy);
+ add('idle',9,planIdle);
+ for(const c of C){const i=recent.indexOf('a:'+c[0]);if(i===0)c[1]*=0.15;else if(i>0&&i<3)c[1]*=0.55;c[1]*=rnd(0.65,1.35)}
+ C.sort((a,b)=>b[1]-a[1]);
+ const top=C.slice(0,4).map(c=>[c,Math.pow(c[1],1.6)]);
+ const ch=wpick(top);
+ if(!ch[0].startsWith('cook'))recent.unshift('a:'+ch[0]);else recent.unshift('a:cook');
+ recent=recent.slice(0,10);
+ ch[2]();
+}
+function remember(id){recent=recent.filter(r=>r!==id);recent.unshift(id);recent=recent.slice(0,10)}
+
+// ---------- activity plans ----------
+function plateMess(){if(mess.length<10)mess.push({type:'dish',x:rnd(110,132),y:141})}
+function afterMeal(){
+ if(chance(0.25+traits.neat*0.6)){H.plan.unshift(...dishSteps())}else{log(pick(['Iniwan muna yung plato sa mesa. "Mamaya na." (Hindi.)','Plato sa mesa: day 1 of being ignored.','Huhugasan daw niya mamaya. Sabi niya yan ha.']))}
+}
+function dishSteps(){return[go('sink'),act({dur:rnd(40,70),back:true,anim:'scrub',label:'Naghuhugas ng plato',icon:'drop',say:['ang dami kong hugasin para sa isang tao','sino gumamit ng tatlong baso. ako lang naman nandito.','hugas hugas hugas ♪'],
+ tick:(dt,s)=>{if(chance(dt*4))emit('px',rnd(52,62),96,{vy:-10,vx:rnd(-8,8),color:'#bfe6ff',max:.5,g:40})},
+ end:()=>{const n=mess.filter(m=>m.type==='dish'||m.type==='box').length;mess=mess.filter(m=>m.type!=='dish'&&m.type!=='box');if(n){log(`Naghugas ng ${n} ${n>1?'plato':'plato'}. Adulting.`);moodBoost+=4;for(let i=0;i<6;i++)emit('spark',rnd(50,64),rnd(88,96))}}})]}
+
+function planCook(){
+ const dish=chooseDish();if(!dish)return planDelivery();
+ const slot=mealSlot(hourF())||'snack';
+ const burnt=chance(0.07+(needs.energy<30?0.12:0)+(H.prop==='phone'?0.1:0));
+ const cookDur=rnd(80,160);
+ setPlan('Nagluluto ng '+dish.name,[
+  go('fridge'),
+  act({dur:4,f:-1,label:'Nakatitig sa loob ng ref',start:()=>{fridgeOpen=true},end:()=>{fridgeOpen=false;useIng(dish)},
+   say:[`hmm... ${dish.name} na lang kaya`,`ano'ng meron... ayan, ${dish.name}!`,craving===dish.id?`${dish.name}. kanina ko pa 'to iniisip.`:`sige na nga, ${dish.name}`,'*nakatitig sa ref nang tatlong minuto*']}),
+  go('stove',{prop:'groceries'}),
+  act({dur:cookDur,back:true,anim:'stir',label:'Nagluluto ng '+dish.name,icon:'food',
+   start:()=>{cooking={dish,burnt}},
+   tick:(dt,s)=>{if(chance(dt*3))emit('steam',rnd(78,88),90,{vy:-10,max:2});if(chance(dt*6))emit('px',rnd(78,88),92,{vy:-14,vx:rnd(-10,10),color:'#ffd27a',max:.35,g:30});
+    if(burnt&&s.t>cookDur*0.65&&chance(dt*6))emit('smoke',rnd(78,88),88,{vy:-12,max:2.6});
+    if(burnt&&!s.panic&&s.t>cookDur*0.7){s.panic=true;say(pick(['HALA. HALA HALA.','amoy sunog... ako ba yon?','okay. crispy. sinadya ko yan.']))}},
+   lines:['amoy pa lang, busog na ko','konting toyo... konting suka... konting dasal','sana all marunong magluto. ay, ako pala.',`${CAT}, hindi para sayo 'to`,'tikman ko lang... *tikim ng 5 beses*'],
+   end:()=>{cooking=null}}),
+  call(()=>{if(burnt){log(`Nagluto ng ${dish.name}... medyo sunog. "Smoky flavor" daw.`);moodBoost-=5}else{log(pick([`Nagluto ng ${dish.name}. Ang bango ng buong studio.`,`${dish.name} for ${slot==='breakfast'?'breakfast':slot==='lunch'?'lunch':slot==='dinner'?'dinner':'merienda'}. Chef ${NAME} in the house.`,`Successful ${dish.name}. Walang nasunog. Achievement unlocked.`]))}}),
+  go('table',{prop:'plate',plateColor:dish.c}),
+  act({dur:rnd(60,110),pose:'sit',f:1,label:'Kumakain ng '+dish.name,icon:'heart',
+   start:()=>{tableDish={c:dish.c,full:1}},tick:(dt,s)=>{tableDish&&(tableDish.full=1-s.t/s.dur)},
+   gain:{hunger:burnt?55:78,fun:8},
+   say:burnt?['kaya pa naman... siguro','ang pait. ang pait ng buhay.']:['ang sarap ko talaga magluto','extra rice pa nga','eto na yung pinakamasarap na '+dish.name+' sa Pilipinas, walang kontra',`${DOG} wag mo kong titigan nang ganyan`],
+   lines:['*nguya nguya*','ang sarap... luha ng kaligayahan',`${DOG}, isa lang ha. ISA LANG.`],
+   end:()=>{tableDish=null;plateMess();if(slot)today.ate[slot]=true;remember(dish.id);moodBoost+=burnt?0:6;if(craving===dish.id){craving=null;log(`Natupad ang craving sa ${dish.name}. Peace at last.`)};afterMeal()}}),
+ ]);
+}
+function planDelivery(){
+ const food=pick(DELIVERY);const slot=mealSlot(hourF());
+ setPlan('Nag-order ng '+food,[
+  go('sofa'),
+  act({dur:rnd(25,40),pose:'sit',x:236,y:120,prop:'phone',label:'Nag-o-order ng pagkain',icon:'food',say:['tinatamad ako magluto. sorry na, budget.',`order na lang. ${food}. deserve ko 'to.`,'free delivery naman... pag lampas 500. sige, dagdag pa ng dessert.'],start:()=>{phoneGlow=true},end:()=>{phoneGlow=false}}),
+  act({dur:rnd(50,90),pose:'sit',x:236,y:120,prop:'phone',label:'Hinihintay yung rider',start:()=>{phoneGlow=true},say:['rider is 2 mins away... kanina pa siya 2 mins away','*refresh ng tracking app*'],end:()=>{phoneGlow=false;doorbell=2.5;dog.react=2;log(`Ding dong! Dumating na yung ${food}.`)}}),
+  go('door',{from:{x:236,y:132}}),
+  act({dur:4,f:-1,say:['salamat po kuya! ingat po!','thank you po! 5 stars kayo sakin'],label:'Kinukuha yung order'}),
+  go('table',{prop:'bag'}),
+  act({dur:rnd(60,100),pose:'sit',f:1,label:'Kumakain ng '+food,icon:'heart',start:()=>{tableDish={c:'#c8783a',full:1,box:true}},tick:(dt,s)=>{tableDish&&(tableDish.full=1-s.t/s.dur)},gain:{hunger:80,fun:14},
+   say:['worth it. kahit hindi.','eto talaga yung self-care'],end:()=>{tableDish=null;if(mess.length<10)mess.push({type:'box',x:rnd(112,130),y:141});if(slot&&slot!=='midnight')today.ate[slot]=true;moodBoost+=5;afterMeal()}}),
+ ]);
+}
+function planSnack(){
+ const opts=['chichirya','icecream','pandesal'].filter(k=>inv[k]>0);const k=pick(opts);
+ const prop=k==='chichirya'?'chips':k==='icecream'?'icecream':'bread';
+ setPlan('Nagmemerienda ng '+INV_LABEL[k],[
+  go('fridge'),act({dur:3,f:-1,start:()=>{fridgeOpen=true},end:()=>{fridgeOpen=false;inv[k]--}}),
+  go('sofa',{prop}),
+  act({dur:rnd(50,90),pose:'sit',x:236,y:120,prop,label:'Kumakain ng '+INV_LABEL[k],icon:'food',gain:{hunger:22,fun:10},
+   say:['konting kain lang... *ubos ang buong bag*','snack lang, hindi ito dinner. (dinner na ito.)',`${DOG}, wala 'to, hindi ito para sa aso`],
+   end:()=>{if(k==='chichirya'&&chance(1-traits.neat)&&mess.length<10){mess.push({type:'wrapper',x:rnd(222,250),y:rnd(132,140)});log('May balat ng chichirya sa sahig. Hindi ko alam sino may gawa. (Si Tala.)')}else log(`Nag-merienda ng ${INV_LABEL[k]}.`)}}),
+ ]);
+}
+function planGrocery(){
+ setPlan('Nag-grocery',[
+  go('door'),
+  act({dur:3,f:-1,say:['grocery lang ako! bantayan niyo bahay',`${DOG}, ikaw muna padre de pamilya`],label:'Aalis para mag-grocery'}),
+  act({dur:rnd(220,400),hidden:true,label:'Nasa grocery (wala sa bahay)',start:()=>{H.away=true;log('Lumabas para mag-grocery. Si '+DOG+' naghihintay sa pinto.')},
+   end:()=>{H.away=false;const bought=[];
+    const add=(k,n)=>{inv[k]=(inv[k]||0)+n;bought.push(n+' '+INV_LABEL[k])};
+    add(pick(['manok','baboy','baka']),ri(1,2));add(pick(['manok','baboy']),1);add('itlog',ri(4,6));add('gulay',ri(2,3));
+    if(chance(.6))add('canton',ri(2,4));if(chance(.4))add('delata',1);if(chance(.3))add('tablea',1);if(inv.kape<4)add('kape',6);
+    add(pick(['chichirya','icecream','pandesal']),ri(1,3));
+    log(`Bumalik galing grocery: ${bought.join(', ')}. Plus mga bagay na wala sa listahan.`);doorbell=0}}),
+  go('fridge',{prop:'groceries',from:{x:12,y:136}}),
+  act({dur:8,f:-1,label:'Inaayos yung groceries',start:()=>{fridgeOpen=true},end:()=>{fridgeOpen=false},say:['bakit 2k na agad. puro gulay lang naman binili ko.','tetris sa loob ng ref']}),
+ ]);
+}
+function planCoffee(){
+ const spot=chance(.5)?'window':'desk';
+ setPlan('Nagkakape',[
+  go('counter'),
+  act({dur:rnd(12,20),back:true,anim:'scrub',label:'Nagtitimpla ng kape',icon:'mug',start:()=>{kettle=1},end:()=>{kettle=0;inv.kape=Math.max(0,inv.kape-1);today.coffee=true},say:['kape muna bago tao','3-in-1 lang, hindi tayo mayaman']}),
+  spot==='window'?go('window',{prop:'mug'}):go('desk',{prop:'mug'}),
+  spot==='window'?act({dur:rnd(60,110),back:true,prop:'mug',label:'Nagkakape sa may bintana',gain:{energy:14,fun:8},say:['ang ganda ng umaga... sana walang meeting','*higop*'],lines:['*higop*','life is good. or at least caffeinated.']})
+  :act({dur:rnd(60,110),pose:'sit',back:true,x:198,y:129,label:'Nagkakape habang nagche-check ng emails',gain:{energy:14,fun:3},start:()=>{screen='mail'},end:()=>{screen=null},say:['*higop* ...47 unread. hindi ko kayo kilala.']}),
+ ]);
+}
+function planFeedPets(){
+ const k=hourF()<14?'am':'pm';
+ setPlan(`Pinapakain sina ${CAT} at ${DOG}`,[
+  go('counter'),act({dur:3,back:true,say:[`${CAT}! ${DOG}! kainan na!`,'sino gutom? SINO GUTOM?']}),
+  go('bowls'),act({dur:5,f:-1,label:`Pinapakain sina ${CAT} at ${DOG}`,icon:'heart',gain:{social:15},start:()=>{bowlsFull=true;cat.state='idle';cat.t=999;dog.state='idle';dog.t=999},end:()=>{today.fed[k]=true;log(`Pinakain sina ${CAT} at ${DOG}. Parang hindi kumain ng isang taon.`)}}),
+ ]);
+}
+function planNap(){
+ setPlan('Umiidlip sa sofa',[
+  go('sofa'),
+  act({dur:rnd(300,720),pose:'lie',x:238,y:114,label:'Umiidlip sa sofa',icon:'z',gain:{energy:42},
+   say:['5 minutes lang... promise','power nap. power. nap.','pikit lang ako saglit'],
+   tick:(dt)=>{if(chance(dt*.6))emit('z',H.x-10,H.y-12,{vy:-5,vx:3,max:2.4})},
+   end:()=>{log(pick(['Umidlip sa sofa. "5 minutes" daw.','Nagising sa idlip, nakalimutan kung anong araw na.','Power nap complete. Medyo groggy pero buhay.']))}}),
+ ]);
+}
+function planSleep(){
+ setPlan('Naghahanda matulog',[
+  go('bath'),act({dur:rnd(40,70),hidden:true,label:'Nagto-toothbrush',start:()=>{H.away=false}}),
+  go('bed',{from:{x:312,y:134}}),
+  act({dur:99999,pose:'lie',inBed:true,x:282,y:113,f:1,label:'Tulog',icon:'z',sleep:true,
+   start:()=>{lightsOff=true;if(!catchingUp)log(pick(['Nag-goodnight na. Si '+CAT+' agad sa paanan niya.','Natulog na (after 1 hour of scrolling sa kama).','Lights off. Goodnight, '+NAME+'.']))},
+   say:['goodnight... wag niyo kong gisingin','tulog na ko. sana walang sumunod na ipis.'],
+   gain:{energy:1},
+   tick:(dt,s)=>{addNeed('energy',dt*100/(6.5*3600));needs.hunger=Math.max(needs.hunger,30);needs.fun=Math.max(needs.fun,45);needs.social=Math.max(needs.social,45);
+    if(chance(dt*.35))emit('z',H.x-10,H.y-10,{vy:-4,vx:2.5,max:2.6});
+    const hf=hourF();const h2=hf<12?hf+24:hf;
+    if(!today.woke&&h2>bedtime()+1.2&&h2<wakeTime()+22&&chance(dt/1800)){today.woke=true;s.t=s.dur;H.plan=midnightPlan();return}
+    if(!isSleepTime(hf)){
+     if(!today.snoozed&&chance(.35)){today.snoozed=true;say('*snooze*');log('Pinindot ang snooze. Twice. Okay, thrice.');s.until=null;return}
+     s.t=s.dur}},
+   end:()=>{lightsOff=false}}),
+  call(()=>{if(!isSleepTime()){H.plan.unshift(act({dur:5,pose:'sit',x:282,y:118,f:1,label:'Kakagising lang',say:['umaga na pala... ayoko pa','hmmmph. buhay pa ko.','good morning... sino nag-on ng araw'],end:()=>{log(pick(['Gising na si '+NAME+'. Mukhang hindi pa siya ready sa mundo.','Good morning! Nakatayo na, technically.']));today.woke=false}}))}}),
+ ]);
+}
+function midnightPlan(){
+ const opt=pick(['water','snack','pee']);
+ const back=[go('bed'),act({dur:99999,pose:'lie',inBed:true,x:282,y:113,f:1,label:'Tulog ulit',icon:'z',sleep:true,start:()=>{lightsOff=true},tick:(dt,s)=>{addNeed('energy',dt*100/(6.5*3600));if(chance(dt*.35))emit('z',H.x-10,H.y-10,{vy:-4,vx:2.5,max:2.6});if(!isSleepTime())s.t=s.dur},end:()=>{lightsOff=false}}),
+  call(()=>{H.plan.unshift(act({dur:5,pose:'sit',x:282,y:118,f:1,label:'Kakagising lang',say:['umaga na? parang kakapikit ko lang'],end:()=>{today.woke=false}}))})];
+ lightsOff=false;
+ if(opt==='snack'&&(inv.canton>0||hasSnack()))return[act({dur:3,pose:'sit',x:282,y:118,say:['...gutom ako. bakit ako gutom.']}),go('fridge'),act({dur:5,f:-1,label:'Midnight snack mission',start:()=>{fridgeOpen=true},end:()=>{fridgeOpen=false;log('Nagising nang hatinggabi para mag-ref raid. Classic.');addNeed('hunger',15)}}),go('fridge'),...back];
+ if(opt==='pee')return[act({dur:2,pose:'sit',x:282,y:118}),go('bath'),act({dur:30,hidden:true,label:'CR break'}),go('bed',{from:{x:312,y:134}}),...back.slice(1)];
+ return[act({dur:2,pose:'sit',x:282,y:118}),go('sink'),act({dur:5,back:true,label:'Umiinom ng tubig',end:()=>log('Nagising para uminom ng tubig. Hydrated kahit 3AM.')}),...back];
+}
+function planRead(){
+ const where=pick(['sofa','sofa','bed','table']);const bc=pick(['#c0503a','#3a70b0','#e0b040','#5a9a60','#9a5aa0']);
+ const book=pick(['romance novel na may shirtless sa cover','self-help book na hindi naman niya sinusunod','mystery novel','manga','libro tungkol sa pera (para sa vibes lang)']);
+ const pose=where==='bed'?{pose:'lie',inBed:false,x:282,y:113}:where==='sofa'?{pose:'sit',x:236,y:120}:{pose:'sit',x:121,y:147,f:1};
+ setPlan('Nagbabasa ng '+book,[
+  go('shelf'),act({dur:4,back:true,label:'Pumipili ng libro',say:['ano kayang babasahin...','ito na lang, yung hindi ko pa tapos since 2023']}),
+  go(where==='table'?'table':where,{prop:'book'}),
+  act({dur:rnd(220,520),...pose,prop:'book',bookColor:bc,label:'Nagbabasa ng '+book,icon:'book',gain:{fun:45},
+   say:['isang chapter lang','shhh nasa magandang part na ko'],lines:['WAIT. siya pala yung pumatay?!','*kilig*','okay isa pang chapter','bakit ganito yung ending, author?'],
+   tick:(dt,s)=>{if(needs.energy<35&&where!=='table'&&s.t>60&&!s.dozed&&chance(dt/60)){s.dozed=true;s.t=s.dur;log('Nakatulog habang nagbabasa. Libro sa mukha.');H.plan.unshift(act({dur:rnd(200,400),pose:'lie',x:where==='bed'?282:238,y:where==='bed'?113:114,label:'Nakatulog habang nagbabasa',icon:'z',gain:{energy:30},tick:(dt)=>{if(chance(dt*.5))emit('z',H.x-10,H.y-12,{vy:-5,vx:3,max:2.4})}}))}},
+   end:()=>{if(chance(.5))log(`Nagbasa ng ${book}.`)}}),
+ ]);
+}
+function planDesk(){
+ const hf=hourF();const work=hf>9&&hf<17&&chance(.6);
+ const kind=work?'work':pick(['game','shop','vid','game']);
+ const L={work:['Nagwo-work sa computer','mail',['okay focus. FOCUS.','reply all... hindi, wag reply all','sino nag-schedule ng meeting ng 4:55pm'],{fun:4}],
+  game:['Naglalaro ng video game','game',['isang round lang','ANO BA YAN TEAMMATE','gg. hindi, rematch.'],{fun:48}],
+  shop:['Nag-o-online shopping (add to cart lang daw)','shop',['add to cart lang, hindi bibilhin','11.11 sale na ba? hindi pa? sige check ko lang','kailangan ko ba talaga ng mini waffle maker... oo.'],{fun:35}],
+  vid:['Nanonood ng cat videos','vid',[`mas cute pa rin si ${CAT}`,'isang video lang... 2 hours later','HAHAHAHA yung pusa nahulog'],{fun:40}]}[kind];
+ setPlan(L[0],[
+  go('desk'),
+  act({dur:rnd(260,700),pose:'sit',back:true,x:198,y:129,anim:'type',label:L[0],icon:kind==='work'?'bang':'note',gain:L[3],
+   start:()=>{screen=L[1];deskLamp=true},end:()=>{screen=null;deskLamp=false;if(kind==='shop'&&chance(.4))log('Nag-checkout. "Hindi ko alam paano nangyari."');else log(L[0]+'.')},
+   say:L[2],lines:L[2]}),
+ ]);
+}
+function planDrama(){
+ const show=pick(['K-drama','teleserye','reality dating show','true crime docu','anime']);
+ setPlan('Nanonood ng '+show,[
+  go('sofa'),
+  act({dur:rnd(300,700),pose:'sit',x:236,y:120,prop:'phone',label:'Nanonood ng '+show+' sa phone',icon:'heart',gain:{fun:50},
+   start:()=>{phoneGlow=true},end:()=>{phoneGlow=false;if(show==='K-drama'&&chance(.5))log('Umiyak sa K-drama. Episode 3 pa lang.');else log('Nanood ng '+show+'.')},
+   say:['isang episode lang','HINDI. hindi pwede.','bakit sila naghiwalay sa episode 8 lang?!'],
+   lines:['*sigaw sa unan*','SINO KA PARA SAKTAN SIYA','okay sige, isa pa','ang pogi. ang pogi. ang pogi.','hindi ako umiiyak, may alikabok lang'],
+   tick:(dt,s)=>{if(traits.drama>.4&&s.t>s.dur*.6&&chance(dt*.8))emit('px',H.x+(H.f>0?2:-2),H.y-16,{vy:6,vx:0,color:'#7fc8ff',max:.8,g:20})}}),
+ ]);
+}
+function planVideoke(){
+ setPlan('Nagvi-videoke',[
+  go('rug'),
+  act({dur:rnd(100,170),prop:'mic',anim:'bob',f:-1,label:'Nagvi-videoke (sorry, kapitbahay)',icon:'note',gain:{fun:45,social:10},
+   say:['♪ laaaa la la... ♪ (hindi alam yung lyrics)','para sa lahat ng nasaktan... ♪','ARE YOU READY, STUDIO?!'],lines:['♪ ♪ ♪','*bumirit sa chorus*','sabay-sabay tayo! (mag-isa lang siya)'],
+   tick:(dt)=>{if(chance(dt*2.2))emit('note',H.x+rnd(-8,8),H.y-26,{vy:-9,vx:rnd(-4,4),max:2,color:pick(['#f2b544','#e8808a','#74c6a4'])})},
+   end:()=>{const sc=ri(58,100);log(`Videoke score: ${sc}. ${sc>=95?'"PERFECT" daw sabi ng machine. Iyak.':sc<70?'Galit sa machine. Rigged daw.':'Pwede na. Pwede na.'}`);moodBoost+=sc>=90?8:sc<70?-3:3}}),
+ ]);
+}
+function planDance(){
+ setPlan('Sumasayaw mag-isa',[go('rug'),act({dur:rnd(60,120),anim:'dance',label:'Sumasayaw sa sala',icon:'note',gain:{fun:32},
+  say:['walang nakakakita... sige na','tiktok dance practice (hindi viral)','body roll... aray likod ko'],
+  tick:(dt)=>{if(chance(dt*1.5))emit('note',H.x+rnd(-8,8),H.y-26,{vy:-9,vx:rnd(-4,4),max:2,color:'#74c6a4'})},end:()=>log('Sumayaw mag-isa sa sala. Si '+DOG+' nakisali.')})]);
+}
+function planYoga(){
+ const fell=chance(.25);
+ setPlan('Nag-yo-yoga',[go('rug'),
+  act({dur:rnd(90,150),anim:'yoga',label:'Nag-yo-yoga (sinusubukan)',icon:'heart',gain:{fun:15,energy:8,hygiene:-5},
+   say:['inhale... exhale... bakit masakit','namaste. or whatever.','flexible ako dati, promise'],
+   tick:(dt,s)=>{if(fell&&!s.fell&&s.t>s.dur*.6){s.fell=true;H.anim=null;H.pose='lie';H.y=152;say('okay lang ako. okay lang ako.');log('Nag-yoga. Nahulog. Tinuloy pa rin. Respeto.')}},
+   end:()=>{H.y=148;if(!fell)log('Nag-yoga sa rug. Centered daw siya ngayon.')}})]);
+}
+function planWindow(){
+ const rain=weather.type==='ulan',night=darkness()>.3;
+ const lines=rain?['ang ganda ng ulan... sana di bumaha','perfect weather para matulog buong araw','champorado weather...']:night?['ang daming ilaw sa labas... lahat may ginagawa','ano kaya ginagawa ng kapitbahay','ano ba talaga purpose ko sa buhay']:['may ibon! hi ibon','ang init sa labas, buti na lang nandito ako','ano ba talaga purpose ko sa buhay'];
+ setPlan('Nakatitig sa bintana',[go('window'),act({dur:rnd(40,90),back:true,label:rain?'Nanonood ng ulan':'Nakatitig sa bintana (existential mode)',icon:rain?'cloud':'q',gain:{fun:12},say:lines,lines,end:()=>{if(chance(.4))log(rain?'Nanood ng ulan sa bintana. Main character moment.':'Tumitig sa bintana. Nag-isip tungkol sa buhay. Walang konklusyon.')}})]);
+}
+function planJournal(){
+ setPlan('Nagsusulat sa journal',[go('table'),act({dur:rnd(150,300),pose:'sit',f:1,prop:'book',bookColor:'#e8c07a',label:'Nagsusulat sa journal',icon:'heart',gain:{fun:22},
+  say:['dear diary, kumain ako. yun lang.','dear diary... sino ba talaga ako','gratitude list: 1. kape 2. '+CAT+' 3. kape ulit'],end:()=>log('Nagsulat sa journal. Confidential daw.')})]);
+}
+function planPlants(){
+ setPlan('Nagdidilig ng halaman',[go('sink'),act({dur:4,back:true,label:'Pinupuno yung pandilig'}),
+  go('plant',{prop:'can'}),act({dur:rnd(14,22),f:1,prop:'can',label:'Nagdidilig ng halaman',icon:'drop',say:['lumaki ka anak','kinakausap ko kayo kasi sabi sa internet nakakatulong','sino nagsabing ako lang mag-isa dito. may halaman ako.'],tick:(dt)=>{if(chance(dt*8))emit('px',H.x+9,H.y-10,{vy:8,vx:4,color:'#7fc8ff',max:.6,g:40})}}),
+  go('window',{prop:'can'}),act({dur:8,back:true,prop:'can',end:()=>{plantWater=100;log('Nagdilig ng halaman. Plant mom duties.')}})]);
+}
+function catFloorPos(){if(cat.elev){const sp=CAT_SPOTS[cat.elev];return{x:sp.x,y:LANE+2,reach:true}}return{x:cat.x,y:cat.y,reach:false}}
+function planPetCat(){
+ const p=catFloorPos();
+ setPlan('Nilalambing si '+CAT,[go({x:clamp(p.x-10,8,312),y:clamp(p.y,128,170)}),
+  act({dur:rnd(20,40),f:1,anim:'pet',label:'Nilalambing si '+CAT,icon:'heart',gain:{social:35,fun:10},
+   start:()=>{cat.state='pet';cat.t=0;cat.dur=999},
+   say:[`sino'ng pinakamagandang pusa? ikaw!`,`${CAT}... baby... anak... prinsesa ko`,'wag mo kong kagatin ha. ha?!'],
+   tick:(dt)=>{if(chance(dt*1.5))emit('heart',cat.x+rnd(-3,3),cat.y-10,{vy:-6,max:1.6})},
+   end:()=>{if(chance(.25)){log(`Nilambing si ${CAT}. Kinagat siya. Love language daw yon.`);cat.state='idle';cat.t=999}else{log(`Nilambing si ${CAT}. Purr level: maximum.`);cat.state='idle';cat.t=999}}})]);
+}
+function planPlayDog(){
+ setPlan('Nakikipaglaro kay '+DOG,[go('rug'),
+  act({dur:rnd(60,100),prop:'ball',label:'Naglalaro ng fetch kasama si '+DOG,icon:'heart',gain:{social:32,fun:20,energy:-4},
+   start:()=>{dog.state='fetch';dog.t=0;dog.dur=999},
+   say:[`${DOG}! kunin mo! KUNIN MO!`,'sino good boy? IKAW!','eto na eto na eto na... ay di ko pa binato'],
+   tick:(dt)=>{if(!ball&&Math.hypot(dog.x-H.x,dog.y-H.y)<14&&chance(dt*1.5)){const dir=H.x>200?-1:1;ball={x:H.x+dir*4,y:H.y-14,vx:dir*rnd(50,90),vy:-rnd(40,60),floor:rnd(140,166),landed:false,held:false};H.prop=null;H.f=dir}
+    if(ball&&ball.held&&Math.hypot(dog.x-H.x,dog.y-H.y)<12){ball=null;H.prop='ball';dog.wag=2}},
+   end:()=>{ball=null;dog.state='idle';dog.t=999;log(pick([`Nag-fetch sila ni ${DOG}. Panalo si ${DOG}.`,`Nakipaglaro kay ${DOG}. Pagod na si ${NAME}, hindi pa si ${DOG}.`]))}})]);
+}
+function planCall(){
+ const who=pick(['bestie','nanay niya','ex (bakit?!)','kapatid','group chat (video call)']);
+ const lines=who==='nanay niya'?['opo ma, kumakain ako','hindi pa ma, wala pa kong jowa','opo, nagdadasal ako... minsan']:who.startsWith('ex')?['hello? ...bakit ka napatawag','okay lang ako. masaya ako. (hindi.)']:['ANO?! sila na ulit?!','teh, CHIKA MO NA','hindi ako nagulat. medyo nagulat.','grabe siya. grabe talaga.'];
+ setPlan('Kausap sa phone si '+who,[go('sofa'),act({dur:rnd(150,330),pose:'sit',x:236,y:120,prop:'phoneEar',label:'Kausap sa phone si '+who,icon:'bang',gain:{social:45,fun:12},say:lines,lines,
+  end:()=>log(who.startsWith('ex')?'Tumawag yung ex. Hindi natin pag-uusapan.':`Nakipag-chismisan sa ${who}. ${pick(['May bagong tea.','Isang oras. Isang oras talaga.','Puro "hala" at "talaga?" lang yung naririnig.'])}`)})]);
+}
+function planShower(){
+ setPlan('Naliligo',[go('bath'),
+  act({dur:rnd(160,280),hidden:true,label:'Naliligo (may concert sa CR)',icon:'drop',start:()=>{H.away=false},end:()=>{needs.hygiene=100;today.shower=true;moodBoost+=4}}),
+  act({dur:14,x:312,y:134,prop:'towel',f:-1,label:'Kakaligo lang',say:['fresh na ko. new me.','shower concert: sold out','ang lamig ng tubig, buhay pa ko'],end:()=>{if(chance(.7-traits.neat*.5)&&mess.length<10){mess.push({type:'clothes',x:rnd(290,306),y:rnd(132,142)});log('Naligo. Yung damit, nasa sahig na ngayon. Part of the decor.')}else log('Naligo. Bango na.')}}),
+ ]);
+}
+function planDishes(){setPlan('Naghuhugas ng plato',[go('table'),act({dur:3,pose:'stand',f:1,label:'Kinukuha yung mga plato',say:['okay. okay na. maghuhugas na.','sino nag-iwan nito? ah, ako.']}),...dishSteps()])}
+function planTidy(){
+ const items=mess.filter(m=>m.type!=='dish'&&m.type!=='box');
+ const steps=[act({dur:3,prop:'broom',label:'Naglilinis ng bahay',say:['okay. cleaning mode.','ang kalat. sino nakatira dito. ay ako.']})];
+ for(const it of items){steps.push(go({x:clamp(it.x-6,10,310),y:clamp(it.y+2,128,170)},{prop:'broom'}));steps.push(act({dur:4,prop:'broom',anim:'sweep',f:1,label:'Naglilinis ng bahay',end:()=>{mess=mess.filter(m=>m!==it);for(let i=0;i<4;i++)emit('spark',it.x+rnd(-3,3),it.y-2)}}))}
+ steps.push(call(()=>{log('Naglinis ng bahay. Mukhang may nakatirang adult na ulit.');moodBoost+=6}));
+ setPlan('Naglilinis ng bahay',steps);
+}
+function planGift(){
+ const g=gift;
+ setPlan('May nakitang meryenda sa pinto',[go('door'),act({dur:4,f:-1,label:'Tinitingnan yung iniwan sa pinto',icon:'bang',say:[`uy! ${g}! sino nag-iwan nito?`,`${g}?! para sakin? sino ka, mahiwagang nilalang?`,'...ikaw yun no? salamat!'],end:()=>{gift=null}}),
+  go('table',{prop:'bag'}),act({dur:rnd(45,80),pose:'sit',f:1,label:'Kumakain ng '+g,icon:'heart',start:()=>{tableDish={c:'#d89a4a',full:1}},tick:(dt,s)=>{tableDish&&(tableDish.full=1-s.t/s.dur)},gain:{hunger:25,fun:18,social:22},say:['ang sarap!! salamat, kung sino ka man','ito na yung highlight ng araw ko'],end:()=>{tableDish=null;moodBoost+=10;log(`Kinain yung ${g} na iniwan mo. Mukhang masaya siya.`)}})]);
+}
+function planIdle(){
+ const k=pick(['stretch','wander','phone','clock','dogtalk']);
+ if(k==='stretch')return setPlan('Nag-i-stretch',[act({dur:rnd(6,10),anim:'wave',label:'Nag-i-stretch',say:['*crack* ayan, may tumunog','ang tigas ng likod ko, 80 years old na ko']})]);
+ if(k==='phone')return setPlan('Nagso-scroll sa phone',[act({dur:rnd(25,60),prop:'phone',label:'Nagso-scroll nang walang direksyon',start:()=>{phoneGlow=true},end:()=>{phoneGlow=false},say:['*scroll* *scroll* *scroll*','bakit ako nasa profile ng pinsan ng ex ko']})]);
+ if(k==='clock')return setPlan('Tumingin sa orasan',[go({x:185,y:134}),act({dur:5,back:true,label:'Tumingin sa orasan',say:[`${hhmm()} na?! saan napunta yung oras`,'parang kanina lang umaga']})]);
+ if(k==='dogtalk')return setPlan('Kinakausap si '+DOG,[go({x:clamp(dog.x+12,10,310),y:clamp(dog.y,128,170)}),act({dur:rnd(10,18),f:-1,label:'Kinakausap si '+DOG+' tungkol sa buhay',gain:{social:12},say:[`${DOG}, sa tingin mo dapat ko ba siyang i-text?`,`${DOG}, ikaw lang nakakaintindi sakin`,`alam mo ${DOG}, mahirap maging adult`]})]);
+ const spot=pick([{x:150,y:150},{x:90,y:145},{x:260,y:140},{x:200,y:158}]);
+ return setPlan('Paikot-ikot lang',[go(spot),act({dur:rnd(6,12),label:'Paikot-ikot, nakalimutan kung bakit tumayo',say:['bakit nga ba ako tumayo?','ano nga ulit kukunin ko...'],icon:'q'})]);
+}
+
+// ---------- interactions ----------
+function knock(){
+ windowShake=0.45;dog.react=2.2;emit('bang',124,40,{vy:-6,vx:0,max:1.2,color:'#fff'});
+ if(cat.state==='sleep'&&chance(.5)){cat.face='bang';cat.react=1.5}
+ if(H.away){log('Kumatok ka. Walang tao, si '+DOG+' lang ang sumagot. Ang ingay.');return}
+ if(H.cur&&H.cur.sleep){if(chance(.3)){say('ANO BA. 3AM NA... ay, hindi pa pala. TULOG AKO.');log('Kumatok ka habang tulog siya. Nagising saglit, nagalit, natulog ulit.')}else log('Kumatok ka. Tulog na tulog, hindi man lang gumalaw.');return}
+ if(H.cur&&H.cur.hidden){log('Kumatok ka pero nasa CR siya. "SAGLIT LANG!"');say('SAGLIT LANG!');return}
+ if(H.anim==='type'&&chance(.45)){say(pick(['busy ako teh, mamaya na','*ignores you professionally*']));log('Kumatok ka. Dinedma ka. Busy daw.');return}
+ H.wave=2.4;say(pick(['hi!! nandiyan ka pala','uy! kumusta? kumain ka na?','ay ikaw! akala ko si Kuya delivery','hello! bawal pumasok, magulo bahay ko']));log('Kumatok ka sa bintana. Kumaway si '+NAME+'.');
+}
+function leaveGift(){
+ if(gift){say(`wait lang, di ko pa nakukuha yung ${gift}`);return}
+ gift=pick(GIFTS);log(`Nag-iwan ka ng ${gift} sa pinto.`);
+ if(H.cur&&H.cur.sleep)log('Tulog pa siya. Makikita niya paggising.');
+}
+function clickCanvas(e){
+ const r=cv.getBoundingClientRect();const sc=Math.min(r.width/W,r.height/H_);const ox=(r.width-W*sc)/2,oy=(r.height-H_*sc)/2;
+ const x=(e.clientX-r.left-ox)/sc,y=(e.clientY-r.top-oy)/sc;
+ const hit=(ex,ey,rx,top)=>x>ex-rx&&x<ex+rx&&y>ey-top&&y<ey+3;
+ if(hit(cat.x,cat.y,7,11)){
+  if(chance(.65)){for(let i=0;i<3;i++)emit('heart',cat.x+rnd(-3,3),cat.y-10,{vy:-7});log(pick([`Kinalabit mo si ${CAT}. Prrrrr.`,`Hinimas mo si ${CAT}. Nag-slow blink siya sayo.`]))}
+  else{emit('bang',cat.x,cat.y-14,{vy:-5,vx:0,color:'#ff7a6a'});cat.face='bang';cat.react=1.2;log(`Hinawakan mo si ${CAT}. Hiss. Hindi ka niya kilala ngayon.`);if(cat.state!=='pet'){cat.state='idle';cat.t=999}}
+  return}
+ if(hit(dog.x,dog.y,9,14)){dog.wag=3;dog.react=0;for(let i=0;i<3;i++)emit('heart',dog.x+rnd(-4,4),dog.y-14,{vy:-7});log(pick([`Hinimas mo si ${DOG}. Ang bilis ng buntot.`,`Kinausap mo si ${DOG}. Tumagilid ang ulo.`,`${DOG} gumulong para sa belly rub.`]));return}
+ if(H.visible&&hit(H.x,H.y+H.dy,7,28)){
+  if(H.cur&&H.cur.sleep){emit('z',H.x-6,H.y-14,{vy:-5});say('zzz... limang minuto pa...');return}
+  H.wave=1.8;say(pick(['hm? bakit?','nanonood ka na naman sakin no','hi! tuloy mo lang trabaho mo, ako bahala dito','wag mo kong i-judge, nagpapahinga ako','kumain ka na ba? kumain ka na.']));return}
+ if(x>100&&x<146&&y>44&&y<95){knock()}
+}
+
+// ---------- update: human ----------
+function updateHuman(dt){
+ if(H.wave>0){H.wave-=dt;return}
+ const s=H.cur;if(!s){chooseNext();return}
+ if(s.type==='go'){
+  const p=s.path[0];if(!p){H.pose='stand';nextStep();return}
+  const dx=p.x-H.x,dy=p.y-H.y,d=Math.hypot(dx,dy),sp=28*dt;
+  if(Math.abs(dx)>0.5)H.f=dx>0?1:-1;
+  if(d<=sp){H.x=p.x;H.y=p.y;s.path.shift();if(!s.path.length){if(s.to.f)H.f=s.to.f;H.pose='stand';nextStep()}}else{H.x+=dx/d*sp;H.y+=dy/d*sp}
+  H.walkT+=dt;
+ }else if(s.type==='act'){
+  s.t+=dt;
+  if(s.gain)for(const k in s.gain)addNeed(k,s.gain[k]*dt/Math.min(s.dur,99999));
+  s.tick&&s.tick(dt,s);
+  if(H.cur!==s)return;
+  H.lineT-=dt;if(s.lines&&H.lineT<=0){H.lineT=rnd(25,45);if(!catchingUp)say(pick(s.lines))}
+  if(s.icon){H.iconT-=dt;if(H.iconT<-12){H.iconT=4}}
+  if(s.t>=s.dur){s.end&&s.end(s);if(H.cur===s)nextStep()}
+ }
+}
+
+// ---------- update: cat ----------
+const CAT_SPOTS={fridge:{x:32,y:76,elev:1},sill:{x:124,y:92,elev:1},bed:{x:296,y:106,elev:1},sofaBack:{x:246,y:93,elev:1},sofa:{x:226,y:110,elev:1},desk:{x:204,y:104,elev:1},counter:{x:48,y:96,elev:1},shelf:{x:157,y:60,elev:1},
+ sun:{x:126,y:142},dogbed:{x:160,y:163},rug:{x:250,y:142},floor:{x:90,y:150}};
+function catGoTo(name){
+ const sp=CAT_SPOTS[name];cat.path=[];
+ if(cat.elev)cat.path.push({jump:true,x:cat.x+(cat.x<160?6:-6),y:LANE+4});
+ if(sp.elev){cat.path.push({x:sp.x,y:LANE+4});cat.path.push({jump:true,x:sp.x,y:sp.y,elev:name})}
+ else cat.path.push({x:sp.x,y:sp.y});
+ cat.target=name;cat.state='move';
+}
+function catChoose(){
+ const hf=hourF(),night=hf>=23||hf<6,sun=darkness()<.2&&weather.type!=='ulan';
+ const opts=[];
+ if(bowlsFull)opts.push(['eat',60]);
+ if(H.anim==='type'&&H.cur&&H.cur.label)opts.push(['keyboard',14]);
+ if(H.pose==='lie'||(H.pose==='sit'&&H.x>220&&H.x<250))opts.push(['lap',18]);
+ if(cooking)opts.push(['beg',16]);
+ opts.push(['sleep',night?55:35],['groom',12],['wander',10],['window',10+(sun?6:0)],['zoom',night?6:1.5],['counter',3]);
+ const c=wpick(opts);cat.mode=c;
+ if(c==='eat'){cat.path=[];if(cat.elev)cat.path.push({jump:true,x:cat.x,y:LANE+4});cat.path.push({x:48,y:132});cat.state='move';cat.target=null;cat.after='eat';return}
+ if(c==='keyboard'){catGoTo('desk');cat.after='keyboard';return}
+ if(c==='lap'){cat.path=[];if(cat.elev)cat.path.push({jump:true,x:cat.x,y:LANE+4});cat.path.push({x:H.x,y:LANE+4});cat.path.push({jump:true,x:H.x+(H.pose==='lie'?2:0),y:H.pose==='lie'?H.y-5:H.y-6,elev:'lap'});cat.state='move';cat.target=null;cat.after='lap';return}
+ if(c==='beg'){cat.path=[];if(cat.elev)cat.path.push({jump:true,x:cat.x,y:LANE+4});cat.path.push({x:92,y:140});cat.state='move';cat.after='beg';return}
+ if(c==='sleep'){const sp=pick(sun?['sun','sun','bed','sofa','dogbed','sill']:['bed','bed','sofa','dogbed','fridge','sofaBack','shelf']);catGoTo(sp);cat.after='sleep';return}
+ if(c==='groom'){cat.state='groom';cat.t=0;cat.dur=rnd(10,25);return}
+ if(c==='window'){catGoTo('sill');cat.after='watch';return}
+ if(c==='counter'){catGoTo('counter');cat.after='push';return}
+ if(c==='zoom'){cat.path=[];if(cat.elev)cat.path.push({jump:true,x:cat.x,y:LANE+4});for(let i=0;i<5;i++)cat.path.push({x:rnd(20,300),y:rnd(130,170)});cat.state='move';cat.zoom=true;cat.after='groom';if(!catchingUp&&chance(.5))log(`${CAT} biglang nag-zoomies. Walang dahilan. Walang paliwanag.`);return}
+ cat.path=[];if(cat.elev)cat.path.push({jump:true,x:cat.x,y:LANE+4});cat.path.push({x:rnd(20,300),y:rnd(130,168)});cat.state='move';cat.after='groom';
+}
+function updateCat(dt){
+ cat.t+=dt;if(cat.react>0)cat.react-=dt;else cat.face=null;
+ if(cat.jump){const j=cat.jump;j.t+=dt*speedNorm(dt);const k=Math.min(1,j.t/j.d);cat.x=j.x0+(j.x1-j.x0)*k;cat.y=j.y0+(j.y1-j.y0)*k-Math.sin(k*Math.PI)*j.h;if(k>=1){cat.jump=null;cat.elev=j.elev||null}return}
+ if(cat.state==='move'){
+  const p=cat.path[0];if(!p){cat.zoom=false;catArrive();return}
+  if(p.jump){cat.path.shift();cat.jump={x0:cat.x,y0:cat.y,x1:p.x,y1:p.y,t:0,d:.5,h:Math.max(8,Math.abs(cat.y-p.y)*0.5+8),elev:p.elev||null};cat.f=p.x>=cat.x?1:-1;cat.elev=null;return}
+  const dx=p.x-cat.x,dy=p.y-cat.y,d=Math.hypot(dx,dy),sp=(cat.zoom?80:22)*dt;
+  if(Math.abs(dx)>.5)cat.f=dx>0?1:-1;cat.walkT+=dt*(cat.zoom?3:1);
+  if(d<=sp){cat.x=p.x;cat.y=p.y;cat.path.shift()}else{cat.x+=dx/d*sp;cat.y+=dy/d*sp}
+  return}
+ if(cat.state==='lap'){if(!(H.pose==='lie'||(H.pose==='sit'&&Math.abs(H.x-cat.x)<4))||H.x!==cat.lapX){cat.elev=null;cat.jump={x0:cat.x,y0:cat.y,x1:cat.x+8,y1:LANE+4,t:0,d:.5,h:8};cat.state='idle';cat.t=999}return}
+ if(cat.state==='keyboard'&&!(H.anim==='type')){cat.state='idle';cat.t=999}
+ if(cat.state==='beg'&&!cooking){cat.state='idle';cat.t=999}
+ if(cat.state==='eat'&&cat.t>cat.dur){cat.state='idle';cat.t=999;bowlsFullCheck()}
+ if(cat.state==='push'&&cat.t>3&&!cat.pushed){cat.pushed=true;fallingCup={x:cat.x-4,y:94,vy:0};if(!catchingUp)log(`${CAT} tinulak yung baso sa counter. Tumitig sa mata mo habang ginagawa.`)}
+ if(cat.t>cat.dur&&cat.state!=='move')catChoose();
+}
+function speedNorm(){return 1}
+function catArrive(){
+ const a=cat.after||'groom';cat.after=null;cat.t=0;
+ if(a==='sleep'){cat.state='sleep';cat.dur=rnd(120,600)}
+ else if(a==='watch'){cat.state='watch';cat.dur=rnd(40,120)}
+ else if(a==='eat'){cat.state='eat';cat.dur=rnd(15,30)}
+ else if(a==='keyboard'){cat.state='keyboard';cat.dur=rnd(25,60);if(H.anim==='type'&&!catchingUp){say(pick([`${CAT}!! umalis ka sa keyboard, may deadline ako`,`${CAT}, asdfjkl;;;;;;; — ayan, nag-email ka na sa boss ko`,`sige ${CAT}, ikaw na mag-work, ako na pusa`]));log(`${CAT} umupo sa keyboard. Productivity: 0.`)}}
+ else if(a==='lap'){cat.state='lap';cat.dur=rnd(120,400);cat.lapX=H.x;if(!catchingUp){emit('heart',cat.x,cat.y-10);if(chance(.6))log(`${CAT} humiga sa ibabaw ni ${NAME}. Hindi na siya pwedeng gumalaw. Batas yan.`)}}
+ else if(a==='beg'){cat.state='beg';cat.dur=rnd(20,50);if(!catchingUp)emit('q',cat.x,cat.y-12,{vy:-4,vx:0,color:'#fff'})}
+ else if(a==='push'){cat.state='push';cat.dur=rnd(6,12);cat.pushed=false}
+ else{cat.state='groom';cat.dur=rnd(8,20)}
+}
+function bowlsFullCheck(){if(dog.state!=='eat'&&cat.state!=='eat')bowlsFull=false}
+
+// ---------- update: dog ----------
+function dogSet(state,x,y,dur){dog.state=state;dog.tx=x;dog.ty=y;dog.t=0;dog.dur=dur}
+function updateDog(dt){
+ dog.t+=dt;if(dog.wag>0)dog.wag-=dt;if(dog.react>0){dog.react-=dt;if(chance(dt*3))emit('bang',dog.x+dog.f*8,dog.y-16,{vy:-6,vx:0,max:.7,color:'#fff'})}
+ const humanSleeping=H.cur&&H.cur.sleep;const home=!H.away&&!(H.cur&&H.cur.hidden&&!H.cur.sleep);
+ // decide
+ if(dog.state==='fetch'){
+  if(ball&&!ball.held&&ball.landed){dog.tx=ball.x;dog.ty=ball.floor}else if(ball&&ball.held){dog.tx=H.x+H.f*8;dog.ty=H.y}else{dog.tx=H.x+H.f*12;dog.ty=H.y+2}
+  if(ball&&ball.landed&&!ball.held&&Math.hypot(dog.x-ball.x,dog.y-ball.floor)<4){ball.held=true}
+ }else if(bowlsFull&&dog.state!=='eat'&&dog.state!=='goeat'){dogSet('goeat',62,133,0)}
+ else if(dog.state==='goeat'){if(Math.hypot(dog.x-62,dog.y-133)<2){dogSet('eat',62,133,rnd(12,25))}}
+ else if(dog.state==='eat'){if(dog.t>dog.dur){dog.state='idle';dog.t=999;bowlsFullCheck()}}
+ else if(dog.t>dog.dur){
+  if(H.away)dogSet('wait',24,140,rnd(30,60));
+  else if(humanSleeping)dogSet('sleep',266,142,rnd(200,600));
+  else if(tableDish&&H.pose==='sit'&&Math.abs(H.x-121)<3)dogSet('beg',142,151,rnd(20,50));
+  else if(H.pose==='sit'&&H.x>220&&H.x<250)dogSet(chance(.6)?'lie':'sleep',228,142,rnd(60,200));
+  else if(H.pose==='lie'&&!H.inBed)dogSet('sleep',226,142,rnd(100,300));
+  else{const c=wpick([['follow',H.pose==='walk'?50:15],['sleep',22],['sniff',14],['lie',12],['zoom',2]]);
+   if(c==='follow')dogSet('follow',H.x,H.y,rnd(15,40));
+   else if(c==='sleep')dogSet('sleep',160,164,rnd(120,400));
+   else if(c==='sniff')dogSet('sniff',rnd(20,300),rnd(132,170),rnd(6,14));
+   else if(c==='lie')dogSet('lie',clamp(H.x+rnd(-30,30),20,300),clamp(H.y+rnd(6,14),136,170),rnd(40,120));
+   else{dogSet('zoom',rnd(20,300),rnd(132,170),6);if(!catchingUp)log(`${DOG} nag-zoomies. Muntik matumba yung halaman.`)}}
+ }
+ if(dog.state==='follow'){dog.tx=clamp(H.x-H.f*14,10,310);dog.ty=clamp(H.y+4,130,172);if(!home){dog.t=999}}
+ if(dog.state==='zoom'&&Math.hypot(dog.x-dog.tx,dog.y-dog.ty)<3){dog.tx=rnd(20,300);dog.ty=rnd(132,170)}
+ // move
+ const dx=dog.tx-dog.x,dy=dog.ty-dog.y,d=Math.hypot(dx,dy);
+ const sp=(dog.state==='zoom'||dog.state==='fetch'?70:dog.state==='goeat'?40:24)*dt;
+ dog.moving=d>(dog.state==='follow'?6:1.5);
+ if(dog.moving){if(Math.abs(dx)>.5)dog.f=dx>0?1:-1;const m=Math.min(sp,d);dog.x+=dx/d*m;dog.y+=dy/d*m;dog.walkT+=dt*(sp>40*dt?2:1)}
+ if(!dog.moving&&(dog.state==='beg'||dog.state==='eat'))dog.f=dog.state==='beg'?-1:-1;
+}
+
+// ---------- update: world ----------
+function updateWorld(dt,rdt){
+ for(const k in DECAY)needs[k]=clamp(needs[k]-DECAY[k]*dt*(k==='energy'&&H.inBed?0:1),0,100);
+ moodBoost*=Math.pow(0.5,dt/900);
+ plantWater=clamp(plantWater-dt*100/(30*3600),0,100);
+ if(Date.now()>weather.until){const prev=weather.type;rollWeather();if(prev!==weather.type&&!catchingUp)log(weather.type==='ulan'?'Umuulan na. Perfect para sa sabaw.':weather.type==='araw'?'Lumabas na ang araw.':'Kumulimlim.')}
+ if(Date.now()>cravingUntil){craving=pick(DISHES).id;cravingUntil=Date.now()+rnd(2,4)*3600000}
+ if(today.date!==dateKey())today={date:dateKey(),ate:{},coffee:false,shower:false,fed:{},woke:false,snoozed:false};
+ if(ball&&!ball.landed){ball.vy+=160*dt;ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;if(ball.x<12||ball.x>308){ball.vx*=-0.6;ball.x=clamp(ball.x,12,308)}if(ball.y>=ball.floor&&ball.vy>0){ball.y=ball.floor;if(Math.abs(ball.vy)<30){ball.landed=true}else{ball.vy*=-0.45;ball.vx*=.7}}}
+ if(ball&&ball.held){ball.x=dog.x+dog.f*8;ball.y=dog.y-8}
+ if(fallingCup){fallingCup.vy+=200*dt;fallingCup.y+=fallingCup.vy*dt;if(fallingCup.y>=134){if(mess.length<10)mess.push({type:'shard',x:fallingCup.x,y:134});fallingCup=null;
+   if(!catchingUp&&!H.away&&!(H.cur&&H.cur.sleep)){say(pick([`${CAT.toUpperCase()}!!!`,`${CAT}... bakit. BAKIT.`,'yan na naman siya']))}}}
+ windowShake=Math.max(0,windowShake-rdt);doorbell=Math.max(0,doorbell-rdt);
+ if(weather.type==='ulan'&&chance(dt/600)&&!catchingUp)flash=.25;flash=Math.max(0,flash-rdt);
+}
+function updateParticles(rdt){
+ for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.life+=rdt;if(p.life>p.max){particles.splice(i,1);continue}p.vy+=(p.g||0)*rdt;p.x+=p.vx*rdt;p.y+=p.vy*rdt}
+ if(particles.length>220)particles.splice(0,particles.length-220);
+}
+
+// ---------- time & light ----------
+const SKY=[[0,'#0b1430','#1b2752'],[4.8,'#121a3e','#2e2c5c'],[6,'#e8907a','#7a5f9e'],[7.2,'#9fd0f0','#e8dcc8'],[16.6,'#88c0ea','#d8ecf6'],[17.8,'#f0906a','#8a5aa0'],[19,'#2a2f62','#5a3f78'],[20.5,'#0f1838','#1e2b58'],[24,'#0b1430','#1b2752']];
+function skyColors(hf){for(let i=0;i<SKY.length-1;i++){const a=SKY[i],b=SKY[i+1];if(hf>=a[0]&&hf<=b[0]){const t=(hf-a[0])/(b[0]-a[0]);let top=mix(a[1],b[1],t),bot=mix(a[2],b[2],t);if(weather.type!=='araw'){const g=weather.type==='ulan'?.55:.3;top=mix(top,'#6a7080',g*(darkness()<.3?1:.4));bot=mix(bot,'#8a8e98',g*(darkness()<.3?1:.4))}return[top,bot]}}return['#0b1430','#1b2752']}
+function darkness(hf=hourF()){let d;if(hf>=7.3&&hf<16.6)d=0;else if(hf>=16.6&&hf<19.3)d=(hf-16.6)/2.7*.62;else if(hf>=19.3||hf<4.8)d=.62;else d=.62*(1-(hf-4.8)/2.5);if(weather.type==='ulan')d=Math.max(d,.18);else if(weather.type==='maulap')d=Math.max(d,.08);return clamp(d,0,.62)}
+
+// ---------- drawing: bitmaps ----------
+const BM={heart:['.#.#.','#####','#####','.###.','..#..'],z:['###','..#','.#.','#..','###'],note:['..##','..#.','..#.','###.','##..'],bang:['#','#','#','.','#'],q:['##.','..#','.#.','...','.#.'],
+ drop:['.#.','###','###','.#.'],cloud:['.##..','####.','#####'],mug:['###.','####','###.','###.'],book:['#####','#.#.#','#####'],food:['.....','#####','#####','.###.']};
+function bm(name,x,y,c){const rows=BM[name];ctx.fillStyle=c;for(let j=0;j<rows.length;j++)for(let i=0;i<rows[j].length;i++)if(rows[j][i]==='#')ctx.fillRect(Math.round(x)+i,Math.round(y)+j,1,1)}
+const ICON_C={heart:'#e8586a',z:'#5a6aa8',note:'#3a8a6a',bang:'#d0602a',q:'#7a5aa0',drop:'#4a9ad8',cloud:'#8a90a0',mug:'#8a5a3a',book:'#3a70b0',food:'#c0703a'};
+
+// ---------- drawing: room ----------
+function drawRoom(t,hf){
+ // wall
+ R(0,0,W,118,'#d8c2a2');
+ for(let x=4;x<W;x+=10)R(x,0,1,98,'#cfb795');
+ R(0,98,W,20,'#b78d66');R(0,98,W,1,'#e6d2b4');R(0,100,W,1,'#9e7650');
+ for(let x=0;x<W;x+=16)R(x,101,1,15,'#a57d58');
+ // ceiling beam + string lights
+ R(0,0,W,6,'#5a3e2c');R(0,6,W,1,'#3e2a1e');
+ // floor
+ R(0,118,W,62,'#a26c46');
+ for(let y=122;y<180;y+=6){R(0,y,W,1,'#8a5a38');const off=(y/6)%2?0:13;for(let x=off;x<W;x+=26)R(x,y-5,1,5,'#8f5e3b')}
+ R(0,116,W,3,'#6a4430');R(0,118,W,1,'#4e3222');
+ // pendant lamp over table
+ R(121,7,1,22,'#2a2020');R(115,28,13,4,'#e8b04a');R(114,31,15,2,'#c4902e');if(!lightsOff&&darkness()>.12)R(117,33,9,1,'#fff2b0');
+ // front door
+ R(1,68,22,50,'#5a3a26');R(3,70,18,48,'#8a5a3a');R(5,73,6,18,'#7a4c30');R(13,73,6,18,'#7a4c30');R(5,95,6,20,'#7a4c30');R(13,95,6,20,'#7a4c30');R(18,92,2,2,'#e8c050');
+ R(2,119,20,4,'#b5523b');R(4,120,16,2,'#c86a52');
+ if(doorbell>0&&Math.floor(t*6)%2)bm('bang',11,60,'#fff');
+ // fridge
+ R(22,76,20,42,'#dfe7ea');R(22,76,1,42,'#f4f8f9');R(41,76,1,42,'#b8c4ca');R(22,92,20,1,'#a8b4ba');R(38,80,1,8,'#8a979e');R(38,96,1,14,'#8a979e');R(25,82,2,2,'#e8586a');R(29,80,2,3,'#f2b544');R(26,98,3,2,'#74c6a4');R(30,100,2,3,'#5a8ad0');R(22,117,20,1,'#6a7478');
+ if(fridgeOpen){R(23,77,18,40,'#fff6d0');R(23,86,18,1,'#e0d8b0');R(23,98,18,1,'#e0d8b0');R(23,108,18,1,'#e0d8b0');R(25,82,4,4,'#e8586a');R(31,83,3,3,'#74c6a4');R(26,93,6,4,'#f0e0a0');R(34,92,4,5,'#c0703a');R(25,103,3,5,'#6aa860');R(30,104,5,4,'#e8c050');R(14,76,8,42,'#cfd8dc');R(14,76,8,1,'#f4f8f9');R(15,84,6,1,'#b8c4ca')}
+ // upper cabinets
+ R(42,50,56,18,'#9a6a46');R(42,67,56,1,'#6a4430');for(let x=42;x<98;x+=14){R(x,50,1,18,'#7a4e32');R(x+11,58,1,3,'#e8c050')}
+ // counter + sink
+ R(42,100,28,18,'#8a5a3a');R(44,103,11,13,'#7a4c30');R(57,103,11,13,'#7a4c30');R(53,108,1,2,'#e8c050');R(59,108,1,2,'#e8c050');
+ R(42,96,28,4,'#d8d0c4');R(42,96,28,1,'#efe9e0');R(48,96,14,2,'#7d8c92');R(54,89,2,7,'#aab4b8');R(54,89,5,1,'#aab4b8');R(58,89,1,3,'#aab4b8');
+ R(63,90,6,6,'#f2efe8');R(63,90,6,1,'#d8d2c8');R(67,93,1,1,'#e8586a');
+ // stove
+ R(70,100,24,18,'#3a3a42');R(73,103,18,9,'#1e1e24');R(74,104,16,1,'#4a4a54');R(73,114,4,1,'#8a8a90');R(80,114,4,1,'#8a8a90');R(87,114,4,1,'#8a8a90');
+ R(70,96,24,4,'#2a2a30');R(74,96,7,1,'#555');R(84,96,7,1,'#555');
+ R(72,68,20,7,'#b0b8bc');R(74,75,16,1,'#8a9498');
+ R(84,90,6,6,kettle?'#e0504a':'#c0443a');R(85,89,4,1,'#902a24');R(90,92,2,1,'#c0443a');if(kettle&&chance(.3))emit('steam',91,88,{vy:-8,max:1.2});
+ if(cooking){const fl=Math.floor(t*10)%2;R(75,95,6,1,fl?'#f08a2a':'#4a8af0');R(74,93,9,3,'#2e2e32');R(70,93,4,1,'#5a4030');R(75,92,7,1,cooking.burnt&&cooking.dish?'#3a2a20':cooking.dish.c);if(fl)R(76+ri(0,4),91,1,1,'#ffe0a0')}
+ else R(75,94,6,2,'#333338');
+ // window
+ drawWindow(t,hf);
+ // shelf
+ R(148,60,20,58,'#7a4e32');R(150,62,16,54,'#5e3a24');for(const y of [74,88,102])R(148,y,20,2,'#8a5a3a');
+ const books=[['#c0503a',9],['#3a70b0',11],['#e0b040',8],['#5a9a60',10],['#9a5aa0',9],['#e07a5a',11],['#4a8a8a',8]];
+ let bx=151;for(let row=0;row<3;row++){bx=151;for(let i=0;i<5;i++){const b=books[(i+row*2)%books.length];const top=[74,88,102][row]-b[1];R(bx,top,2,b[1],b[0]);bx+=3}}
+ R(151,112,6,4,'#d8d0c4');R(152,110,4,2,'#74c6a4');
+ R(155,54,6,6,'#c0643e');R(157,48,2,6,'#5a9a50');R(155,50,2,2,'#5a9a50');R(159,51,2,2,'#5a9a50');
+ // floor plant
+ const droop=plantWater<25;const lg=droop?'#9aa050':'#4f9a58',lg2=droop?'#80883e':'#3a7a44';
+ R(168,106,10,12,'#c0643e');R(168,106,10,2,'#d8784e');
+ R(172,88,2,18,lg2);R(166,90,6,4,lg);R(174,86,6,4,lg);R(164,96,8,3,lg2);R(174,94,7,4,lg);R(169,82,5,4,lg);if(droop)R(165,100,4,2,lg2);
+ // wall clock
+ const d=nowDate();R(177,52,11,11,'#3a2a20');R(178,53,9,9,'#f6efe0');R(182,57,1,1,'#3a2a20');
+ const ha=((d.getHours()%12)+d.getMinutes()/60)/12*Math.PI*2,ma=d.getMinutes()/60*Math.PI*2;
+ for(let i=1;i<=3;i++)R(182+Math.round(Math.sin(ma)*i),57-Math.round(Math.cos(ma)*i),1,1,'#3a2a20');
+ for(let i=1;i<=2;i++)R(182+Math.round(Math.sin(ha)*i),57-Math.round(Math.cos(ha)*i),1,1,'#c0443a');
+ // poster
+ R(192,52,18,22,'#f2e8d8');R(193,53,16,20,'#e89a6a');R(193,63,16,10,'#4a7ab0');R(198,57,6,6,'#f8d070');R(193,63,16,1,'#f8d070');
+ // desk
+ R(180,104,34,3,'#a0704a');R(180,104,34,1,'#bc8a60');R(181,107,2,11,'#7a4e32');R(211,107,2,11,'#7a4e32');R(200,107,11,9,'#8a5a3a');R(201,111,9,1,'#6a4430');
+ R(188,86,19,16,'#26262c');R(196,102,3,2,'#26262c');R(190,103,14,1,'#d8d8d8');
+ drawScreen(t);
+ R(182,101,4,3,'#3a3a40');R(183,94,1,7,'#3a3a40');R(181,91,6,3,deskLamp&&darkness()>.1?'#ffd060':'#e2b04a');
+ // sofa
+ R(214,100,6,24,'#3f7576');R(252,100,6,24,'#3f7576');R(218,92,36,16,'#4f8a8b');R(218,92,36,1,'#68a4a4');
+ R(220,106,32,8,'#5a9a9a');R(236,106,1,8,'#3f7576');R(218,114,36,10,'#477f80');R(216,124,3,2,'#3a2a20');R(253,124,3,2,'#3a2a20');
+ R(221,97,9,9,'#e8b04a');R(222,98,7,7,'#f0c060');R(243,98,8,8,'#d8735a');
+ // rug
+ R(208,128,58,16,'#b5523b');R(210,130,54,12,'#c86a52');R(212,132,50,8,'#b5523b');for(let x=214;x<262;x+=6)R(x,135,3,2,'#e8c07a');
+ // bed
+ R(262,88,6,36,'#7a4e32');R(263,89,4,34,'#8a5a3a');R(266,114,38,10,'#8a5a3a');R(266,114,38,1,'#a0704a');R(266,106,36,8,'#f2ede4');R(268,101,11,7,'#ffffff');R(268,107,11,1,'#d8d2c8');
+ R(300,100,4,24,'#7a4e32');
+ if(!H.inBed){R(279,104,22,11,'#6a7fc0');for(let x=281;x<300;x+=5)R(x,107,2,2,'#8a9ad8');R(279,104,22,1,'#8a9ad8')}
+ // fairy lights over bed
+ for(let i=0;i<9;i++){const x=266+i*5,y=74+Math.round(Math.sin(i/8*Math.PI)*5);R(x,y-1,5,1,'#4a3a2a');const c=['#ffcf5a','#ff8a8a','#8affc8','#8ac8ff'][i%4];R(x+2,y,1,2,(Math.floor(t*1.3+i)%5)?c:shade(c,-60))}
+ // bathroom door
+ R(306,68,14,50,'#5a3a26');R(308,70,12,48,'#8a5a3a');R(310,73,10,18,'#7a4c30');R(310,95,10,20,'#7a4c30');R(309,92,2,2,'#e8c050');
+ if(H.cur&&H.cur.hidden&&!H.away&&H.x>300){R(306,118,14,1,'#ffe8a0')}
+ // pet bowls
+ R(44,128,8,3,'#5a8ad0');R(44,128,8,1,'#7aa8e8');R(54,128,8,3,'#e8586a');R(54,128,8,1,'#ff7a8a');if(bowlsFull){R(45,128,6,1,'#a0603a');R(55,128,6,1,'#a0603a')}
+}
+function drawWindow(t,hf){
+ const sx=windowShake>0?Math.round(Math.sin(t*80)):0;
+ const [top,bot]=skyColors(hf);
+ R(97,41,50,2,'#5a3e2c');
+ const x0=102+sx,y0=46;
+ for(let y=0;y<44;y++)R(x0,y0+y,38,1,mix(top,bot,y/43));
+ const dk=darkness(hf);
+ if(dk>.35&&weather.type==='araw'){for(let i=0;i<14;i++){const sx2=x0+((i*37)%36)+1,sy=y0+((i*23)%26)+1;if((Math.floor(t*.7+i*1.7))%6)R(sx2,sy,1,1,'#f4f0d8')}}
+ if(dk>.3){R(x0+27,y0+6,5,5,weather.type==='araw'?'#f4ecd0':'#a8acb8');R(x0+29,y0+6,3,3,mix(top,bot,.2))}
+ else if(hf>6&&hf<18.5&&weather.type==='araw'){const p=(hf-6)/12.5;R(x0+4+Math.round(p*28),y0+20-Math.round(Math.sin(p*Math.PI)*16),5,5,'#fff0a8')}
+ if(weather.type!=='ulan'){const cx=((t*1.2)%60)-12;R(x0+cx,y0+10,10,3,dk>.3?'#3a4060':'#ffffff');R(x0+cx+3,y0+8,5,2,dk>.3?'#3a4060':'#ffffff');const cx2=((t*.8+30)%60)-12;R(x0+cx2,y0+18,8,2,dk>.3?'#353a58':'#f4f8fb')}
+ // skyline
+ const bl=[[0,30,7],[7,24,5],[12,33,6],[18,27,8],[26,22,5],[31,29,7]];
+ for(const [bx,by,bw] of bl){const bxx=x0+bx;R(bxx,y0+by,Math.min(bw,38-bx),44-by,dk>.3?'#1a1e36':mix('#7a88a8',bot,.3));if(dk>.3)for(let wy=by+2;wy<42;wy+=3)for(let wx=1;wx<bw-1;wx+=2)if(((bx*7+wy*3+wx*5)%7)<3)R(bxx+wx,y0+wy,1,1,'#ffd27a')}
+ if(weather.type==='ulan'){ctx.fillStyle='rgba(200,220,255,.55)';for(let i=0;i<22;i++){const rx=x0+((i*17+Math.floor(t*60)*3)%38),ry=y0+((i*29+Math.floor(t*90)*5)%44);ctx.fillRect(rx,ry,1,3)}}
+ if(flash>0){ctx.fillStyle=`rgba(255,255,255,${flash*3})`;ctx.fillRect(x0,y0,38,44)}
+ // parol (Sep-Dec)
+ const mo=nowDate().getMonth();if(mo>=8){const px=x0+10,py=y0+4;R(px+3,y0-4,1,8,'#3a2a20');const pc=['#e8404a','#f2b544','#e8404a'];R(px+3,py+3,1,9,pc[0]);R(px-1,py+7,9,1,pc[0]);R(px+1,py+5,5,5,pc[1]);R(px+2,py+6,3,3,'#fff0a0');R(px+2,py+12,1,4,'#f2b544');R(px+4,py+12,1,3,'#e8404a')}
+ // frame
+ R(100+sx,44,42,2,'#f1ece4');R(100+sx,90,42,2,'#f1ece4');R(100+sx,44,2,48,'#f1ece4');R(140+sx,44,2,48,'#f1ece4');R(120+sx,46,2,44,'#f1ece4');R(102+sx,67,38,2,'#f1ece4');
+ R(98,92,46,3,'#f1ece4');R(98,95,46,1,'#c8bfb2');
+ R(95,43,6,52,'#c45b4a');R(96,43,1,52,'#a8483a');R(98,43,1,52,'#d4705e');R(141,43,6,52,'#c45b4a');R(143,43,1,52,'#a8483a');R(145,43,1,52,'#d4705e');
+ // sill herb
+ const hg=plantWater<25?'#9aa050':'#5aaa5a';R(104,88,6,4,'#c0643e');R(105,84,1,4,hg);R(107,83,1,5,hg);R(104,85,1,1,hg);R(108,84,2,1,hg);
+}
+function drawScreen(t){
+ const x=189,y=87,w=17,h=14;
+ if(!screen){R(x,y,w,h,'#161a26');R(x+1,y+1,4,1,'#262c3c');return}
+ if(screen==='mail'){R(x,y,w,h,'#e8eef4');R(x,y,w,2,'#4a7ab0');for(let i=0;i<4;i++)R(x+2,y+4+i*2.5,8+((i*5)%6),1,'#8a98a8');R(x+12,y+4,3,3,'#e8586a')}
+ else if(screen==='game'){R(x,y,w,h,'#202a5a');const f=Math.floor(t*4);R(x+2+(f%10),y+9,2,2,'#f2b544');R(x+12-(f%7),y+4,2,2,'#e8586a');R(x,y+12,w,2,'#3a8a5a');if(f%5===0)R(x+7,y+6,3,3,'#ffffff')}
+ else if(screen==='shop'){R(x,y,w,h,'#fff4ec');R(x,y,w,2,'#ee6a3a');for(let i=0;i<3;i++){R(x+1+i*5,y+4,4,4,['#f2b544','#74c6a4','#e8808a'][i]);R(x+1+i*5,y+9,4,1,'#ee6a3a')}}
+ else if(screen==='vid'){R(x,y,w,h,'#101014');R(x+5,y+4,6,4,'#e8944a');R(x+6,y+3,1,1,'#e8944a');R(x+9,y+3,1,1,'#e8944a');R(x+1,y+12,Math.floor((t*2)%15),1,'#e8404a')}
+}
+
+// ---------- drawing: characters ----------
+function drawHuman(t){
+ if(!H.visible)return;
+ const x=Math.round(H.x),y=Math.round(H.y+H.dy),f=H.f;
+ const skin='#d39a6a',skinS='#b98256',hair='#2b1b16',shirt=outfit(),shirtS=shade(shirt,-28),pants='#3b4766',shoe='#2a2230';
+ ctx.save();ctx.translate(x,y);if(f<0)ctx.scale(-1,1);
+ const P=H.pose,A=H.wave>0?'wave':H.anim;
+ const breathe=(Math.floor(t*1.2)%3===0)?1:0;
+ if(P==='lie'){
+  R(-13,-8,7,7,skin);R(-14,-9,3,8,hair);R(-13,-9,7,2,hair);R(-16,-7,2,3,hair);R(-9,-6,2,1,'#3a2020');R(-8,-3,1,1,'#e58a7a');
+  R(-6,-7,10,6,shirt);R(-6,-7,10,1,shade(shirt,20));R(4,-6,9,5,pants);R(13,-6,2,5,skin);
+  if(H.inBed){R(-5,-9,27,9,'#6a7fc0');for(let xx=-3;xx<20;xx+=5)R(xx,-7,2,2,'#8a9ad8');R(-5,-9,27,1,'#8a9ad8')}
+  if(H.prop==='book'){R(-11,-12,5,3,H.cur&&H.cur.bookColor||'#c0503a')}
+  ctx.restore();return}
+ const sit=P==='sit';const o=sit?3:0;
+ if(sit){if(!H.back){R(-3,-7,8,3,pants);R(3,-4,2,4,pants);R(3,-1,3,1,shoe)}}
+ else{
+  if(P==='walk'){const st=Math.floor(H.walkT*7)%2;R(-3,-6,2,st?5:6,pants);R(1,-6,2,st?6:5,pants);R(-3,st?-2:-1,3,1,shoe);R(1,st?-1:-2,3,1,shoe)}
+  else if(A==='dance'){const st=Math.floor(t*4)%2;R(st?-4:-3,-6,2,6,pants);R(st?1:2,-6,2,6,pants);R(st?-4:-3,-1,3,1,shoe);R(st?1:2,-1,3,1,shoe)}
+  else if(A==='yoga'&&Math.floor(t/4)%2){R(-1,-6,2,6,pants);R(-1,-1,3,1,shoe);R(1,-10,4,2,pants)}
+  else{R(-3,-6,2,6,pants);R(1,-6,2,6,pants);R(-3,-1,3,1,shoe);R(1,-1,3,1,shoe)}
+ }
+ const bob=A==='bob'||A==='dance'?(Math.floor(t*4)%2):0;
+ const ty=-15+o+bob;
+ R(-4,ty,8,9-(sit?1:0),shirt);R(-4,ty,1,8,shirtS);R(-4,ty,8,1,shade(shirt,18));
+ const hy=ty-9-(breathe&&!sit&&P==='stand'&&!A?0:0);
+ if(H.back){
+  R(-4,hy,8,9,hair);R(-5,hy-1,10,4,hair);R(-2,hy-4,4,3,hair);R(-5,hy+2,1,5,hair);R(4,hy+2,1,5,hair);
+  let la=0,ra=0;
+  if(A==='stir'){ra=Math.floor(t*3)%2?-2:0}else if(A==='scrub'){la=Math.floor(t*5)%2?-1:0;ra=Math.floor(t*5)%2?0:-1}else if(A==='type'){la=Math.floor(t*7)%2?-1:0;ra=Math.floor(t*7+1)%2?-1:0}
+  R(-6,ty+1+la,2,6,shirtS);R(4,ty+1+ra,2,6,shirtS);R(-6,ty+7+la,2,1,skinS);R(4,ty+7+ra,2,1,skinS);
+  if(H.prop==='mug'){R(5,ty+4+ra,3,3,'#efe8dc')}
+  if(H.prop==='can'){R(5,ty+5,5,4,'#5fa0c8')}
+ }else{
+  R(-4,hy,8,9,skin);R(-5,hy-2,10,3,hair);R(-5,hy,3,8,hair);R(-2,hy+1,1,1,hair);R(2,hy,3,1,hair);R(-3,hy-5,4,3,hair);
+  if(H.prop==='towel'){R(-5,hy-5,10,5,'#f4f4f0');R(-5,hy-1,10,1,'#d8d8d0');R(-6,hy,2,4,'#f4f4f0')}
+  const blink=Math.floor(t*10)%37===0;
+  if(H.cur&&H.cur.sleep){R(1,hy+4,2,1,'#3a2020')}else R(2,hy+3,1,blink?1:2,'#2a1414');
+  R(2,hy+6,2,1,'#e58a7a');
+  if(H.anim==='stir'||H.label.startsWith('Umiiyak'))R(3,hy+7,1,1,'#7a3030');
+  // arms
+  R(-5,ty+1,1,6,shirtS);R(-5,ty+7,1,1,skinS);
+  if(A==='wave'){const w=Math.floor(t*6)%2;R(1,ty-6,2,7,shirtS);R(1+w,ty-8,2,2,skin)}
+  else if(A==='dance'){const w=Math.floor(t*4)%2;R(1,w?ty-6:ty+1,2,7,shirtS);R(1,w?ty-8:ty+7,2,2,skin)}
+  else if(A==='yoga'){R(-1,ty-7,2,8,shirtS);R(-1,ty-9,2,2,skin)}
+  else if(H.prop==='phoneEar'){R(1,ty-3,2,5,shirtS);R(2,hy+3,2,3,'#222')}
+  else if(H.prop&&H.prop!=='towel'){R(0,ty+2,5,2,shirtS);R(5,ty+2,2,2,skin);drawProp(H.prop,6,ty+3,t)}
+  else if(A==='pet'){const w=Math.floor(t*3)%2;R(0,ty+3,5,2,shirtS);R(5,ty+4+w,2,2,skin)}
+  else if(A==='sweep'){R(0,ty+2,5,2,shirtS);R(5,ty+2,2,2,skin)}
+  else{R(0,ty+1,2,6,shirtS);R(0,ty+7,2,1,skin)}
+ }
+ ctx.restore();
+}
+function drawProp(p,hx,hy,t){
+ if(p==='plate'){R(hx-2,hy-1,7,1,'#f4f4f4');R(hx-1,hy-2,5,1,H.cur&&H.cur.plateColor||'#a0603a')}
+ else if(p==='bag'){R(hx-1,hy-1,6,6,'#d9c39a');R(hx-1,hy-1,6,1,'#c4ad84');R(hx+1,hy-3,2,2,'#c4ad84')}
+ else if(p==='groceries'){R(hx-1,hy-1,6,6,'#d9c39a');R(hx,hy-5,1,4,'#5aaa5a');R(hx+2,hy-4,2,3,'#e8586a')}
+ else if(p==='phone'){R(hx-1,hy-4,2,4,'#222');R(hx-1,hy-4,1,3,'#9fe0ff')}
+ else if(p==='book'){R(hx-1,hy-4,5,4,H.cur&&H.cur.bookColor||'#c0503a');R(hx+1,hy-4,1,4,'#f2ede4')}
+ else if(p==='mug'){R(hx-1,hy-3,3,3,'#efe8dc');R(hx+2,hy-2,1,1,'#efe8dc');if(Math.floor(t*2)%2)R(hx,hy-5,1,1,'#ffffff')}
+ else if(p==='mic'){R(hx,hy-6,1,6,'#333');R(hx-1,hy-8,3,2,'#999')}
+ else if(p==='can'){R(hx-1,hy-2,5,4,'#5fa0c8');R(hx+4,hy-3,2,1,'#5fa0c8')}
+ else if(p==='broom'){R(hx,hy-12,1,20,'#a0704a');R(hx-2,hy+6,5,3,'#d8b45a')}
+ else if(p==='chips'){R(hx-1,hy-4,4,5,'#e04a3a');R(hx-1,hy-2,4,1,'#f2c040')}
+ else if(p==='icecream'){R(hx,hy-1,2,3,'#d8a060');R(hx-1,hy-3,4,2,'#f4c8d8')}
+ else if(p==='bread'){R(hx-1,hy-2,4,3,'#d8a060');R(hx,hy-2,2,1,'#e8c080')}
+ else if(p==='ball'){R(hx,hy-2,2,2,'#e8c040')}
+}
+function drawCat(t){
+ const x=Math.round(cat.x),y=Math.round(cat.y),f=cat.f;
+ const o='#e8944a',s='#b8682e',w='#f8ead6';
+ ctx.save();ctx.translate(x,y);if(f<0)ctx.scale(-1,1);
+ const st=cat.jump?'jump':cat.state;
+ const sleepy=st==='sleep'||st==='lap';
+ if(sleepy){const br=Math.floor(t*.8)%2;R(-5,-4-br,10,4+br,o);R(-4,-5-br,8,1,o);R(-2,-4-br,1,2,s);R(1,-4-br,1,2,s);R(2,-5,4,4,o);R(2,-6,1,1,o);R(5,-6,1,1,o);R(3,-3,2,1,'#5a3a20');R(-6,-1,9,1,s);R(-5,0,0,0,o)}
+ else if(st==='move'||st==='jump'){const wk=Math.floor(cat.walkT*8)%2;R(-5,-6,9,4,o);R(-3,-6,1,2,s);R(0,-6,1,2,s);R(3,-9,5,5,o);R(3,-10,1,1,o);R(6,-10,1,1,o);R(6,-8,1,1,'#2a2a2a');R(7,-6,1,1,'#e88a8a');R(3,-5,2,2,w);
+  if(st==='jump'){R(-4,-2,2,1,o);R(2,-3,2,1,o)}else{R(wk?-4:-3,-2,1,2,o);R(wk?-1:-2,-2,1,2,o);R(wk?2:1,-2,1,2,o);R(wk?4:3,-2,1,2,o)}
+  R(-7,-8,2,1,o);R(-6,-7,1,2,o)}
+ else{ // sit / groom / watch / beg / eat / keyboard / push / pet / idle
+  R(-3,-7,6,7,o);R(-3,-5,1,2,s);R(2,-5,1,2,s);R(-1,-12,5,5,o);R(-1,-13,1,1,o);R(3,-13,1,1,o);R(0,-5,2,4,w);
+  const tl=Math.sin(t*(st==='watch'?5:2))>0?1:0;R(-6,-1,4,1,o);R(-6,-2-tl,1,1,o);
+  if(st==='groom'&&Math.floor(t*2)%2){R(3,-10,2,2,o);R(2,-9,1,1,'#2a2a2a')}else if(st==='pet'||cat.face==='heart'){R(2,-10,2,1,'#3a2a20')}else{R(2,-11,1,1,'#2a2a2a');R(4,-9,1,1,'#e88a8a')}
+  if(st==='eat'){R(1,-9,3,1,o)}
+ }
+ ctx.restore();
+ if(cat.face==='bang')bm('bang',x,y-18,'#ff7a6a');
+ if(st==='beg'&&Math.floor(t*1.5)%3===0)bm('q',x+3,y-18,'#ffffff');
+}
+function drawDog(t){
+ const x=Math.round(dog.x),y=Math.round(dog.y),f=dog.f;
+ const b='#c9955a',d='#8a5a30',w='#f0dcc0';
+ ctx.save();ctx.translate(x,y);if(f<0)ctx.scale(-1,1);
+ const wag=dog.wag>0||dog.state==='beg'||dog.state==='fetch'||dog.state==='follow'?Math.floor(t*(dog.wag>0?14:7))%2:0;
+ const st=dog.moving?'walk':dog.state;
+ if(st==='sleep'||st==='lie'){R(-7,-5,14,5,b);R(-5,-1,10,1,w);R(5,-7,6,5,b);R(10,-5,2,2,w);R(11,-5,1,1,'#222');R(5,-7,2,4,d);R(st==='sleep'?7:8,-6,st==='sleep'?2:1,1,'#2a1a10');R(-9,-3,3,1,b);if(st==='sleep'&&chance(.004))emit('z',x+f*4,y-10,{vy:-4,vx:2,max:2})}
+ else if(st==='beg'||st==='wait'||st==='eat'){
+  if(st==='eat'){R(-6,-8,11,5,b);R(-4,-4,7,1,w);R(4,-7,6,5,b);R(9,-4,2,2,w);R(4,-7,2,3,d);R(-5,-3,2,3,b);R(2,-3,2,3,b)}
+  else{R(-3,-10,6,9,b);R(-1,-7,3,5,w);R(0,-15,6,5,b);R(5,-13,2,2,w);R(6,-13,1,1,'#222');R(0,-15,2,4,d);R(3,-14,1,1,'#222');R(1,-2,2,2,b);R(-6,-2+(wag?-1:0),3,1,b)}
+ }else{
+  const wk=st==='walk'?Math.floor(dog.walkT*8)%2:0;
+  R(-6,-8,11,5,b);R(-4,-4,7,1,w);R(4,-12,6,5,b);R(9,-10,2,2,w);R(10,-10,1,1,'#222');R(4,-12,2,4,d);R(7,-11,1,1,'#222');
+  R(wk?-6:-5,-3,2,3,b);R(wk?-2:-3,-3,2,3,b);R(wk?1:2,-3,2,3,b);R(wk?4:3,-3,2,3,b);
+  R(-8,-11+(wag?1:0),2,3,b);R(-7,-9,1,1,b);
+  if(st==='sniff'&&Math.floor(t*3)%2)R(10,-9,1,1,'#222');
+ }
+ ctx.restore();
+}
+function drawMess(m){
+ const x=Math.round(m.x),y=Math.round(m.y);
+ if(m.type==='dish'){R(x-3,y-1,7,1,'#f4f4f4');R(x-2,y-2,3,1,'#c09a6a');R(x+2,y-2,1,1,'#a07040')}
+ else if(m.type==='box'){R(x-3,y-4,7,4,'#f4ecd8');R(x-3,y-4,7,1,'#e04a3a');R(x-1,y-3,3,1,'#e8b04a')}
+ else if(m.type==='clothes'){R(x-3,y-2,7,2,outfit());R(x-2,y-3,4,1,shade(outfit(),-20));R(x+2,y-1,3,1,'#3b4766')}
+ else if(m.type==='wrapper'){R(x-1,y-1,3,1,'#e04a3a');R(x,y-2,2,1,'#f2c040')}
+ else if(m.type==='shard'){R(x-2,y-1,1,1,'#e8e2d6');R(x,y-1,2,1,'#e8e2d6');R(x+3,y-1,1,1,'#c8c2b6')}
+}
+function drawTable(){
+ R(103,140,35,4,'#a0704a');R(103,140,35,1,'#bc8a60');R(103,144,35,1,'#6a4430');R(105,145,2,11,'#7a4e32');R(134,145,2,11,'#7a4e32');
+ if(tableDish){const fill=Math.max(1,Math.round(5*tableDish.full));if(tableDish.box){R(114,135,8,5,'#f4ecd8');R(114,135,8,1,'#e04a3a')}R(124,139,8,1,'#f4f4f4');R(125,138,fill,1,tableDish.c);R(130,137,2,2,'#f4f4f4')}
+ for(const m of mess)if(m.y<145&&m.x>100&&m.x<140)drawMess(m);
+}
+function drawChair(){R(191,120,15,3,'#4a4450');R(192,109,13,11,'#5a5462');R(193,110,11,1,'#6a6474');R(197,123,3,6,'#3a3440');R(193,129,11,1,'#2a2430');R(193,130,1,1,'#1a1420');R(203,130,1,1,'#1a1420')}
+function drawDogBed(){R(150,158,22,9,'#6a4a8a');R(152,159,18,6,'#8a6aa8');R(152,159,18,1,'#a08ac0')}
+function drawGift(){if(!gift)return;R(6,128,8,8,'#d9c39a');R(6,128,8,1,'#c4ad84');R(8,126,4,2,'#c4ad84');R(9,131,2,2,'#e8586a')}
+function drawBall(){if(ball)R(Math.round(ball.x),Math.round(ball.y)-2,2,2,'#e8c040')}
+function drawCup(){if(fallingCup)R(Math.round(fallingCup.x),Math.round(fallingCup.y)-3,3,3,'#e8e2d6')}
+
+function drawParticles(){
+ for(const p of particles){const a=1-p.life/p.max;
+  if(p.type==='steam'){ctx.fillStyle=`rgba(255,255,255,${.5*a})`;ctx.fillRect(Math.round(p.x+Math.sin(p.life*3)*2),Math.round(p.y),2,2)}
+  else if(p.type==='smoke'){ctx.fillStyle=`rgba(70,70,74,${.7*a})`;ctx.fillRect(Math.round(p.x+Math.sin(p.life*2)*3),Math.round(p.y),3,3)}
+  else if(p.type==='px'){ctx.globalAlpha=a;R(p.x,p.y,1,1,p.color);ctx.globalAlpha=1}
+  else if(p.type==='spark'){ctx.globalAlpha=a;R(p.x,p.y-p.life*6,1,1,'#fff6c0');ctx.globalAlpha=1}
+  else if(BM[p.type]){ctx.globalAlpha=Math.min(1,a*1.5);bm(p.type,p.x,p.y,p.color||ICON_C[p.type]||'#fff');ctx.globalAlpha=1}
+ }
+}
+function drawIconBubble(t){
+ if(!H.visible||!H.icon||H.iconT<=0||!(H.cur&&H.cur.icon))return;
+ const top=H.pose==='lie'?H.y-14:H.y+H.dy-(H.pose==='sit'?26:30);
+ const x=Math.round(H.x+(H.pose==='lie'?-10:4)),y=Math.round(top-11);
+ R(x,y,11,9,'#fffaf0');R(x+1,y-1,9,1,'#fffaf0');R(x+1,y+9,9,1,'#fffaf0');R(x-1,y+1,1,7,'#fffaf0');R(x+11,y+1,1,7,'#fffaf0');
+ R(x+1,y+11,2,2,'#fffaf0');R(x,y+14,1,1,'#fffaf0');
+ const ic=H.icon;const rows=BM[ic];bm(ic,x+Math.floor((11-rows[0].length)/2),y+Math.floor((9-rows.length)/2),ICON_C[ic]);
+}
+
+function drawLighting(t){
+ const dk=darkness();const asleep=lightsOff;
+ let base=asleep?Math.max(dk,.1)+(dk>.2?.12:0):dk;
+ if(base<=0.01)return;
+ lctx.globalCompositeOperation='source-over';lctx.clearRect(0,0,W,H_);
+ lctx.fillStyle=`rgba(14,10,36,${clamp(base,0,.78)})`;lctx.fillRect(0,0,W,H_);
+ lctx.globalCompositeOperation='destination-out';
+ const L=[];
+ const homeAwake=!asleep&&!H.away;
+ if(homeAwake&&dk>.12){L.push([121,40,150,.92]);L.push([121,120,110,.5])}
+ if(screen)L.push([197,95,34,.75]);
+ if(deskLamp)L.push([184,98,40,.7]);
+ if(phoneGlow&&H.visible)L.push([H.x+H.f*4,H.y+H.dy-12,14,.6]);
+ if(fridgeOpen)L.push([30,96,32,.85]);
+ if(cooking)L.push([80,94,22,.7]);
+ if(H.cur&&H.cur.hidden&&!H.away&&dk>.12)L.push([312,118,18,.5]);
+ for(let i=0;i<9;i++){const x=268+i*5,y=75+Math.round(Math.sin(i/8*Math.PI)*5);L.push([x,y,9,.55])}
+ L.push([121,68,asleep?46:30,asleep?.55:.3]);
+ if(nowDate().getMonth()>=8)L.push([115,58,14,.7]);
+ for(const [x,y,r,s] of L){const g=lctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(0,0,0,${s})`);g.addColorStop(1,'rgba(0,0,0,0)');lctx.fillStyle=g;lctx.fillRect(x-r,y-r,r*2,r*2)}
+ ctx.drawImage(lc,0,0);
+ if(homeAwake&&dk>.12){const g=ctx.createRadialGradient(121,40,0,121,40,140);g.addColorStop(0,'rgba(255,190,110,.10)');g.addColorStop(1,'rgba(255,190,110,0)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H_)}
+}
+function drawSunbeam(){const dk=darkness();if(dk>.25||weather.type==='ulan')return;const a=(1-dk/.25)*(weather.type==='maulap'?.05:.13);ctx.fillStyle=`rgba(255,236,190,${a})`;ctx.beginPath();ctx.moveTo(102,92);ctx.lineTo(140,92);ctx.lineTo(152,152);ctx.lineTo(108,152);ctx.closePath();ctx.fill()}
+
+function render(t){
+ const hf=hourF();
+ drawRoom(t,hf);
+ drawSunbeam();
+ const ents=[];
+ ents.push([156,drawTable]);ents.push([131,drawChair]);ents.push([167,drawDogBed]);ents.push([136,drawGift]);
+ for(const m of mess)if(!(m.y<145&&m.x>100&&m.x<140))ents.push([m.y,()=>drawMess(m)]);
+ ents.push([H.inBed?200:H.y+(H.pose==='sit'&&H.x>220?-6:0),()=>drawHuman(t)]);
+ let ck=cat.elev?(cat.elev==='lap'?(H.inBed?201:H.y+1):(cat.elev==='bed'||cat.elev==='sofa'?126:40)):cat.y;if(cat.jump)ck=Math.max(cat.y,cat.jump.y1)+0.5;
+ ents.push([ck,()=>drawCat(t)]);
+ ents.push([dog.y+.2,()=>drawDog(t)]);
+ ents.push([ball?ball.floor+.1:0,drawBall]);ents.push([200,drawCup]);
+ ents.sort((a,b)=>a[0]-b[0]);for(const e of ents)e[1]();
+ drawParticles();
+ drawLighting(t);
+ drawIconBubble(t);
+}
+
+// ---------- UI ----------
+const $=id=>document.getElementById(id);
+const NEED_LABEL=[['hunger','Busog'],['energy','Energy'],['fun','Saya'],['hygiene','Linis ng katawan'],['social','Lambing'],['tidy','Ayos ng bahay']];
+$('needs').innerHTML=NEED_LABEL.map(([k,l])=>`<div class="need"><span>${l}</span><div class="bar"><i id="n-${k}"></i></div><span id="v-${k}">0</span></div>`).join('');
+function traitText(){const a=[];a.push(traits.neat>.62?'malinis sa bahay':traits.neat<.35?'medyo burara':'malinis pag may bisita');if(traits.foodie>.55)a.push('foodie');a.push(traits.owl?'night owl':'maagang natutulog (kunwari)');if(traits.drama>.6)a.push('iyakin sa K-drama');
+ const fv=favs.map(id=>DISHES.find(d=>d.id===id).name);return a.join(' · ')+`. Paborito niya ang ${fv[0]} at ${fv[1]}.`}
+function updateUI(){
+ $('clock').textContent=hhmm();
+ $('weather').textContent=WEATHER_LABEL[weather.type]+(nowDate().getMonth()>=8?' · ber months na':'');
+ $('sub').textContent=`Day ${dayNum()} kasama mo · kasama sina ${CAT} at ${DOG}`;
+ $('activity').textContent=H.label;$('thought').textContent=thoughtText;
+ $('mood').textContent='mood: '+moodLabel();
+ const cr=craving&&DISHES.find(d=>d.id===craving);$('craving').textContent='craving: '+(cr?cr.name:'wala, kuntento');
+ for(const [k] of NEED_LABEL){const v=Math.round(k==='tidy'?tidiness():needs[k]);const el=$('n-'+k);el.style.width=v+'%';el.className=v<30?'low':v<60?'mid':'';$('v-'+k).textContent=v}
+ $('fridge').innerHTML=Object.keys(INV_LABEL).map(k=>`<span class="chip${inv[k]>0?'':' out'}">${INV_LABEL[k]} ${inv[k]}</span>`).join('');
+ $('traits').textContent=traitText();
+}
+function placeBubble(){
+ if(bubbleT<=0){bubbleEl.classList.add('fade');return}
+ const r=cv.getBoundingClientRect(),sr=$('stage').getBoundingClientRect();const sc=Math.min(r.width/W,r.height/H_);const ox=r.left-sr.left+(r.width-W*sc)/2,oy=r.top-sr.top+(r.height-H_*sc)/2;
+ let bx,by;
+ if(bubbleOwner==='human'){if(!H.visible){bx=H.x<40?14:H.x>290?300:H.x;by=60}else{bx=H.x;by=H.y+H.dy-(H.pose==='lie'?18:H.pose==='sit'?28:33)}}
+ bx=clamp(bx,30,290);
+ bubbleEl.style.left=(ox+bx*sc)+'px';bubbleEl.style.top=(oy+by*sc-14)+'px';
+}
+
+$('knockBtn').onclick=knock;$('giftBtn').onclick=leaveGift;
+cv.addEventListener('click',clickCanvas);
+document.querySelectorAll('.speed button').forEach(b=>b.onclick=()=>{speed=+b.dataset.speed;document.querySelectorAll('.speed button').forEach(x=>x.classList.toggle('on',x===b))});
+let wakeLock=null;
+$('zenBtn').onclick=async()=>{const on=document.body.classList.toggle('zen');$('zenBtn').textContent=on?'Ipakita ang panel':'Zen mode';try{if(on&&navigator.wakeLock)wakeLock=await navigator.wakeLock.request('screen');else if(wakeLock){wakeLock.release();wakeLock=null}}catch(e){}};
+$('fsBtn').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('stage').requestFullscreen()}catch(e){$('zenBtn').click()}};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('zen'))$('zenBtn').click()});
+
+// ---------- catch-up on load ----------
+const lastSave=saved.lastSave||0;
+if(!saved.lastSave){log(`Lumipat na si ${NAME} sa bagong studio kasama sina ${CAT} at ${DOG}. Welcome home!`)}
+else{const gap=(Date.now()-lastSave)/1000;if(gap>600){for(const k in DECAY)if(k!=='energy')needs[k]=Math.max(30,needs[k]-DECAY[k]*Math.min(gap,3*3600));
+ log(pick([`Welcome back! Habang wala ka, kinausap ni ${NAME} si ${DOG} tungkol sa buhay niya.`,`Bumalik ka! May naiwan pa sanang pagkain... wala na.`,`Welcome back! Si ${CAT} hindi ka napansin. Si ${DOG}, sobra.`,'Bumalik ka! Medyo makalat na ulit. Wag mo nang itanong.']))}}
+if(isSleepTime()){H.x=282;H.y=113}
+renderLog();chooseNext();updateUI();
+
+// ---------- loop ----------
+let last=performance.now(),uiT=0,saveT=0;
+function step(sdt,rdt){updateWorld(sdt,rdt);updateHuman(sdt);updateCat(sdt);updateDog(sdt)}
+function frame(now){
+ let rdt=(now-last)/1000;last=now;
+ if(rdt>1){catchingUp=true;let sim=Math.min(rdt*speed,3600);while(sim>0){const d=Math.min(.5,sim);step(d,d/speed);sim-=d}catchingUp=false;rdt=0.016}
+ rdt=Math.min(rdt,.1);const sdt=rdt*speed;
+ step(sdt,rdt);updateParticles(rdt);
+ bubbleT-=rdt;
+ render(now/1000);
+ placeBubble();
+ uiT-=rdt;if(uiT<=0){uiT=.5;updateUI()}
+ saveT-=rdt;if(saveT<=0){saveT=15;save()}
+ requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+addEventListener('pagehide',save);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
+window.__studio={setHour(h){const d=new Date();const tgt=new Date(d);tgt.setHours(Math.floor(h),Math.round((h%1)*60),0,0);timeOffset=tgt-d},H,cat,dog,needs,force(n){({cook:planCook,desk:planDesk,nap:planNap,videoke:planVideoke,petcat:planPetCat,playdog:planPlayDog,drama:planDrama,grocery:planGrocery,shower:planShower,tidy:planTidy})[n]()},setSpeed(s){speed=s},mess,get weather(){return weather},setWeather(t){weather.type=t}};
+})();
+</script>
+</body>
+</html>
