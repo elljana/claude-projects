@@ -11,6 +11,7 @@ Idle na pixel-art room na pwede mong panoorin habang nagwo-work ka. Si **Tala** 
 - **Trabaho:** freelance graphic designer siya, may recurring na clients, Zoom meetings (blouse sa taas, pajama sa baba), revisions, deadlines, puyat mode at sweldo
 - **Phases:** ang binabasa at pinapanood niya ay nagbibigay ng ilang araw na "era" (K-drama, self-help, cooking show, true crime, fitness, romance) na nagbabago ng ugali niya
 - **Character development:** nagbabago ang kalinisan, cooking skill at paboritong ulam niya base sa mga ginagawa niya
+- **Crossover sa [The Midnight Roast](../midnight-roast/):** minsan sa gabi nagkakape o nagwo-work si Tala sa café kapag hindi siya makatulog o naloloka na siya sa bahay, at minsan sumisilip si Espresso sa bintana para asarin si Siopao
 - **Tuloy ang buhay niya habang wala ka:** pagbalik mo, sina-simulate niya ang nangyari (hanggang 12 oras) at ikukuwento niya sa'yo
 
 ## Paano buksan

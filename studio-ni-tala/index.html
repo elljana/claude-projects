@@ -419,7 +419,7 @@ function nextStep(){
 const canMake=d=>Object.entries(d.need).every(([k,v])=>(inv[k]||0)>=v);
 const canCookAny=()=>allDishes().some(canMake);
 function useIng(d){for(const [k,v] of Object.entries(d.need))inv[k]=Math.max(0,inv[k]-v)}
-function lowStock(){return (inv.manok+inv.baboy+inv.baka)<2||inv.itlog<2||inv.gulay<1||allDishes().filter(canMake).length<3}
+function lowStock(){return (inv.manok+inv.baboy+inv.baka)<1||inv.itlog<1||allDishes().filter(canMake).length<2}
 function chooseDish(){
  const slot=mealSlot(hourF())||'snack';const rain=weather.type==='ulan';
  const opts=allDishes().filter(canMake).map(d=>{let w=1;
@@ -447,7 +447,8 @@ let suggestion=null;
 function chooseNext(){
  H.away=false;
  const hf=hourF();
- if(isSleepTime(hf)){const p=urgentProject();const h2=hf<12?hf+24:hf;if(p&&p.due-simNow()<10*H1&&p.progress<95&&h2<bedtime()+3.5&&needs.energy>8)return planWork(p,true);return planSleep()}
+ if(isSleepTime(hf)){const p=urgentProject();const h2=hf<12?hf+24:hf;if(p&&p.due-simNow()<10*H1&&p.progress<95&&h2<bedtime()+3.5&&needs.energy>8)return chance(.25)&&cafeOpen(hf)&&wallet>400?planCafe('puyat'):planWork(p,true);
+  if(needs.energy>80&&cafeOpen(hf)&&wallet>400&&!(today.cafe>=2)&&chance(.15))return planCafe('insomnia');return planSleep()}
  const n=needs,slot=mealSlot(hf),rain=weather.type==='ulan',mealDue=slot&&slot!=='midnight'&&!today.ate[slot];
  const C=[];const add=(id,score,fn)=>{if(score>0)C.push([id,score,fn])};
  const hd=100-n.hunger,fd=100-n.fun,sd=100-n.social,ed=100-n.energy;
@@ -477,6 +478,7 @@ function chooseNext(){
  add('dishes',dishes*24*(0.4+traits.neat),planDishes);
  add('tidy',other*16*(0.4+traits.neat),planTidy);
  add('idle',9,planIdle);
+ add('cafe',cafeOpen(hf)&&wallet>400&&!meetingSoon(120)&&!(today.cafe>=2)?(8+fd*0.25+(urgentProject()?15:0)+(hf<4.5?12:0)):0,()=>planCafe('kape'));
  for(const c of C){const i=recent.indexOf('a:'+c[0]);if(i===0)c[1]*=(c[0]==='work'?0.6:0.15);else if(i>0&&i<3)c[1]*=0.55;c[1]*=rnd(0.65,1.35)*phaseMod(c[0]);
   if(suggestion&&suggestion.until>simNow()&&suggestion.id===c[0])c[1]=c[1]*4+250}
  C.sort((a,b)=>b[1]-a[1]);
@@ -559,7 +561,7 @@ function planGrocery(){
   act({dur:rnd(220,400),hidden:true,label:'Nasa grocery (wala sa bahay)',start:()=>{H.away=true;log('Lumabas para mag-grocery. Si '+DOG+' naghihintay sa pinto.')},
    end:()=>{H.away=false;const bought=[];
     const add=(k,n)=>{inv[k]=(inv[k]||0)+n;bought.push(n+' '+INV_LABEL[k])};
-    add(pick(['manok','baboy','baka']),ri(1,2));add(pick(['manok','baboy']),1);add('itlog',ri(4,6));add('gulay',ri(2,3));
+    add(pick(['manok','baboy','baka']),ri(2,3));add(pick(['manok','baboy']),ri(1,2));add('baka',ri(0,1)||1);add('itlog',ri(4,6));add('gulay',ri(2,3));
     if(chance(.6))add('canton',ri(2,4));if(chance(.4))add('delata',1);if(chance(.3))add('tablea',1);if(inv.kape<4)add('kape',6);
     add(pick(['chichirya','icecream','pandesal']),ri(1,3));
     const cost=ri(1100,2100);wallet-=cost;log(`Bumalik galing grocery: ${bought.join(', ')}. Gastos: ${peso(cost)}. Plus mga bagay na wala sa listahan.`);doorbell=0;highlight('nag-grocery ako');
@@ -615,7 +617,8 @@ function planSleep(){
  ]);
 }
 function midnightPlan(){
- const opt=pick(['water','snack','pee']);
+ const opt=pick(['water','snack','pee',...(cafeOpen()&&wallet>400&&!(today.cafe>=2)?['cafe']:[])]);
+ if(opt==='cafe')return[act({dur:3,pose:'sit',x:282,y:118,say:['...hindi na ko makatulog.']}),...cafeSteps('insomnia').steps];
  const back=[go('bed'),act({dur:99999,pose:'lie',inBed:true,x:282,y:113,f:1,label:'Tulog ulit',icon:'z',sleep:true,start:()=>{lightsOff=true},tick:(dt,s)=>{addNeed('energy',dt*100/(6.5*3600));if(chance(dt*.35))emit('z',H.x-10,H.y-10,{vy:-4,vx:2.5,max:2.6});if(!isSleepTime())s.t=s.dur},end:()=>{lightsOff=false}}),
   call(()=>{H.plan.unshift(act({dur:5,pose:'sit',x:282,y:118,f:1,label:'Kakagising lang',say:['umaga na? parang kakapikit ko lang'],end:()=>{today.woke=false}}))})];
  lightsOff=false;
@@ -811,6 +814,48 @@ function updateWork(dt){
  const working=projects.filter(p=>p.stage!=='approved').length;
  if(working<2&&hf>8&&hf<22&&chance(dt*(working?0.08:0.25)/3600))newProject();
 }
+// ---------- crossover: The Midnight Roast (night-only café) ----------
+const cafeOpen=(hf=hourF())=>hf>=19.5||hf<4.5;
+const CAFE_BACK=[
+ 'Galing Midnight Roast. Masarap talaga yung kape. Medyo weird yung fish tank, parang nakatingin.',
+ 'Uwi galing Midnight Roast. Yung itim na pusa dun, umupo sa tabi niya buong oras. Pareho talaga lahat ng pusa.',
+ 'Galing Midnight Roast. May lalaking naka-pulang scarf sa may bintana. Pogi. Yun lang. (Okay, medyo pogi.)',
+ 'Uwi galing Midnight Roast, may dalang croissant. Bigay daw ni Benji, yung taga-bakery. Ang bait.',
+ 'Galing Midnight Roast. Parang mas mabagal yung orasan doon. Hindi na niya inisip. Masarap yung kape.',
+ 'Galing Midnight Roast. May tumugtog ng piano kahit walang tao sa piano. "Siguro may timer." Siguro.',
+];
+const CAFE_MSG=['galing ako sa Midnight Roast. weird yung lugar pero yung kape?? chef\'s kiss','uwi na ko galing café. may pogi na naka-red scarf. wala lang. sinasabi ko lang.','ang sarap ng kape sa Midnight Roast. tapos yung pusa doon, parang kilala ako. creepy pero cute'];
+function planCafe(why){const r=cafeSteps(why);setPlan(r.label,r.steps)}
+function cafeSteps(why){
+ today.cafe=(today.cafe||0)+1;
+ const p=urgentProject();const work=!!p&&(why==='puyat'||chance(.5));
+ const C=p&&CLIENTS[p.client];
+ const leave=why==='insomnia'?['hindi ako makatulog. kape na lang ako sa Midnight Roast. (oo, kape. para makatulog.)','gising pa utak ko. café muna.']:work?['naloloka na ko dito sa bahay. sa café na lang ako magwo-work.','change of scenery. dadalhin ko laptop ko.']:['kape muna ko sa Midnight Roast. bantayan niyo bahay',`${DOG}, ikaw muna bahala. kape lang ako.`];
+ return{label:work?'Pupunta sa Midnight Roast para mag-work':'Pupunta sa Midnight Roast',steps:[
+  go('door'),
+  act({dur:3,f:-1,prop:work?'bag':null,label:'Aalis papuntang Midnight Roast',say:leave}),
+  act({dur:rnd(1800,3600),hidden:true,label:work?`Nagwo-work sa Midnight Roast (${p.kind} ni ${C.name})`:'Nagkakape sa Midnight Roast',
+   start:()=>{H.away=true;log(work?'Dinala ang laptop sa Midnight Roast. Change of scenery daw.':'Lumabas para magkape sa Midnight Roast.');if(why!=='insomnia'&&!work)talaMsg(pick(['kape lang ako sa Midnight Roast, babalik din ako','café muna ko. wag mo kong hanapin. (hanapin mo ko.)']))},
+   tick:(dt)=>{if(work&&p.stage==='working')p.progress=clamp(p.progress+dt*0.014,0,100);addNeed('fun',dt*15/1800)},
+   end:()=>{H.away=false;wallet-=ri(160,320);addNeed('energy',why==='insomnia'?-4:6);moodBoost+=6;
+    const line=work?`Nag-work sa Midnight Roast: ${p.kind} ni ${C.name}, ${Math.round(p.progress)}% na. Mas productive pala doon. Hindi niya alam kung bakit.`:pick(CAFE_BACK);
+    log(line);highlight('nagkape ako sa Midnight Roast');talaMsg(pick(CAFE_MSG))}}),
+  go('window',{prop:'cafeCup',from:{x:12,y:136}}),
+  act({dur:rnd(40,80),back:true,prop:'cafeCup',label:'Inuubos ang kape galing Midnight Roast',say:['masarap talaga dun. weird, pero masarap.','sino kaya yung naka-red scarf... wala. wala lang.','next time, yung croissant ni Benji naman'],gain:{fun:6}}),
+ ]};
+}
+// Espresso, the café's black cat, sometimes visits Tala's window at night
+const esp={active:false,t:0,dur:0};
+function updateEspresso(dt){
+ if(esp.active){esp.t+=dt;
+  if(cat.elev==='sill'&&!esp.met&&!cat.jump){esp.met=true;cat.face='bang';cat.react=3;
+   if(!catchingUp){emit('bang',cat.x,cat.y-16,{vy:-5,vx:0,color:'#ff7a6a'});log(pick([`Bumisita ulit yung itim na pusa sa bintana. Staring contest sila ni ${CAT}. Talo si ${CAT}.`,`Nag-hiss si ${CAT} sa itim na pusa sa labas. Hindi man lang kumurap yung itim na pusa.`,`Si ${CAT} at yung itim na pusa, nagkatitigan sa salamin nang isang minuto. Diplomasya.`]))}}
+  if(esp.t>esp.dur){esp.active=false;if(!esp.met&&!catchingUp)log('May itim na pusang sumilip sa bintana tapos umalis. Walang nakapansin. (Si '+DOG+' lang, pero tulog siya.)')}
+  return}
+ if(darkness()>.3&&chance(dt/2700)){esp.active=true;esp.t=0;esp.dur=rnd(60,140);esp.met=false;
+  if(!['lap','eat','keyboard','pet'].includes(cat.state)&&cat.state!=='move'){catGoTo('sill');cat.after='watch'}
+  if(!catchingUp&&!H.away&&!(H.cur&&(H.cur.sleep||H.cur.hidden))&&chance(.6)){say(pick(['uy, yung itim na pusa ulit. kaninong pusa ka ba','parang nakita ko na yang pusang yan sa café...','hello, ikaw na naman. may moon ka sa dibdib no?']));if(chance(.5))talaMsg('yung itim na pusa ng Midnight Roast nasa bintana ko na naman. si Siopao, galit na galit')}}
+}
 // ---------- interactions ----------
 function knock(){
  windowShake=0.45;dog.react=2.2;emit('bang',124,40,{vy:-6,vx:0,max:1.2,color:'#fff'});
@@ -965,7 +1010,7 @@ function updateDog(dt){
 
 // ---------- update: world ----------
 function updateWorld(dt,rdt){
- updateWork(dt);
+ updateWork(dt);updateEspresso(dt);
  if(phase&&simNow()>phase.until)endPhase();
  closeness=clamp(closeness-dt*1/86400,0,100);
  for(const k in DECAY)needs[k]=clamp(needs[k]-DECAY[k]*dt*(k==='energy'&&H.inBed?0:1),0,100);
@@ -1090,6 +1135,9 @@ function drawWindow(t,hf){
  for(const [bx,by,bw] of bl){const bxx=x0+bx;R(bxx,y0+by,Math.min(bw,38-bx),44-by,dk>.3?'#1a1e36':mix('#7a88a8',bot,.3));if(dk>.3)for(let wy=by+2;wy<42;wy+=3)for(let wx=1;wx<bw-1;wx+=2)if(((bx*7+wy*3+wx*5)%7)<3)R(bxx+wx,y0+wy,1,1,'#ffd27a')}
  if(weather.type==='ulan'){ctx.fillStyle='rgba(200,220,255,.55)';for(let i=0;i<22;i++){const rx=x0+((i*17+Math.floor(t*60)*3)%38),ry=y0+((i*29+Math.floor(t*90)*5)%44);ctx.fillRect(rx,ry,1,3)}}
  if(flash>0){ctx.fillStyle=`rgba(255,255,255,${flash*3})`;ctx.fillRect(x0,y0,38,44)}
+ // Espresso, the café cat, on the outside ledge
+ if(esp.active){R(x0+6,y0+41,12,3,'#6a6280');R(x0+6,y0+41,12,1,'#8a82a0');const ex=x0+9,ey=y0+31;const k='#0b0810',rim='#7a72a0';R(ex,ey+3,7,7,k);R(ex+1,ey,5,4,k);R(ex+1,ey-1,1,1,k);R(ex+5,ey-1,1,1,k);R(ex,ey-1,1,1,rim);R(ex+1,ey-2,1,1,rim);R(ex+5,ey-2,1,1,rim);R(ex+6,ey-1,1,1,rim);R(ex-1,ey+3,1,6,rim);R(ex+7,ey+3,1,6,rim);
+  const bl=Math.floor(t*.5)%7===0;R(ex+2,ey+1,1,bl?0:1,'#8affa0');R(ex+4,ey+1,1,bl?0:1,'#8affa0');R(ex+3,ey+5,1,1,'#f2d070');R(ex-3,ey+9,3,1,k);R(ex-3,ey+8,1,1,k)}
  // parol (Sep-Dec)
  const mo=nowDate().getMonth();if(mo>=8){const px=x0+10,py=y0+4;R(px+3,y0-4,1,8,'#3a2a20');const pc=['#e8404a','#f2b544','#e8404a'];R(px+3,py+3,1,9,pc[0]);R(px-1,py+7,9,1,pc[0]);R(px+1,py+5,5,5,pc[1]);R(px+2,py+6,3,3,'#fff0a0');R(px+2,py+12,1,4,'#f2b544');R(px+4,py+12,1,3,'#e8404a')}
  // frame
@@ -1177,6 +1225,7 @@ function drawProp(p,hx,hy,t){
  else if(p==='icecream'){R(hx,hy-1,2,3,'#d8a060');R(hx-1,hy-3,4,2,'#f4c8d8')}
  else if(p==='bread'){R(hx-1,hy-2,4,3,'#d8a060');R(hx,hy-2,2,1,'#e8c080')}
  else if(p==='ball'){R(hx,hy-2,2,2,'#e8c040')}
+ else if(p==='cafeCup'){R(hx-1,hy-4,3,5,'#f2ede4');R(hx-1,hy-2,3,2,'#2a2040');R(hx,hy-2,1,1,'#f2d070');R(hx-1,hy-5,3,1,'#3a2a20')}
 }
 function drawCat(t){
  const x=Math.round(cat.x),y=Math.round(cat.y),f=cat.f;
@@ -1343,6 +1392,7 @@ function renderChat(scroll){
 }
 function setUnread(n){unread=n;const b=$('unread');b.hidden=!n;b.textContent=n;document.title=(n&&document.hidden?`(${n}) `:'')+'Studio ni Tala'}
 function notifyNew(text){
+ if(performance.now()<4000)return;
  const zen=document.body.classList.contains('zen');
  if(!chatVisible||zen||document.hidden)setUnread(unread+1);
  if(zen||!chatVisible){const t=$('toast');t.innerHTML='';const b=document.createElement('b');b.textContent='Tala: ';t.append(b,document.createTextNode(text));t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true},10000)}
@@ -1356,6 +1406,8 @@ const ACT_IDS={cook:'magluto',delivery:'mag-order ng pagkain',snack:'mag-meriend
 function rulesText(){return `Ikaw si Tala: 20-something na Pinay, freelance graphic designer, mag-isang nakatira sa maliit na studio apartment kasama ang orange na pusang si ${CAT} at ang aspin na si ${DOG}. Ang kausap mo ay si ${viewerName}, kaibigan mong madalas mag-chat sa'yo habang nagwo-work siya. Para sa'yo, totoo ang buhay mo. Huwag na huwag mong sasabihing AI ka, character ka, o assistant ka.
 
 Paano ka mag-text: Taglish, casual, pwedeng lowercase, nakakatawa, medyo sarcastic at dramatic pero malambing. Maikli: 1 hanggang 3 pangungusap, parang totoong text. Hanggang isang emoji lang, madalas wala. Pwede ang light na mura (shet, putek, gago) kung bagay. Kapag busy ka (meeting, nagwo-work, nagluluto), mas maikli at halatang busy. Kapag tulog ka, ginising ka ng message: inaantok at medyo inis, pero sumasagot pa rin. Ibase ang sagot sa totoong lagay at diary mo sa ibaba; huwag mag-imbento ng malalaking pangyayari na wala roon. Pwede kang magtanong pabalik at mag-follow up sa mga naaalala mo tungkol kay ${viewerName}. Kung may personal na problema si ${viewerName}, maging totoong kaibigan: makinig muna bago magbiro.
+
+May café malapit sa inyo, ang Midnight Roast, na bukas lang sa gabi. Paborito mo ang kape doon, at doon ka minsan nagwo-work kapag naloloka ka na sa bahay o hindi ka makatulog. Medyo weird ang lugar (yung fish tank na parang nakatingin, yung orasan na parang mabagal, yung piano na minsan tumutugtog mag-isa), pero hindi mo masyadong iniisip. Masarap kasi ang kape. Wala kang alam na sikreto tungkol doon, kaya huwag kang mag-imbento o manghula tungkol sa kung anong nangyayari roon; magaan na comment lang. May itim na pusa ang café, may berdeng mata at parang buwan sa dibdib, na minsan sumisilip sa bintana mo at kinaiinisan ni ${CAT}. Kilala mo lang sa mukha ang ilang regular: yung lalaking naka-pulang scarf (pogi, yun lang) at si Benji na taga-bakery na nagdadala ng croissant (mabait). Wala kang crush sa kanila; pinupuri mo lang paminsan-minsan.
 
 Ikaw ang may hawak ng buhay mo. Kapag may inutos o in-suggest si ${viewerName}, pwede kang pumayag o tumanggi depende sa mood, energy, pera at trip mo. Kapag tumanggi ka, sabihin nang nakakatawa.
 
@@ -1372,6 +1424,7 @@ function contextText(){
   `Ginagawa mo ngayon: ${H.label}${H.cur&&H.cur.sleep?' (TULOG ka, ginising ka lang ng message)':''}.`,
   `Mood: ${moodLabel()}. Needs (0-100, mataas = okay): busog ${Math.round(n.hunger)}, energy ${Math.round(n.energy)}, saya ${Math.round(n.fun)}, linis ng katawan ${Math.round(n.hygiene)}, lambing ${Math.round(n.social)}, ayos ng bahay ${Math.round(tidiness())}.`,
   `Pera: ${peso(wallet)}. Client projects: ${pj}.`,
+  `Bukas ang Midnight Roast ngayon: ${cafeOpen()?'oo':'hindi, gabi lang bukas'}.`,
   `Phase ngayon: ${phase?PHASES[phase.id].label:'wala'}. Craving: ${craving?dishName(craving):'wala'}.`,
   `Ugali: ${traitText()}`,
   `Laman ng ref: ${Object.keys(INV_LABEL).filter(k=>inv[k]>0).map(k=>INV_LABEL[k]+' '+inv[k]).join(', ')||'halos wala'}.`,
@@ -1475,7 +1528,7 @@ initRuntime();
 addEventListener('pagehide',()=>{save();saveRemote()});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){save();saveRemote()}});
 window.__studio={setHour(h){const d=new Date();const tgt=new Date(d);tgt.setHours(Math.floor(h),Math.round((h%1)*60),0,0);timeOffset=tgt-d},H,cat,dog,needs,
- force(n){({cook:planCook,desk:planDesk,nap:planNap,videoke:planVideoke,petcat:planPetCat,playdog:planPlayDog,drama:planDrama,grocery:planGrocery,shower:planShower,tidy:planTidy,work:()=>planWork(urgentProject())})[n]()},
+ force(n){({cook:planCook,desk:planDesk,nap:planNap,videoke:planVideoke,petcat:planPetCat,playdog:planPlayDog,cafe:()=>planCafe('kape'),espresso:()=>{esp.active=true;esp.t=0;esp.dur=120;esp.met=false;catGoTo('sill');cat.after='watch'},drama:planDrama,grocery:planGrocery,shower:planShower,tidy:planTidy,work:()=>planWork(urgentProject())})[n]()},
  meetingNow(){const p=projects[0];if(p)p.meetingAt=simNow()+60e3},phase:startPhase,catchUp,talaMsg,newProject,get projects(){return projects},get chat(){return chat},get wallet(){return wallet},
  setSpeed(s){speed=s},get mess(){return mess},get weather(){return weather},setWeather(t){weather.type=t}};
 })();
