@@ -1,6 +1,6 @@
 # Studio ni Tala
 
-Idle na pixel-art room na pwede mong panoorin habang nagwo-work ka. Si **Tala** at ang mga alaga niyang si **Siopao** (pusa) at **Kikiam** (aspin) ay kanya-kanyang nagdedesisyon kung ano gagawin. Magluluto, kakain, iidlip, magvi-videoke, maglilinis (minsan), at marami pang iba.
+Idle na pixel-art studio (top-down 3/4 "dollhouse" view, 480×270) na pwede mong panoorin habang nagwo-work ka. Si **Tala** at ang mga alaga niyang si **Siopao** (pusa) at **Kikiam** (aspin) ay kanya-kanyang nagdedesisyon kung ano gagawin. Magluluto, kakain, iidlip, magvi-videoke, maglilinis (minsan), at marami pang iba.
 
 - Naka-sync ang araw, gabi at routine (kain, kape, tulog) sa totoong oras mo
 - Needs-based ang utak niya (busog, energy, saya, linis, lambing, ayos ng bahay) at may halong randomness, kaya medyo unpredictable
@@ -17,6 +17,9 @@ Idle na pixel-art room na pwede mong panoorin habang nagwo-work ka. Si **Tala** 
 - **Online shopping:** may ETA ang mga order, dumarating sa pinto, ina-unbox niya, at ang ilan ay nagiging display sa bahay (LED lights, moon lamp, teddy bear, sweater ni Kikiam...). Si Siopao, sa kahon uupo
 - **Mga sorpresa:** brownout, ipis, padala ni mama, videoke ng kapitbahay, raffle, holidays (Undas, Pasko, Bagong Taon), birthdays, at mga message na nauunlock habang tumatagal at nagiging close kayo
 - **Tunog (synthesized, walang audio files):** ambience (ulan na tugma sa weather, electric fan, siyudad sa gabi, videoke ng kapitbahay), sound effects (kawali, kettle, keyboard, Zoom, doorbell, si Kikiam at Siopao), at **DZTL 98.3 Radyo ni Tala**, generative lofi na sumusunod sa ginagawa niya: umagang chill, focus beats kapag may deadline, hatinggabi, piano kapag K-drama era, at videoke mode. Hiwalay ang volume ng bawat layer
+- **Lakad at barkada:** may invite muna (kain sa labas, party, gig, salon, Sunday lunch kina mama), tapos naliligo siya, nag-aayos sa salamin, nagpapalit ng outfit at hairstyle, umaalis, at umuuwi na may kwento
+- **Love life:** blind dates na sinet-up ni Kat, talking stage na may kilig, at minsan sawi. Kapag sawi siya, mas iyakin siya sa drama at "sad playlist era" ang radyo
+- **Balcony:** nagsasampay siya (at nagmamadaling kunin kapag umulan) o tumatambay, at makikita mo siya sa likod ng salamin
 - **Linggo ni Tala:** weekly recap na pwedeng buksan kahit kailan, parang Wrapped ng buhay niya
 - **Tuloy ang buhay niya habang wala ka:** pagbalik mo, sina-simulate niya ang nangyari (hanggang 12 oras) at ikukuwento niya sa'yo
 
