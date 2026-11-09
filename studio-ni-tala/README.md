@@ -16,6 +16,7 @@ Idle na pixel-art room na pwede mong panoorin habang nagwo-work ka. Si **Tala** 
 - **Mga palabas at libro:** may totoong title at progress (ep 5/16, chapter 3/30) ang pinapanood at binabasa niya
 - **Online shopping:** may ETA ang mga order, dumarating sa pinto, ina-unbox niya, at ang ilan ay nagiging display sa bahay (LED lights, moon lamp, teddy bear, sweater ni Kikiam...). Si Siopao, sa kahon uupo
 - **Mga sorpresa:** brownout, ipis, padala ni mama, videoke ng kapitbahay, raffle, holidays (Undas, Pasko, Bagong Taon), birthdays, at mga message na nauunlock habang tumatagal at nagiging close kayo
+- **Tunog (synthesized, walang audio files):** ambience (ulan na tugma sa weather, electric fan, siyudad sa gabi, videoke ng kapitbahay), sound effects (kawali, kettle, keyboard, Zoom, doorbell, si Kikiam at Siopao), at **DZTL 98.3 Radyo ni Tala**, generative lofi na sumusunod sa ginagawa niya: umagang chill, focus beats kapag may deadline, hatinggabi, piano kapag K-drama era, at videoke mode. Hiwalay ang volume ng bawat layer
 - **Linggo ni Tala:** weekly recap na pwedeng buksan kahit kailan, parang Wrapped ng buhay niya
 - **Tuloy ang buhay niya habang wala ka:** pagbalik mo, sina-simulate niya ang nangyari (hanggang 12 oras) at ikukuwento niya sa'yo
 
