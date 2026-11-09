@@ -12,6 +12,11 @@ Idle na pixel-art room na pwede mong panoorin habang nagwo-work ka. Si **Tala** 
 - **Phases:** ang binabasa at pinapanood niya ay nagbibigay ng ilang araw na "era" (K-drama, self-help, cooking show, true crime, fitness, romance) na nagbabago ng ugali niya
 - **Character development:** nagbabago ang kalinisan, cooking skill at paboritong ulam niya base sa mga ginagawa niya
 - **Crossover sa [The Midnight Roast](../midnight-roast/):** minsan sa gabi nagkakape o nagwo-work si Tala sa café kapag hindi siya makatulog o naloloka na siya sa bahay, at minsan sumisilip si Espresso sa bintana para asarin si Siopao
+- **Hindi paulit-ulit:** ang mga message niya ay binubuo mula sa mga pinagsasamang piraso, may halong mood, phase at oras, plus isang bagong AI-written na set ng lines kada araw (kapag naka-allow)
+- **Mga palabas at libro:** may totoong title at progress (ep 5/16, chapter 3/30) ang pinapanood at binabasa niya
+- **Online shopping:** may ETA ang mga order, dumarating sa pinto, ina-unbox niya, at ang ilan ay nagiging display sa bahay (LED lights, moon lamp, teddy bear, sweater ni Kikiam...). Si Siopao, sa kahon uupo
+- **Mga sorpresa:** brownout, ipis, padala ni mama, videoke ng kapitbahay, raffle, holidays (Undas, Pasko, Bagong Taon), birthdays, at mga message na nauunlock habang tumatagal at nagiging close kayo
+- **Linggo ni Tala:** weekly recap na pwedeng buksan kahit kailan, parang Wrapped ng buhay niya
 - **Tuloy ang buhay niya habang wala ka:** pagbalik mo, sina-simulate niya ang nangyari (hanggang 12 oras) at ikukuwento niya sa'yo
 
 ## Paano buksan
