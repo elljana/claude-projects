@@ -52,7 +52,7 @@ The in-game portraits are embedded in `index.html` as base64 WebP, so the game n
 ## Credits
 
 - Pixel-art café, sprites, game code and music engine were hand-written in code with Claude (Anthropic).
-- Character portraits were generated with Seedream 4.5 on OpenArt. Rowan's portrait was generated first and used as the style reference for the rest of the cast, so they all match.
+- Character portraits were generated with Seedream 4.5 on OpenArt. Rowan's portrait was generated first and used as the style reference for the rest of the cast, so they all match. Tala has three portraits (with Kikiam, with Siopao, and solo), and the game shows whichever matches who she brought that night.
 - Fonts: Pixelify Sans, Silkscreen and Nunito from Google Fonts.
 
 ## Status
