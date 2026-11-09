@@ -651,6 +651,7 @@
   };
   for(const id in CH2){ const r=REGS[id]; r.ch2=r.lines.length; r.lines.push(...CH2[id]); if(r.th) r.th.push(74,79,84,89,94,99); }
   REGS.accountant.idle.push("The lamp looks tired. Don't you think?","I'll wait. I'm very good at waiting.");
+  const TALA_WORK=["client said “konting changes lang.” six rounds na.","dito na ako nagwo-work. sa bahay, si Kikiam yung umaattend ng meetings ko.","mas productive talaga ako dito. hindi ko alam kung bakit. medyo creepy pero okay.","deadline 9am. 3am na. sakto lang. chill lang.","wag mo kong kausapin, nasa zone ako. (kausapin mo ko, ayoko na sa zone.)"];
   const CHAIR13=["(It's warm. Nobody has been sitting in it.)","(It smells faintly of pandesal and floor wax.)","(There's a name carved under the seat, worn almost smooth. It starts with an I.)","(You pull it out a little. It slides back on its own. Okay. Okay.)"];
   const REG_ORDER=["rowan","benji","okafor","teo","tala","marguerite","pip","lamplighter","accountant"];
   const MYST_REG={witch:"marguerite",ghost:"pip",hooded:"lamplighter"};
@@ -1012,6 +1013,7 @@
     }
     if(!g.reg){ const r=Math.random(); g.opinion=r<0.2?"love":(r<0.3?"hate":"neutral"); g.star=!isMyst(g)&&Math.random()<0.18; }
     if(g.reg==="tala"){ const r=Math.random(); g.kikiam=r<0.7; g.siopao=!g.kikiam&&r<0.8; g.opinion=g.siopao?"hate":(g.kikiam?"neutral":"love"); }
+    if(g.reg==="tala" && Math.random()<0.6){ g.working=true; g.acc=[...g.acc,"laptop"]; g.drinkDur*=2.2; }
     guests.push(g);
     if(g.kikiam) kikiamArrives(g);
     if(g.opinion==="hate") catGrump(g);
@@ -1075,10 +1077,11 @@
     rateWindow+=dt;
   }
   function payGuest(g){
-    let base=coinValueAt(S.machine)*rnd(0.85,1.35)*(g.tipped===2?2.2:g.tipped?1.5:1);
+    let base=coinValueAt(S.machine)*rnd(0.85,1.35)*(g.tipped===2?2.2:g.tipped?1.5:1)*(1+Math.max(0,g.drinkDur-7)/15);
     if(isMyst(g)) base*=g.special?0.5:2;
     const amt=Math.round(base);
     if(amt>0){ S.coins+=amt; rateCoins+=amt; coinPop(g.x,g.footY-42,"+"+amt); if(!S.quiet) sfxCoin(); }
+    if(g.drinkDur>14 && !S.flags.linger1){ S.flags.linger1=true; notify("gold","☕ Lingering pays","Guests who settle in for a while leave bigger tips when they finally go."); }
     S.served++;
   }
   function addAff(g,n){
@@ -1127,7 +1130,8 @@
         if(S.act>=2) addLight(4);
         const endOne=st.heard===(r.ch2??r.lines.length), endTwo=r.ch2!==undefined&&st.heard===r.lines.length;
         if(endOne||endTwo) setTimeout(()=>toast("lore",r.romance?("💘 Chapter "+(endTwo?"two":"one")+" with "+r.name):(endTwo?r.name+", part two":"You know "+r.name+" now"),endTwo?"To be continued in Act 3…":(r.romance?"To be continued…":"Their story is in your journal. They'll still chat.")),1600);
-      } else { const c=regCtx(g.reg); line=(c&&Math.random()<0.45)?c:pick(r.idle); }
+      } else if(g.working && Math.random()<0.6){ line=pick(TALA_WORK); }
+      else { const c=regCtx(g.reg); line=(c&&Math.random()<0.45)?c:pick(r.idle); }
     } else if(isMyst(g)){ line=pick(["…","Warm in here.","Thank you for staying open."]); }
     else { if(g.li===0){ const c=ctxLines(); line=(c.length&&Math.random()<0.55)?pick(c):bagLine(); } else if(g.li===1) line=bagLine(); else line=pick(EMOTES); g.li++; }
     if(!quiet) sfxTalk();
@@ -1456,7 +1460,7 @@
     px(x-3,fy-33,2,eh,eye); px(x+1,fy-33,2,eh,eye);
     px(x-1,fy-29,2,1,"#7a4a4a"); px(x-4,fy-31,1,1,shade(c.skin,0.85)); px(x+3,fy-31,1,1,shade(c.skin,0.85));
     if(acc.includes("flour")){ b.globalAlpha=0.65; px(x-5,fy-30,2,1,"#f08a8a"); px(x+3,fy-30,2,1,"#f08a8a"); b.globalAlpha=1; px(x-5,fy-37,2,1,"#ffffff"); }
-    if(acc.includes("laptop") && seated(g)){ orect(x-7,fy-21,14,9,"#aab0bc"); px(x-1,fy-18,2,2,"#eef0f6"); }
+    if(acc.includes("laptop") && seated(g)){ orect(x-7,fy-21,14,9,"#aab0bc"); px(x-1,fy-18,2,2,"#eef0f6"); if(acc.includes("stylus")){ px(x-5,fy-20,3,3,"#ff8fb0"); px(x+3,fy-16,2,2,"#b093ec"); px(x+2,fy-20,2,1,"#ffd166"); } }
     else if(g.state==="drink"){ if(g.act==="book") bookInHand(x,fy,t); else cupInHand(x,fy,t); }
     rim(x,fy);
   }
@@ -1713,7 +1717,7 @@
   function setQuiet(v){
     S.quiet=v; arrivalT=Math.min(arrivalT,arrivalGap());
     if(v) for(const g of guests) if(seated(g)){ g.drinkDur=Math.max(g.drinkDur,g.t+rnd(16,32)); if(!g.act&&!g.reg&&!isMyst(g)&&Math.random()<0.45) g.act="book"; }
-    if(v) toast("lore","🌙 Quiet hours","The sign on the door flips. Fewer guests, and the ones here settle in for a while. No pop-ups. Anything that happens gets saved for later.");
+    if(v) toast("lore","🌙 Quiet hours","The sign on the door flips. Fewer guests, and the ones here settle in for a while and tip more for it. No pop-ups. Anything that happens gets saved for later.");
     else { const d=S.digest; toast("gold","☕ Back open",d.length?("While it was quiet: "+d.slice(-5).join(" · ")+(d.length>5?" · and "+(d.length-5)+" more":"")+"."):"Nothing much happened. Just rain and coffee."); S.digest=[]; }
     renderUI(); save();
   }
