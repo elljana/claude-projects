@@ -1081,7 +1081,8 @@ function chooseNext(){
  H.away=false;
  const hf=hourF();
  if(isSleepTime(hf)){const p=urgentProject();const h2=hf<12?hf+24:hf;if(p&&p.due-simNow()<10*H1&&p.progress<95&&h2<bedtime()+3.5&&needs.energy>8)return chance(.25)&&cafeOpen(hf)&&wallet>400?planCafe('puyat'):planWork(p,true);
-  if(needs.energy>80&&cafeOpen(hf)&&wallet>400&&!(today.cafe>=2)&&chance(.15))return planCafe('insomnia');return planSleep()}
+  if(needs.energy>80&&cafeOpen(hf)&&wallet>400&&!(today.cafe>=2)&&chance(.15))return planCafe('insomnia');
+  if(phase&&phase.id==='truecrime'&&!today.tc3am&&h2<bedtime()+3.6&&needs.energy>15&&chance(.5)){today.tc3am=true;log('Hindi makatulog. True crime docu muna. (Masamang ideya.)');return planDrama()}return planSleep()}
  const n=needs,slot=mealSlot(hf),rain=weather.type==='ulan',mealDue=slot&&slot!=='midnight'&&!today.ate[slot];
  const C=[];const add=(id,score,fn)=>{if(score>0)C.push([id,score,fn])};
  const hd=100-n.hunger,fd=100-n.fun,sd=100-n.social,ed=100-n.energy;
@@ -1633,6 +1634,21 @@ function lakadReturn(L){
  log(pick(def.back(L.with)));talaMsg(pick(def.msg(L.with)),{important:true});
 }
 
+// ---------- 3AM true crime: cozy-creepy, only in her true crime era ----------
+let flicker=0,spooky={t:0};
+function is3am(){const hf=hourF();return phase&&phase.id==='truecrime'&&hf>=2&&hf<4.5&&!(H.cur&&H.cur.sleep)&&!H.away}
+function update3am(dt){
+ if(flicker>0)flicker-=dt;
+ if(!is3am()||catchingUp)return;
+ spooky.t-=dt;if(spooky.t>0)return;spooky.t=rnd(90,240);
+ const ev=pick(['stare','creak','flicker','growl']);
+ if(ev==='stare'&&!cat.away){cat.path=[];if(cat.elev){const f=catFloorPos();cat.x=f.x;cat.y=f.y;cat.elev=null}cat.path.push({x:30,y:252});cat.state='move';cat.after='watch';cat.f=-1;
+  setTimeout(()=>{cat.face='bang';cat.react=4},2500);say(pick([`${CAT}... ano tinitingnan mo... ${CAT.toUpperCase()}.`,`bakit nakatitig si ${CAT} sa sulok. walang tao dun. WALANG TAO DUN DIBA`]));log(`3AM: ${CAT} nakatitig sa walang laman na sulok. Ayaw ni ${NAME} ng ganito.`)}
+ else if(ev==='creak'){sfx('creak');say(pick(['narinig mo yun?','...sahig lang yun. sahig lang yun.','lumang building lang to. lumang building.']))}
+ else if(ev==='flicker'){flicker=1.2;say(pick(['AY. ...okay. okay lang. kuryente lang yun.','bakit kumislap yung ilaw. bakit.']));log('3AM: kumislap ang ilaw. Inilipat ni Tala ang channel sa cooking show nang 30 segundo.')}
+ else if(!dog.away){dog.react=1.5;sfx('growl');dogSet('wait',40,112,20);say(pick([`${DOG}, bakit ka umuungol sa pinto...`,`${DOG}? ${DOG}, may tao ba sa labas? sagutin mo ko.`]));log(`3AM: umungol si ${DOG} sa pinto. Chineck ni ${NAME} ang lock. Tatlong beses.`)}
+}
+
 // ---------- poking Tala: context-aware, never the same line twice in a row, and she gets annoyed ----------
 let pokes=0,pokeT=0;
 function talaPoke(){
@@ -1658,6 +1674,7 @@ function talaPoke(){
   if(hf<10)pool=pool.concat(['good morning! kape muna ko bago tao']);else if(hf>=23||hf<4)pool=pool.concat(['bakit gising ka pa?','matulog ka na rin ha, '+you]);
   if(hf>=11.5&&hf<13.5)pool=pool.concat(['kumain ka na ba? tanghali na']);
   if(closeness>=60)pool=pool.concat([you+'!! namiss kita kanina','bestie!!']);
+  if(is3am())pool=['AY! ...ikaw lang pala. wag ka namang nanggugulat ng 3AM','gising ka rin? ...dito ka lang ha. wag kang aalis.','narinig mo ba yung kanina? sabihin mo hindi.','sino nag-suggest na manood ako ng true crime nang ganitong oras. ah, ako.'];
  }
  if(H.pose==='stand'||H.pose==='walk')H.wave=1.6;
  say(pickFresh(pool));
@@ -1828,13 +1845,13 @@ function updateDog(dt){
 
 // ---------- update: world ----------
 function updateWorld(dt,rdt){
- updateWork(dt);updateEspresso(dt);updateShop();updateEvents(dt);updateLakad(dt);
+ updateWork(dt);updateEspresso(dt);updateShop();updateEvents(dt);updateLakad(dt);update3am(dt);
  if(phase&&simNow()>phase.until)endPhase();
  closeness=clamp(closeness-dt*1/86400,0,100);
  for(const k in DECAY)needs[k]=clamp(needs[k]-DECAY[k]*dt*(k==='energy'&&H.inBed?0:1),0,100);
  moodBoost*=Math.pow(0.5,dt/900);
  plantWater=clamp(plantWater-dt*100/(30*3600),0,100);
- if(simNow()>weather.until){const prev=weather.type;rollWeather();if(prev!==weather.type&&!catchingUp)log(weather.type==='ulan'?'Umuulan na. Perfect para sa sabaw.':weather.type==='araw'?'Lumabas na ang araw.':'Kumulimlim.')}
+ if(simNow()>weather.until){const prev=weather.type;rollWeather();if(prev!==weather.type&&!catchingUp)log(weather.type==='ulan'?'Umuulan na. Perfect para sa sabaw.':weather.type==='araw'?(darkness()>.3?'Tumila na. Maaliwalas ang langit ngayong gabi.':'Lumabas na ang araw.'):'Kumulimlim.')}
  if(simNow()>cravingUntil){craving=pick(allDishes()).id;cravingUntil=simNow()+rnd(2,4)*3600000}
  if(today.date!==dateKey())today={date:dateKey(),ate:{},coffee:false,shower:false,fed:{},woke:false,snoozed:false};
  if(ball&&!ball.landed){ball.vy+=160*dt;ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;if(ball.x<20||ball.x>380){ball.vx*=-0.6;ball.x=clamp(ball.x,20,380)}if(ball.y>=ball.floor&&ball.vy>0){ball.y=ball.floor;if(Math.abs(ball.vy)<30){ball.landed=true}else{ball.vy*=-0.45;ball.vx*=.7}}}
@@ -2075,7 +2092,7 @@ function drawIconBubble(t){
 }
 function drawLighting(t){
  const dk=darkness();const asleep=lightsOff;
- let base=asleep?Math.max(dk,.1)+(dk>.2?.12:0):dk;if(brownout&&!asleep)base=Math.max(base,dk>.12?.72:.3);
+ let base=asleep?Math.max(dk,.1)+(dk>.2?.12:0):dk;if(brownout&&!asleep)base=Math.max(base,dk>.12?.72:.3);if(flicker>0&&Math.floor(flicker*14)%3===0)base=Math.min(.86,base+.3);
  if(base<=0.01)return;
  lctx.globalCompositeOperation='source-over';lctx.clearRect(0,0,W,H_);
  lctx.fillStyle=`rgba(14,10,36,${clamp(base,0,.78)})`;lctx.fillRect(0,0,W,H_);
@@ -2221,7 +2238,7 @@ function contextText(){
   `Ginagawa mo ngayon: ${H.label}${H.cur&&H.cur.sleep?' (TULOG ka, ginising ka lang ng message)':''}.`,
   `Mood: ${moodLabel()}. Needs (0-100, mataas = okay): busog ${Math.round(n.hunger)}, energy ${Math.round(n.energy)}, saya ${Math.round(n.fun)}, linis ng katawan ${Math.round(n.hygiene)}, lambing ${Math.round(n.social)}, ayos ng bahay ${Math.round(tidiness())}.`,
   `Pera: ${peso(wallet)}. Client projects: ${pj}.`,
-  `Bukas ang Midnight Roast ngayon: ${cafeOpen()?'oo':'hindi, gabi lang bukas'}.`,
+  `${is3am()?'3AM na at nanonood ka ng true crime: medyo takot ka sa bawat tunog, pero hindi mo aaminin. ':''}Bukas ang Midnight Roast ngayon: ${cafeOpen()?'oo':'hindi, gabi lang bukas'}.`,
   `Pinapanood mo: ${media.show?`${media.show.title} (${SHOW_LABEL[media.show.type]}, ep ${media.show.at}/${media.show.total})`:'wala'}. Binabasa mo: ${media.book?`${media.book.title} (${BOOK_LABEL[media.book.type]}, ch ${media.book.at}/${media.book.total})`:'wala'}. Natapos kamakailan: ${media.finished.slice(-3).map(f=>f.title).join(', ')||'wala'}.`,
   `Online orders na parating: ${shop.pending.map(p=>p.name).join(', ')||'wala'}. Mga binili na nasa bahay na: ${shop.owned.map(id=>(ITEMS.find(i=>i.id===id)||{}).name).join(', ')||'wala'}.`,
   `Birthday ni ${viewerName}: ${['','January','February','March','April','May','June','July','August','September','October','November','December'][+viewerBday.split('-')[0]]} ${viewerBday.split('-')[1]}. Birthday mo: March 8.`,
@@ -2397,6 +2414,8 @@ const SFX={
  zoomIn(){const t=SND.ctx.currentTime,b=SND.N.sfx;tone('sine',660,0,t,.25,.1,b);tone('sine',880,0,t+.12,.35,.1,b)},
  zoomOut(){const t=SND.ctx.currentTime,b=SND.N.sfx;tone('sine',880,0,t,.25,.1,b);tone('sine',587,0,t+.12,.4,.1,b)},
  boom(){const t=SND.ctx.currentTime;noiseHit(t,.5,.16,SND.N.sfx,['lowpass',600]);tone('sine',90,40,t,.4,.16,SND.N.sfx)},
+ creak(){const ctx=SND.ctx,t=ctx.currentTime,o=ctx.createOscillator(),bp=ctx.createBiquadFilter(),g=ctx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(70,t);o.frequency.linearRampToValueAtTime(52,t+.7);bp.type='bandpass';bp.frequency.value=420;bp.Q.value=6;o.connect(bp);bp.connect(g);g.connect(SND.N.amb);env(g,t,.08,.12,.7);o.start(t);o.stop(t+.9)},
+ growl(){tone('sawtooth',95,80,SND.ctx.currentTime,.8,.06,SND.N.sfx,['lowpass',400])},
  squeak(){tone('square',1200,1700,SND.ctx.currentTime,.15,.05,SND.N.sfx,['lowpass',3000])},
 };
 function sfx(n){if(SND.on&&SND.ctx&&SFX[n])try{SFX[n]()}catch(e){}}
@@ -2437,15 +2456,18 @@ const STATIONS={
   play(p,ch,t,spb){if(p.pos===0)pad(ch,t,spb*8,.04,null,1600);piano(ch[p.pos%ch.length]+12,t,spb*3,.08);if(p.pos===0)piano(ch[0]-12,t,spb*8,.1);if(p.pos%4===2&&Math.random()<.6)piano(pick(this.scale)+12,t,spb*3,.07)}},
  sawi:{name:'sad playlist era',bpm:56,prog:[[45,48,52,57],[41,45,48,53],[43,47,50,55],[40,43,47,52]],scale:[57,60,64,67,69,72],
   play(p,ch,t,spb){const E=SND.N.echoIn;if(p.pos===0){piano(ch[0]-12,t,spb*8,.1,E);pad(ch,t,spb*8,.025,null,700)}if(p.pos%2===0)piano(ch[(p.pos/2)%ch.length]+12,t,spb*3,.07,E);if(p.pos===3&&Math.random()<.5)piano(pick(this.scale)+12,t,spb*4,.06,E)}},
+ truecrime:{name:'3AM true crime (wag kang lilingon)',bpm:54,prog:[[38,39,45],[36,37,43],[38,39,45],[41,42,48]],scale:[50,51,55,56,62,63],
+  play(p,ch,t,spb){if(p.pos===0)pad(ch,t,spb*8,.05,null,420);noiseHit(t,.012,p.pos%2?.03:.045,SND.N.radioIn,['highpass',5200]);
+   if(p.pos===0&&p.bar%2===0){kick(t,.22);kick(t+.18,.15)}if(Math.random()<.22){const m=pick(this.scale);piano(m+12,t,spb*5,.05,SND.N.echoIn);piano(m+13,t+.02,spb*3,.02,SND.N.echoIn)}}},
  videoke:{name:'videoke mode (si Tala ang kumakanta)',bpm:108,prog:[[48,52,55],[45,48,52],[41,45,48],[43,47,50]],scale:[60,62,64,67,69,72],
   play(p,ch,t,spb){if(p.pos%2===1)for(const m of ch)epiano(m+12,t,spb*.8,.06);bassSyn(ch[0]-12+(p.pos%2?12:0),t,spb*.8,.2,600,'square');if(p.pos%4===0)kick(t,.32);if(p.pos%4===2){snare(t,.08);clap(t,.07)}hat(t,.035);
    if(p.pos%2===0&&Math.random()<.9)lead(pick(this.scale)+12,t,spb*1.6,.07)}},
 };
-const STATION_ORDER=['morning','opm','citypop','focus','night','kdrama','sawi','videoke'];
+const STATION_ORDER=['morning','opm','citypop','focus','night','kdrama','sawi','truecrime','videoke'];
 function radioMode(){
  if(SND.pick&&SND.pick!=='auto')return SND.pick;
  if(!H.visible&&H.away)return null;if(H.cur&&H.cur.sleep)return null;if(brownout)return null;
- if(/videoke/i.test(H.label))return'videoke';if(heartbreak())return'sawi';if(phase&&phase.id==='kdrama')return'kdrama';
+ if(/videoke/i.test(H.label))return'videoke';if(is3am())return'truecrime';if(heartbreak())return'sawi';if(phase&&phase.id==='kdrama')return'kdrama';
  const p=urgentProject();if(H.anim==='type'||(p&&p.due-simNow()<24*H1))return'focus';
  const hf=hourF(),dayOdd=nowDate().getDate()%2;
  if(hf>=20||hf<5)return'night';if(hf<11)return dayOdd?'opm':'morning';
