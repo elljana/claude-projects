@@ -1636,13 +1636,21 @@ function lakadReturn(L){
 
 // ---------- 3AM true crime: cozy-creepy, only in her true crime era ----------
 let flicker=0,spooky={t:0};
-function is3am(){const hf=hourF();return phase&&phase.id==='truecrime'&&hf>=2&&hf<4.5&&!(H.cur&&H.cur.sleep)&&!H.away}
+function tcNight(){const hf=hourF();return phase&&phase.id==='truecrime'&&(hf>=21.5||hf<4.5)}
+function is3am(){return tcNight()&&!(H.cur&&H.cur.sleep)&&!H.away}
+const peak3am=()=>{const hf=hourF();return hf>=2&&hf<4.5}
 function update3am(dt){
  if(flicker>0)flicker-=dt;
- if(!is3am()||catchingUp)return;
- spooky.t-=dt;if(spooky.t>0)return;spooky.t=rnd(90,240);
+ // asleep in her true crime era: once a night, something wakes her up; you read about it in the morning
+ if(tcNight()&&peak3am()&&H.cur&&H.cur.sleep&&!today.tcWoke&&chance(dt/2400)){today.tcWoke=true;flags.tcMorning=dateKey();
+  const what=pick(['may lumangitngit sa sahig','umungol si Kikiam sa pinto','nakita niyang nakatitig si Siopao sa kanya sa dilim','may kumatok daw (yung pinto ng kapitbahay pala)']);
+  log(`Nagising si ${NAME} kasi ${what}. Hindi na nakatulog ulit nang 40 minuto.`);highlight(`nagising ako nang ${hhmm()} kasi ${what}`)}
+ if(!H.cur||!H.cur.sleep){if(flags.tcMorning&&hourF()>6&&hourF()<12){const d=flags.tcMorning;flags.tcMorning=null;if(d)talaMsg(pick(['teh. kagabi. may narinig ako. hindi na ko nakatulog. never na kong manonood ng true crime. (manonood ako mamaya)','good morning... kung morning nga. puyat ako kasi may lumangitngit kagabi. true crime, ikaw ang may kasalanan.']),{important:true})}}
+ if(!is3am())return;
+ spooky.t-=dt;if(spooky.t>0)return;spooky.t=peak3am()?rnd(60,150):rnd(180,400);
+ if(catchingUp){log(`${pick([`${CAT} nakatitig sa walang laman na sulok.`,'kumislap ang ilaw.',`umungol si ${DOG} sa pinto.`,'may lumangitngit.'])} (True crime hours.)`);return}
  const ev=pick(['stare','creak','flicker','growl']);
- if(ev==='stare'&&!cat.away){cat.path=[];if(cat.elev){const f=catFloorPos();cat.x=f.x;cat.y=f.y;cat.elev=null}cat.path.push({x:30,y:252});cat.state='move';cat.after='watch';cat.f=-1;
+ if(ev==='stare'&&!cat.away&&!H.inBed){cat.path=[];if(cat.elev){const f=catFloorPos();cat.x=f.x;cat.y=f.y;cat.elev=null}cat.path.push({x:30,y:252});cat.state='move';cat.after='watch';cat.f=-1;
   setTimeout(()=>{cat.face='bang';cat.react=4},2500);say(pick([`${CAT}... ano tinitingnan mo... ${CAT.toUpperCase()}.`,`bakit nakatitig si ${CAT} sa sulok. walang tao dun. WALANG TAO DUN DIBA`]));log(`3AM: ${CAT} nakatitig sa walang laman na sulok. Ayaw ni ${NAME} ng ganito.`)}
  else if(ev==='creak'){sfx('creak');say(pick(['narinig mo yun?','...sahig lang yun. sahig lang yun.','lumang building lang to. lumang building.']))}
  else if(ev==='flicker'){flicker=1.2;say(pick(['AY. ...okay. okay lang. kuryente lang yun.','bakit kumislap yung ilaw. bakit.']));log('3AM: kumislap ang ilaw. Inilipat ni Tala ang channel sa cooking show nang 30 segundo.')}
@@ -2456,7 +2464,7 @@ const STATIONS={
   play(p,ch,t,spb){if(p.pos===0)pad(ch,t,spb*8,.04,null,1600);piano(ch[p.pos%ch.length]+12,t,spb*3,.08);if(p.pos===0)piano(ch[0]-12,t,spb*8,.1);if(p.pos%4===2&&Math.random()<.6)piano(pick(this.scale)+12,t,spb*3,.07)}},
  sawi:{name:'sad playlist era',bpm:56,prog:[[45,48,52,57],[41,45,48,53],[43,47,50,55],[40,43,47,52]],scale:[57,60,64,67,69,72],
   play(p,ch,t,spb){const E=SND.N.echoIn;if(p.pos===0){piano(ch[0]-12,t,spb*8,.1,E);pad(ch,t,spb*8,.025,null,700)}if(p.pos%2===0)piano(ch[(p.pos/2)%ch.length]+12,t,spb*3,.07,E);if(p.pos===3&&Math.random()<.5)piano(pick(this.scale)+12,t,spb*4,.06,E)}},
- truecrime:{name:'3AM true crime (wag kang lilingon)',bpm:54,prog:[[38,39,45],[36,37,43],[38,39,45],[41,42,48]],scale:[50,51,55,56,62,63],
+ truecrime:{name:'true crime hours (wag kang lilingon)',bpm:54,prog:[[38,39,45],[36,37,43],[38,39,45],[41,42,48]],scale:[50,51,55,56,62,63],
   play(p,ch,t,spb){if(p.pos===0)pad(ch,t,spb*8,.05,null,420);noiseHit(t,.012,p.pos%2?.03:.045,SND.N.radioIn,['highpass',5200]);
    if(p.pos===0&&p.bar%2===0){kick(t,.22);kick(t+.18,.15)}if(Math.random()<.22){const m=pick(this.scale);piano(m+12,t,spb*5,.05,SND.N.echoIn);piano(m+13,t+.02,spb*3,.02,SND.N.echoIn)}}},
  videoke:{name:'videoke mode (si Tala ang kumakanta)',bpm:108,prog:[[48,52,55],[45,48,52],[41,45,48],[43,47,50]],scale:[60,62,64,67,69,72],
