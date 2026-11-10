@@ -475,8 +475,10 @@ function desk(s){
  R(284,58,24,4,P.cream);R(285,58,22,1,P.white);for(let x=286;x<306;x+=3)px(x,60,P.grey);R(310,59,4,3,P.grey);
  rbox(269,52,6,6,P.cream);R(270,52,4,1,'#6a3a1e');R(275,54,1,2,P.cream);
  R(316,42,1,14,P.inkS);R(316,41,8,2,P.inkS);rbox(320,36,8,6,P.m2);R(321,42,6,1,P.m3);
- // chair (back view, on the floor in front)
- shadow(296,WY+20,22,4);rbox(287,WY+2,18,14,'#5a5462');R(288,WY+2,16,1,'#7a7484');R(289,WY+5,14,1,'#4a4450');rbox(285,WY+14,22,4,'#4a4450');R(295,WY+18,2,4,'#3a3440');
+}
+function deskChair(){
+ // office chair seen from behind; its backrest hides her lower back when she sits
+ shadow(290,WY+20,24,4);rbox(279,WY-6,22,16,'#5a5462');R(280,WY-6,20,1,'#7a7484');R(281,WY-3,18,1,'#4a4450');R(281,WY+2,18,1,'#4a4450');rbox(277,WY+9,26,4,'#4a4450');R(289,WY+13,3,6,'#3a3440');R(282,WY+19,17,2,'#2a2430');R(282,WY+21,2,1,'#1a1420');R(297,WY+21,2,1,'#1a1420');
 }
 function tvWall(t,s){
  rbox(330,14,52,3,P.w4);R(331,14,50,1,P.w5);
@@ -609,7 +611,7 @@ function drawRoom(ctx,s){X=ctx;const t=s.t;
 }
 // floor entities (drawn depth-sorted with the characters by the game; here returned as a list)
 function floorItems(s){const t=s.t;return[
- [176,()=>diningTable(t,s)],[124,()=>backStool()],[198,()=>fan(t,!s.brownout)],[246,()=>dogBed()],[262,()=>bigPlant(t)],[182,()=>basket()],[248,()=>toys()],[138,()=>beanbag()],
+ [176,()=>diningTable(t,s)],[101,()=>deskChair()],[124,()=>backStool()],[198,()=>fan(t,!s.brownout)],[246,()=>dogBed()],[262,()=>bigPlant(t)],[182,()=>basket()],[248,()=>toys()],[138,()=>beanbag()],
  [136,()=>coffeeTable()],[192,()=>sofaBack()],[190,()=>floorLamp(s.night)],[152,()=>bed(t,s)],[212,()=>halfWall()],[226,()=>crDoorReal()],
 ]}
 function blanketOver(){rbox(402,99,40,36,P.b2);R(403,99,38,2,P.b3);for(let y=104;y<132;y+=9)for(let x=406;x<438;x+=9){R(x,y,4,4,P.b3);px(x+1,y+1,P.b1)}R(440,99,2,36,P.b1)}
@@ -769,7 +771,7 @@ function say(text,owner='human'){if(catchingUp||!text)return;saidRecent.push(tex
 const BACKY=104,FRONTY=216,CORR=190;
 const S={
  door:{x:32,y:98,f:-1},fridge:{x:62,y:100},bowls:{x:76,y:106,f:-1},sink:{x:96,y:100},counter:{x:110,y:100},stove:{x:134,y:100},
- cattree:{x:166,y:102},window:{x:224,y:98},desk:{x:296,y:102},tv:{x:356,y:100},shelf:{x:356,y:100},clock:{x:380,y:102},
+ cattree:{x:166,y:102},window:{x:224,y:98},desk:{x:290,y:104},tv:{x:356,y:100},shelf:{x:356,y:100},clock:{x:380,y:102},
  table:{x:93,y:118},tableFront:{x:100,y:190},beanbag:{x:250,y:150},sofa:{x:340,y:210,f:1},rug:{x:240,y:222},center:{x:220,y:204},
  bed:{x:420,y:160},dresser:{x:437,y:100},bath:{x:452,y:206,f:1},plant:{x:420,y:250,f:1},basket:{x:414,y:196},halfwall:{x:378,y:164,f:1},
 };
@@ -1959,7 +1961,7 @@ function talaPlacement(){
  if(H.pose==='sit'){
   if(x>78&&x<110&&y<152)return{mode:'upper',x:93,y:143,key:140,front:true};
   if(x>316&&x<356&&y>150)return{mode:'upper',x:336,y:176,key:170,back:true};
-  if(x>282&&x<312&&y<124)return{mode:'upper',x:296,y:114,key:114,back:true};
+  if(x>280&&x<312&&y<124)return{mode:'upper',x:290,y:92,key:100,back:true};
   if(x>236&&x<266&&y>118&&y<160)return{mode:'upper',x:250,y:138,key:139};
   if(x>396)return{mode:'full',x:430,y:148,key:153};
   return{mode:'upper',x,y,key:y};
