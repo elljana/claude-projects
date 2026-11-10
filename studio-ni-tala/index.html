@@ -133,6 +133,8 @@ body.zen .stage{aspect-ratio:auto;height:100%;border-radius:0;box-shadow:none}
 .mix{display:grid;gap:10px;margin-top:12px}
 .mix label{display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:10px;align-items:center;font-size:13px}
 .mix input[type=range]{width:100%;accent-color:var(--jade)}
+.pick{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:10px;align-items:center;font-size:13px;margin-top:12px}
+.pick select{font:inherit;font-size:13px;color:var(--ink);background:#17141d;border:1px solid var(--line);border-radius:5px;padding:5px 6px;min-width:0}
 .now-playing{margin-top:12px;font-size:13px;color:var(--accent);font-family:var(--display)}
 .now-playing small{display:block;font-family:var(--body);color:var(--muted);font-size:12px}
 @media (prefers-reduced-motion:reduce){.bubble,.bar i{transition:none}}
@@ -197,6 +199,7 @@ body.zen .stage{aspect-ratio:auto;height:100%;border-radius:0;box-shadow:none}
         <label for="volRadio"><span>Radyo ni Tala</span><input type="range" id="volRadio" min="0" max="100"></label>
         <label for="volCrackle"><span>Vinyl crackle sa radyo</span><input type="range" id="volCrackle" min="0" max="100"></label>
       </div>
+      <label class="pick" for="stationPick"><span>Istasyon</span><select id="stationPick"><option value="auto">Auto (si Tala ang bahala)</option></select></label>
       <div class="now-playing" id="nowPlaying"></div>
     </div>
     <div class="card">
@@ -2371,6 +2374,7 @@ function sndInit(){
  N.sizzle=layer(N.sfx,white,[['highpass',2600],['lowpass',9000]]);N.water=layer(N.sfx,white,[['bandpass',1300,.8]]);
  N.kettleOsc=ctx.createOscillator();N.kettleOsc.frequency.value=1900;N.kettle=ctx.createGain();N.kettle.gain.value=0;N.kettleOsc.connect(N.kettle);N.kettle.connect(N.sfx);N.kettleOsc.start();
  N.crackle=layer(N.radioIn,crk,[['highpass',700]]);
+ N.echoIn=ctx.createGain();N.echoIn.connect(N.radioIn);const dl=ctx.createDelay(1);dl.delayTime.value=.38;const fb=ctx.createGain();fb.gain.value=.38;const wet=ctx.createGain();wet.gain.value=.45;N.echoIn.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(N.radioIn);
  return true;
 }
 function env(g,t,a,peak,d){g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(peak,.0002),t+a);g.gain.exponentialRampToValueAtTime(.0001,t+a+d)}
@@ -2397,38 +2401,69 @@ const SFX={
 };
 function sfx(n){if(SND.on&&SND.ctx&&SFX[n])try{SFX[n]()}catch(e){}}
 // Tala's own station: DZTL 98.3, generative lofi that follows her mood and day
+// --- instruments (all synthesized) ---
+function pluck(m,t,vel,bus,bright=2600){const ctx=SND.ctx,f=mtof(m),g=ctx.createGain(),lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(bright,t);lp.frequency.exponentialRampToValueAtTime(500,t+.35);
+ const a=ctx.createOscillator();a.type='triangle';a.frequency.value=f;const b=ctx.createOscillator();b.type='sawtooth';b.frequency.value=f;b.detune.value=6;const bg=ctx.createGain();bg.gain.value=.35;
+ a.connect(lp);b.connect(bg);bg.connect(lp);lp.connect(g);g.connect(bus||SND.N.radioIn);env(g,t,.004,vel,.9);a.start(t);b.start(t);a.stop(t+1);b.stop(t+1)}
+function strum(ch,t,vel,bus,down=true){const ns=down?ch:[...ch].reverse();ns.forEach((m,i)=>pluck(m+12,t+i*.016,vel*(1-i*.08),bus))}
+function piano(m,t,dur,vel,bus){const ctx=SND.ctx,f=mtof(m),g=ctx.createGain();g.connect(bus||SND.N.radioIn);
+ for(const [mult,amp,type] of [[1,1,'sine'],[2,.35,'triangle'],[3,.12,'sine']]){const o=ctx.createOscillator();o.type=type;o.frequency.value=f*mult;const og=ctx.createGain();og.gain.value=amp;o.connect(og);og.connect(g);o.start(t);o.stop(t+dur+.1)}
+ g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vel,t+.006);g.gain.exponentialRampToValueAtTime(vel*.3,t+.5);g.gain.exponentialRampToValueAtTime(.0001,t+dur)}
+function pad(ch,t,dur,vel,bus,cut=1200){const ctx=SND.ctx,lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=cut;const g=ctx.createGain();lp.connect(g);g.connect(bus||SND.N.radioIn);
+ g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vel,t+.5);g.gain.setValueAtTime(vel,t+dur-.4);g.gain.linearRampToValueAtTime(.0001,t+dur);
+ for(const m of ch)for(const d of [-7,7]){const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=mtof(m);o.detune.value=d;o.connect(lp);o.start(t);o.stop(t+dur+.05)}}
+function bassSyn(m,t,dur,vel,cut=420,type='sawtooth'){const ctx=SND.ctx,o=ctx.createOscillator(),lp=ctx.createBiquadFilter(),g=ctx.createGain();o.type=type;o.frequency.value=mtof(m);lp.type='lowpass';lp.frequency.setValueAtTime(cut*2.2,t);lp.frequency.exponentialRampToValueAtTime(cut,t+.12);o.connect(lp);lp.connect(g);g.connect(SND.N.radioIn);env(g,t,.008,vel,dur);o.start(t);o.stop(t+dur+.05)}
+function lead(m,t,dur,vel){const ctx=SND.ctx,o=ctx.createOscillator(),lfo=ctx.createOscillator(),lg=ctx.createGain(),lp=ctx.createBiquadFilter(),g=ctx.createGain();o.type='square';o.frequency.value=mtof(m);lfo.frequency.value=5.5;lg.gain.value=6;lfo.connect(lg);lg.connect(o.detune);lp.type='lowpass';lp.frequency.value=2200;o.connect(lp);lp.connect(g);g.connect(SND.N.radioIn);env(g,t,.02,vel,dur);o.start(t);lfo.start(t);o.stop(t+dur+.05);lfo.stop(t+dur+.05)}
+const kick=(t,v)=>tone('sine',120,42,t,.22,v,SND.N.radioIn),snare=(t,v)=>noiseHit(t,.15,v,SND.N.radioIn,['bandpass',1800,.8]),hat=(t,v)=>noiseHit(t,.03,v,SND.N.radioIn,['highpass',7500]),
+ shaker=(t,v)=>{noiseHit(t,.05,v,SND.N.radioIn,['highpass',6000]);noiseHit(t+.03,.04,v*.6,SND.N.radioIn,['highpass',6500])},
+ clap=(t,v)=>{for(let i=0;i<3;i++)noiseHit(t+i*.011,.08,v,SND.N.radioIn,['bandpass',1400,1.2])};
+// --- stations: each has its own sound, tempo and groove ---
 const STATIONS={
- morning:{name:'umagang chill',bpm:78,prog:[[53,57,60,64],[52,55,59,62],[50,53,57,60],[48,52,55,59]],drums:1,mel:.35,scale:[60,62,64,67,69,72,74,76]},
- focus:{name:'focus beats (may deadline)',bpm:86,prog:[[50,53,57,60,64],[43,47,50,53,57],[48,52,55,59,62],[48,52,55,59,62]],drums:1,mel:.12,scale:[62,64,67,69,71,74]},
- night:{name:'hatinggabi',bpm:68,prog:[[45,48,52,55],[41,45,48,52],[50,53,57,60],[52,56,59,62]],drums:.6,mel:.25,scale:[57,60,62,64,67,69,72]},
- kdrama:{name:'K-drama era (piano lang)',bpm:64,prog:[[48,52,55,60],[47,50,55,59],[45,48,52,57],[41,45,48,53]],drums:0,mel:.45,arp:1,scale:[64,67,69,72,74,76,79]},
- sawi:{name:'sad playlist era',bpm:58,prog:[[45,48,52,57],[41,45,48,53],[43,47,50,55],[40,43,47,52]],drums:0,mel:.4,arp:1,scale:[57,60,64,67,69,72]},
- videoke:{name:'videoke mode (si Tala ang kumakanta)',bpm:104,prog:[[48,52,55],[45,48,52],[41,45,48],[43,47,50]],drums:1,mel:.9,lead:1,scale:[60,62,64,67,69,72]},
+ morning:{name:'umagang chill',bpm:80,prog:[[48,52,55,59],[47,50,55,62],[45,48,52,55],[41,45,48,52]],scale:[60,62,64,67,69,72],
+  play(p,ch,t,spb){if([0,3,5].includes(p.pos))strum(ch,t,.12,null,p.pos!==3);if(p.pos%2)shaker(t,.035);if(p.pos===0||p.pos===4)kick(t,.22);if(p.pos===4)snare(t,.05);if(p.pos===0||p.pos===4)bassSyn(ch[0]-12,t,spb*3,.16,320,'triangle');if(p.pos===6&&Math.random()<.5)pluck(pick(this.scale)+12,t,.09)}},
+ opm:{name:'OPM acoustic (harana feels)',bpm:78,prog:[[43,47,50,55],[38,42,45,50],[40,43,47,52],[35,38,42,47],[36,40,43,48],[43,47,50,55],[36,40,43,48],[38,42,45,50]],scale:[67,69,71,74,76,79],
+  play(p,ch,t,spb){const pat={0:1,2:1,3:0,5:0,6:1,7:0};if(p.pos in pat)strum(ch,t,p.pos===0?.15:.1,null,!!pat[p.pos]);if(p.pos===0)bassSyn(ch[0]-12,t,spb*4,.14,300,'triangle');if(p.pos%4===2)shaker(t,.02);
+   if(p.pos%2===0&&Math.random()<.35)piano(pick(this.scale),t,spb*3,.09)}},
+ citypop:{name:'city pop (pang-biyahe sa EDSA nang 1985)',bpm:106,prog:[[41,45,48,52,55],[43,47,50,53,57],[40,43,47,50,55],[45,48,52,55,59]],scale:[64,67,69,71,72,74,76],
+  play(p,ch,t,spb){if([0,3,6].includes(p.pos))for(const m of ch.slice(1))epiano(m+12,t,spb*1.6,.05);const bl=[0,12,0,7,12,0,10,12][p.pos];bassSyn(ch[0]-12+bl,t,spb*.9,.2,700,'square');
+   if(p.pos===0||p.pos===4)kick(t,.3);if(p.pos===2||p.pos===6){snare(t,.08);clap(t,.05)}hat(t,p.pos%2?.03:.05);hat(t+spb/2,.02);
+   if(p.bar%2===1&&p.pos%2===0&&Math.random()<.55)lead(pick(this.scale)+12,t,spb*1.4,.035)}},
+ focus:{name:'focus beats (may deadline)',bpm:88,prog:[[50,53,57,60,64],[43,47,50,53,57],[48,52,55,59,62],[48,52,55,59,62]],
+  play(p,ch,t,spb){if(p.pos===0)pad(ch,t,spb*8,.035,null,900);bassSyn(ch[0]-12+(p.pos%4===3?7:0),t,spb*.8,.15,380);if(p.pos===0||p.pos===5)kick(t,.3);if(p.pos===4)snare(t,.07);hat(t,p.pos%2?.025:.045)}},
+ night:{name:'hatinggabi (late-night lo-fi)',bpm:66,prog:[[45,48,52,55,59],[41,45,48,52,55],[50,53,57,60,64],[52,56,59,62,65]],scale:[57,60,62,64,67,69,72],
+  play(p,ch,t,spb){if(p.pos===0){for(const m of ch)epiano(m,t,spb*8.5,.07);pad(ch.slice(0,3),t,spb*8,.02,null,700)}if(p.pos===0||p.pos===5)kick(t,.18);if(p.pos===4)noiseHit(t,.25,.05,SND.N.radioIn,['bandpass',1200,.6]);if(p.pos%2===0)hat(t,.015);
+   if(p.pos%2===0&&Math.random()<.3)epiano(pick(this.scale)+12,t,spb*2.5,.06)}},
+ kdrama:{name:'K-drama era (piano at strings)',bpm:64,prog:[[48,52,55,60],[47,50,55,59],[45,48,52,57],[41,45,48,53]],scale:[64,67,69,72,74,76,79],
+  play(p,ch,t,spb){if(p.pos===0)pad(ch,t,spb*8,.04,null,1600);piano(ch[p.pos%ch.length]+12,t,spb*3,.08);if(p.pos===0)piano(ch[0]-12,t,spb*8,.1);if(p.pos%4===2&&Math.random()<.6)piano(pick(this.scale)+12,t,spb*3,.07)}},
+ sawi:{name:'sad playlist era',bpm:56,prog:[[45,48,52,57],[41,45,48,53],[43,47,50,55],[40,43,47,52]],scale:[57,60,64,67,69,72],
+  play(p,ch,t,spb){const E=SND.N.echoIn;if(p.pos===0){piano(ch[0]-12,t,spb*8,.1,E);pad(ch,t,spb*8,.025,null,700)}if(p.pos%2===0)piano(ch[(p.pos/2)%ch.length]+12,t,spb*3,.07,E);if(p.pos===3&&Math.random()<.5)piano(pick(this.scale)+12,t,spb*4,.06,E)}},
+ videoke:{name:'videoke mode (si Tala ang kumakanta)',bpm:108,prog:[[48,52,55],[45,48,52],[41,45,48],[43,47,50]],scale:[60,62,64,67,69,72],
+  play(p,ch,t,spb){if(p.pos%2===1)for(const m of ch)epiano(m+12,t,spb*.8,.06);bassSyn(ch[0]-12+(p.pos%2?12:0),t,spb*.8,.2,600,'square');if(p.pos%4===0)kick(t,.32);if(p.pos%4===2){snare(t,.08);clap(t,.07)}hat(t,.035);
+   if(p.pos%2===0&&Math.random()<.9)lead(pick(this.scale)+12,t,spb*1.6,.07)}},
 };
+const STATION_ORDER=['morning','opm','citypop','focus','night','kdrama','sawi','videoke'];
 function radioMode(){
+ if(SND.pick&&SND.pick!=='auto')return SND.pick;
  if(!H.visible&&H.away)return null;if(H.cur&&H.cur.sleep)return null;if(brownout)return null;
  if(/videoke/i.test(H.label))return'videoke';if(heartbreak())return'sawi';if(phase&&phase.id==='kdrama')return'kdrama';
  const p=urgentProject();if(H.anim==='type'||(p&&p.due-simNow()<24*H1))return'focus';
- const hf=hourF();return(hf>=20||hf<5)?'night':'morning';
-}
-function playStep(st,step,t,spb){
- const N=SND.N,bar=Math.floor(step/8),pos=step%8,ch=st.prog[bar%st.prog.length];
- if(pos===0)for(const m of ch)epiano(m,t,spb*8.5,.11);
- if(st.arp)epiano(ch[pos%ch.length]+12,t,spb*3,.13);
- if(st.drums){const d=st.drums;
-  if(pos===0||pos===5)tone('sine',110,42,t,.2,.6*d,N.radioIn);
-  if(pos===4)noiseHit(t,.14,.16*d,N.radioIn,['bandpass',1800,.8]);
-  noiseHit(t,.03,(pos%2?.04:.07)*d,N.radioIn,['highpass',7000]);
-  if(pos===0||pos===4)tone('sine',mtof(ch[0]-12),0,t,spb*3.5,.28,N.radioIn)}
- if(pos%2===0&&Math.random()<st.mel){const m=pick(st.scale);
-  if(st.lead)tone('square',mtof(m),0,t,spb*1.6,.08,N.radioIn,['lowpass',1800]);else epiano(m+12,t,spb*2.5,.1)}
+ const hf=hourF(),dayOdd=nowDate().getDate()%2;
+ if(hf>=20||hf<5)return'night';if(hf<11)return dayOdd?'opm':'morning';
+ return Math.floor(hf/2)%2===dayOdd?'citypop':'opm';
 }
 function radioTick(){
  if(!SND.on||!SND.ctx)return;const R=SND.R,ctx=SND.ctx,now=ctx.currentTime;
  if(R.mode){const st=STATIONS[R.mode],spb=60/st.bpm/2;if(R.next<now)R.next=now+.05;
-  while(R.next<now+1.6){playStep(st,R.step,R.next,spb);R.next+=spb*(R.step%2?.88:1.12);R.step++}}
+  while(R.next<now+1.6){const bar=Math.floor(R.step/8),pos=R.step%8;try{st.play({pos,bar,step:R.step},st.prog[bar%st.prog.length],R.next,spb)}catch(e){}R.next+=spb*(R.mode==='focus'||R.mode==='citypop'?1:(R.step%2?.88:1.12));R.step++}}
  if(neighborSing){if(R.nNext<now)R.nNext=now+.05;
   while(R.nNext<now+1.6){if(Math.random()<.7)tone('square',mtof(pick([60,62,64,67,69,72])+(Math.random()<.2?12:0)),0,R.nNext,.32,.05,SND.N.neighbor);R.nNext+=.3}}
+}
+// station change: a quick dial sweep and a three-note DZTL jingle
+function radioSwitch(name){
+ const ctx=SND.ctx,t=ctx.currentTime,s=ctx.createBufferSource();s.buffer=SND.white;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.Q.value=4;bp.frequency.setValueAtTime(400,t);bp.frequency.exponentialRampToValueAtTime(4000,t+.5);
+ const g=ctx.createGain();s.connect(bp);bp.connect(g);g.connect(SND.N.radio);env(g,t,.02,.12,.5);s.start(t);s.stop(t+.6);
+ [72,76,79].forEach((m,i)=>epiano(m,t+.6+i*.16,.5,.09,SND.N.radio));SND.R.next=t+1.25;
+ if(name){const el=$('toast');el.innerHTML='';const b=document.createElement('b');b.textContent='DZTL 98.3 · ';el.append(b,document.createTextNode('Now playing: '+name));el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{el.hidden=true},4000)}
 }
 let lastMode='-';
 function sndUpdate(dt){
@@ -2449,7 +2484,7 @@ function sndUpdate(dt){
  const nT=chat.length;if(P.nT!=null&&nT>P.nT&&chat[nT-1].from==='tala')sfx('pop');P.nT=nT;
  if(roach&&!P.roach)sfx('squeak');P.roach=!!roach;
  const d=nowDate();if(((d.getMonth()===11&&d.getDate()===31&&hourF()>23.8)||(d.getMonth()===0&&d.getDate()===1&&hourF()<.6))&&chance(dt*.7))sfx('boom');
- const mode=radioMode();if(mode!==SND.R.mode){SND.R.mode=mode;SND.R.step=0;SND.R.next=0}
+ const mode=radioMode();if(mode!==SND.R.mode){const was=SND.R.mode;SND.R.mode=mode;SND.R.step=0;SND.R.next=0;if(mode&&!catchingUp)radioSwitch(was!==undefined?STATIONS[mode].name:null)}
  tg(N.crackle,mode?1.5*SND.vol.crackle:0,.3);
  if(mode!==lastMode){lastMode=mode;renderSnd()}
 }
@@ -2458,7 +2493,7 @@ function renderSnd(){
  const m=SND.R.mode;
  $('nowPlaying').innerHTML='';if(!on)return;
  const t=document.createElement('span');t.textContent=m?'DZTL 98.3 · Radyo ni Tala':'Naka-off ang radyo';
- const sm=document.createElement('small');sm.textContent=m?STATIONS[m].name:(H.cur&&H.cur.sleep?'tulog si Tala, ambience lang':brownout?'brownout, walang kuryente':'wala si Tala sa bahay');
+ const sm=document.createElement('small');sm.textContent=m?STATIONS[m].name+(SND.pick&&SND.pick!=='auto'?' (naka-lock)':''):(H.cur&&H.cur.sleep?'tulog si Tala, ambience lang':brownout?'brownout, walang kuryente':'wala si Tala sa bahay');
  $('nowPlaying').append(t,sm);
 }
 function sndToggle(){
@@ -2470,6 +2505,9 @@ function sndToggle(){
 $('sndBtn').onclick=sndToggle;$('sndQuick').onclick=sndToggle;
 for(const [id,k] of [['volAmb','amb'],['volSfx','sfx'],['volRadio','radio'],['volCrackle','crackle']]){const el=$(id);el.value=Math.round(SND.vol[k]*100);
  el.addEventListener('input',()=>{SND.vol[k]=el.value/100;if(SND.ctx&&SND.N[k])SND.N[k].gain.setTargetAtTime(SND.vol[k],SND.ctx.currentTime,.05);if(k==='crackle')SND.prev.crk=null;sndSave()})}
+{const sel=$('stationPick');for(const k of STATION_ORDER){const o=document.createElement('option');o.value=k;o.textContent=STATIONS[k].name;sel.append(o)}
+ try{SND.pick=localStorage.getItem('tala-station')||'auto'}catch(e){SND.pick='auto'}sel.value=SND.pick;
+ sel.addEventListener('change',()=>{SND.pick=sel.value;try{localStorage.setItem('tala-station',SND.pick)}catch(e){}renderSnd()})}
 renderSnd();
 
 // ---------- loop ----------
