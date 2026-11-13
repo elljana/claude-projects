@@ -1669,7 +1669,7 @@ function updateLakad(dt){
 function goOfficial(n){Object.assign(love,{status:'dating',name:n,since:simNow(),health:70,ms:{},fight:null,catOk:0,hoodie:false});stat('events','naging official kay '+n)}
 const JOWA_LOOK={};
 function jowaLook(){const n=love.name||'Josh';if(JOWA_LOOK[n])return JOWA_LOOK[n];let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))>>>0;
- const pk=a=>a[(h=(h*1103515245+12345)>>>0)%a.length];
+ const pk=a=>{h=Math.imul(h^(h>>>15),2246822507)>>>0;h=Math.imul(h^(h>>>13),3266489909)>>>0;return a[(h>>>8)%a.length]};
  return JOWA_LOOK[n]={hair:pk(['short','short','curls','short']),hairColor:pk(['#2b1b16','#1a120e','#3a2418','#4a2a1a']),skin:pk(['#d9a070','#c8925e','#e6b890','#b88458']),
   outfit:pk(['tee','tee','hoodie','polo']),color:pk(['#3a3a4a','#4a6a5a','#8a3a3a','#3a5a8a','#c8a050','#5a4a6a'])}}
 const SWEET=n=>[`si ${n} nag-send ng picture ng pusa sa kalye kasi "kamukha raw ni Siopao." hindi. pero kinilig ako`,`${n}: "ingat ka today." ...ingat din ikaw ha. (hindi ko sinend. sinend ko.)`,
@@ -1689,19 +1689,19 @@ function updateRelationship(dt){
  const now=simNow(),n=love.name,hf=hourF(),awake=hf>8&&hf<23;
  if(love.health==null)love.health=65;if(!love.ms)love.ms={};if(!love.since)love.since=now;
  const days=(now-love.since)/86400e3;
- love.health=clamp(love.health-dt/86400*2.6,0,95);
+ love.health=clamp(love.health+(58-love.health)*dt/86400*.07,0,95);
  if(!love.fight&&awake&&chance(dt/(16*3600))){love.kiligUntil=now+40*60e3;love.kilig=clamp(love.kilig+6,0,100);love.health=clamp(love.health+1.5,0,95);if(!catchingUp)talaMsg(pickNovel(SWEET(n),'sw:'))}
  if(!love.fight&&days>2&&chance(dt/(20*86400))){love.fight={until:now+rnd(10,30)*H1,why:'yung ex niyang nagparamdam',rounds:1};love.health=clamp(love.health-rnd(14,22),0,95);moodBoost-=12;log(`Nag-message daw yung ex ni ${n}. Nag-reply si ${n}. Hindi ito okay kay ${NAME}.`);highlight(`nagparamdam yung ex ni ${n}`);talaMsg(`teh. yung EX ni ${n} nag-message sa kanya. at NAG-REPLY SIYA. "kumusta lang daw." KUMUSTA LANG DAW.`,{important:true});return}
- if(!love.fight&&days>1.5&&chance(dt/(6*86400)*(1.8-love.health/100))){const f=pick(FIGHTS);love.fight={until:now+rnd(6,26)*H1,why:f[0],rounds:1};love.health=clamp(love.health-rnd(8,16),0,95);moodBoost-=10;
+ if(!love.fight&&days>1.5&&chance(dt/(8*86400)*(1.8-love.health/100))){const f=pick(FIGHTS);love.fight={until:now+rnd(6,26)*H1,why:f[0],rounds:1};love.health=clamp(love.health-rnd(8,16),0,95);moodBoost-=10;
   log(`Nag-away sila ni ${n}: ${f[0]}. Hindi sila nag-uusap. (Nag-uusap sila, pero puro "ok.")`);highlight(`nag-away kami ni ${n}`);stat('events','away with '+n);talaMsg(f[1](n),{important:true});return}
  if(love.fight&&now>love.fight.until){const F=love.fight;
   if(chance(.25+love.health/100*.6)){love.fight=null;love.health=clamp(love.health+rnd(5,10),0,95);love.kiligUntil=now+3*H1;moodBoost+=10;
    log(pickNovel([`Nagbati na sila ni ${n}. May dalang pagkain si ${n}. Effective.`,`Bati na sila ni ${n} matapos ang dalawang oras na tawag. Ang "${F.why}" ay hindi na raw issue. (Issue pa rin.)`,`Nag-sorry si ${n}. Nag-sorry din si ${NAME}. Bati na. Kinikilig ulit.`],'dia:'));
    talaMsg(pickNovel([`bati na kami ni ${n} 🥹 nag-sorry siya. nag-sorry din ako. umiyak kami pareho. ang drama namin.`,`okay na kami ni ${n}. dinalhan niya ko ng ${pick(['isaw','milk tea','fishball','cake'])}. madali akong suyuin, alam ko.`]),{important:true})}
-  else if(love.health<45&&(F.rounds>=2||chance(.5))){breakHeart('breakup');return}
+  else if(love.health<40&&days>7&&(F.rounds>=2||chance(.5))){breakHeart('breakup');return}
   else{F.rounds++;F.until=now+rnd(8,20)*H1;love.health=clamp(love.health-5,0,100);talaMsg(pickNovel([`hindi pa rin kami bati ni ${n}. day ${F.rounds}. si Siopao lang kakampi ko.`,`si ${n}, "sorry na." tapos wala na. yun lang? YUN LANG?`]))}
   return}
- if(!love.fight&&love.health<28&&chance(dt/(3*86400))){breakHeart('fade');return}
+ if(!love.fight&&love.health<24&&days>10&&chance(dt/(3*86400))){breakHeart('fade');return}
  // milestones
  const mo=Math.floor(days/30);
  if(mo>=1&&love.ms.mo!==mo&&awake){love.ms.mo=mo;love.health=clamp(love.health+5,0,95);love.kiligUntil=now+4*H1;stat('events',`${mo} month${mo>1?'s':''} with ${n}`);
