@@ -1,8 +1,3 @@
-<!doctype html>
-<html lang="tl">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Studio ni Tala</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +13,7 @@
   color-scheme:dark;
 }
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45}
 .app{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start;box-sizing:border-box;min-height:100%;
   padding-block:18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1500px;margin:0 auto}
 @media (max-width:900px){.app{grid-template-columns:minmax(0,1fr)}}
@@ -77,7 +72,6 @@ body.zen .stage-col{height:100%;gap:0}
 body.zen .topbar,body.zen .actions,body.zen .hint,body.zen .panel{display:none}
 body.zen .stage{aspect-ratio:auto;height:100%;border-radius:0;box-shadow:none}
 .stage:fullscreen{aspect-ratio:auto;width:100%;height:100%;border-radius:0}
-[hidden]{display:none!important}
 .badge[hidden],.toast[hidden],.chip[hidden]{display:none}
 .badge{display:inline-block;margin-left:6px;min-width:18px;padding:0 6px;border-radius:999px;background:var(--rose);color:#2a1218;font-size:11px;letter-spacing:0;text-align:center}
 .msgs{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:8px;max-height:300px;min-height:120px;overflow-y:auto}
@@ -149,8 +143,6 @@ body.zen .stage{aspect-ratio:auto;height:100%;border-radius:0;box-shadow:none}
 .photo-big p{margin:0;color:var(--ink);font-family:var(--display);text-align:center;max-width:60ch}
 @media (prefers-reduced-motion:reduce){.bubble,.bar i{transition:none}}
 </style>
-</head>
-<body>
 
 <div class="app" id="app">
   <section class="stage-col">
@@ -321,6 +313,7 @@ const HAIR={
  bun:[".......HHHH","......HHhHHCC","......HHHHHCC","....HHHHHHHHH","...HHHHhhHHHHHH","..HHHHHHHhHHHHHH","..HHhHHHHHHHHHHHH","..HHHHHHHHHHHHHHH","..HHHHHHHHHHH.HH","..HHHHHHH","..HHHHHH","..HHHHHH","..kHHHHH","..kHHHH","...kHHH","...kHH","....k"],
  down:["","",".....HHHHHHH","...HHHHhhHHHH","..HHHHHhhHHHHHH",".HHHHHHHHhHHHHHH",".HHhHHHHHHHHHHHHH",".HHHHHHHHHHHHHHHH",".HHHHHHHHHHHH.HH",".HHHHHHHH",".HhHHHHH",".HhHHHH",".HHHHHH",".HHhHHH",".HHhHHH",".HHHHHH",".HHHHHH",".kHHhHH",".kHHhH",".kHHH",".kHHH","..kHH","..kH"],
  curls:["","......HHHHH","....HHHHhHHHH","..HHHHHhhHHHHH",".HHHHHHHHHHHHHH","HHHhHHHHHHhHHHHH","HHHHHHHHHHHHHHHHH","HHHHHHHHHHHHHHHHH",".HHHhHHHHHHHH.HH","HHHHHHHHH","HhHHHHH",".HHHHHH","HHhHHHH","HHHHHHH",".HHhHHH","HHHHHH",".HhHHH","HHHHH",".kHHH","kHHk",".kH"],
+ short:["","",".....HHHHHH","...HHHHhhHHHH","..HHHHHHhHHHHH","..HHHHHHHHHHHHH","..HHhHHHHHHHHHH","..HHHHHHHHHHHH","..HHHHHHHHHH.H","..HHHHH","..kHHH","..kHH","...k"],
  pony:["","","",".....HHHHHHH","...HHHHhhHHHHH","..HHHHHHhHHHHHH",".HHHHHHHHHHHHHHH","HHHhHHHHHHHHHHHH","HHHHHHHHHHHHH.HH","kHHHHHHHH","kHHHH","kHHH","HHk","HHk","HHk","Hk","Hk","k"],
 };
 const HOOD={16:"...lTT",17:"..lTTT",18:"..lTT",19:"...l"};
@@ -338,15 +331,17 @@ const FACES={
 const OUTFITS={
  tee:c=>({T:c,P:'#3b4766',F:'#2a2230'}),
  pajama:()=>({T:'#9ab8e0',P:'#86a6d0',F:null,dots:'#f4f8ff'}),
- hoodie:()=>({T:'#e2849a',P:'#3b4766',F:'#f4ecdc',hood:true}),
+ hoodie:c=>({T:c||'#e2849a',P:'#3b4766',F:'#f4ecdc',hood:true}),
  blouse:()=>({T:'#f4f0e6',P:'#e89ab4',F:null}),
  date:()=>({T:'#f4f0e6',P:'#4a5a8a',F:'#c0435a'}),
  party:()=>({T:'#c0435a',P:null,F:'#2a1a2a',skirt:true}),
- sunday:()=>({T:'#f2d070',P:null,F:'#a07040',skirt:true}),
+ sunday:c=>({T:c||'#f2d070',P:null,F:'#a07040',skirt:true}),
+ gown:c=>({T:c||'#b8a0d8',P:null,F:'#e8d8f0',skirt:true,gown:true}),
+ polo:c=>({T:c||'#6a8a6a',P:'#5a4a3a',F:'#2a2230'}),
 };
 function shade(h,a){const n=parseInt(h.slice(1),16);const c=v=>Math.max(0,Math.min(255,v+a));return'#'+[c(n>>16&255),c(n>>8&255),c(n&255)].map(v=>v.toString(16).padStart(2,'0')).join('')}
 function build(o){
- const of=OUTFITS[o.outfit||'tee'](o.color||'#e27d60');
+ const of=OUTFITS[o.outfit||'tee'](o.color||((o.outfit||'tee')==='tee'?'#e27d60':undefined));
  const rows=BODY_PANTS.map((r,i)=>of.skirt&&SKIRT_ROWS[i]?SKIRT_ROWS[i]:r).map(r=>r.split(''));
  const get=(x,y)=>(rows[y]||[])[x]||'.';const set=(x,y,c)=>{while(rows[y].length<=x)rows[y].push('.');rows[y][x]=c};
  if(of.hood)for(const [y,r] of Object.entries(HOOD))r.split('').forEach((c,x)=>{if(c!=='.'&&get(x,+y)==='.')set(x,+y,c)});
@@ -361,9 +356,12 @@ function build(o){
  if(o.back){for(let y=0;y<=16;y++)for(let x=0;x<(rows[y]||[]).length;x++){const c=rows[y][x];if(c!=='.'&&c!=='C'&&c!=='h')rows[y][x]=(x<=3||x>=15)?'k':'H'}rows[5][8]='h';rows[6][7]='h';rows[6][9]='h'}
  if(o.upper)for(let y=29;y<rows.length;y++)rows[y]=[];
  if(of.dots)for(const [x,y] of PJ_DOTS)if(/[TPlt]/.test(get(x,y)))set(x,y,'D');
- const skin='#d9a070',hair_='#2b1b16';
- const pal={S:skin,s:'#b8804f',E:'#22100e',W:'#ffffff',B:'#ea8a7c',M:'#9a4040',T:of.T,l:shade(of.T,22),t:shade(of.T,-32),
-  P:of.P||skin,p:shade(of.P||skin,-30),F:of.F||skin,H:hair_,h:'#54382a',k:'#1a0e0a',C:'#dfe3ea',D:of.dots||of.T,R:'#7fc8ff'};
+ if(of.gown&&!o.upper){for(let y=35;y<=40;y++)rows[y]=("...lTTTTTTTTTTTTTt"+(y%2?"":"")).split('');rows[34]="...lTTTTTTTTTTTTTt".split('');rows[41]="..tttttttttttttttt".split('');rows[42]="....FF.....FF".split('');for(const [x,y] of [[6,30],[11,33],[8,37],[13,39],[5,40]])set(x,y,'D')}
+ if(o.glasses&&!o.back){for(const x of [12,13,15,16])set(x,10,'G');set(14,10,'G');for(const x of [12,13,15,16])if(get(x,11)==='S')set(x,11,'g')}
+ if(o.stache&&!o.back){set(13,13,'k');set(14,13,'k');set(15,13,'k');set(16,13,'k')}
+ const skin=o.skin||'#d9a070',hair_=o.hairColor||'#2b1b16';
+ const pal={S:skin,s:o.skin?shade(skin,-34):'#b8804f',E:'#22100e',W:'#ffffff',B:'#ea8a7c',M:'#9a4040',T:of.T,l:shade(of.T,22),t:shade(of.T,-32),
+  P:of.P||skin,p:shade(of.P||skin,-30),F:of.F||skin,H:hair_,h:o.hairColor?shade(hair_,38):'#54382a',k:o.hairColor?shade(hair_,-18):'#1a0e0a',C:o.clip||'#dfe3ea',D:of.gown?'#f4ecff':(of.dots||of.T),R:'#7fc8ff',G:'#2a2a30',g:shade(skin,18)};
  return{rows,pal};
 }
 const cache={};
@@ -700,14 +698,14 @@ let closeness=saved.closeness??20;
 let proactive=saved.proactive||{day:'',count:0,last:0};
 let lastSave=saved.lastSave||0;
 function snapshot(){return{v:2,traits,firstVisit,needs,inv,mess,log:logEntries.slice(0,60),recent:recent.slice(0,10),favs,craving,cravingUntil,plantWater,today,weather,
- wallet,projects,clientStats,phase,chat:chat.slice(-40),memories:memories.slice(-25),dishScore,unlocked,avoid,closeness,proactive,media,shop,stats,events,flags,linePack,viewerBday,lakad,hairStyle,love,laundry,nov:NOV,guitarSkill,puzzle,dogDirty,lastSave:Date.now()}}
+ wallet,projects,clientStats,phase,chat:chat.slice(-40),memories:memories.slice(-25),dishScore,unlocked,avoid,closeness,proactive,media,shop,stats,events,flags,linePack,viewerBday,lakad,hairStyle,love,laundry,nov:NOV,guitarSkill,puzzle,dogDirty,visit,arcs,ants,leak,speechDrafts,lastSave:Date.now()}}
 function applyState(o){
  Object.assign(traits,o.traits||{});Object.assign(needs,o.needs||{});Object.assign(inv,o.inv||{});
  firstVisit=o.firstVisit||firstVisit;mess=o.mess||[];logEntries=o.log||[];recent=o.recent||[];favs=o.favs||favs;craving=o.craving||null;cravingUntil=o.cravingUntil||0;
  plantWater=o.plantWater??plantWater;if(o.today&&o.today.date===dateKey())today=o.today;if(o.weather)weather=o.weather;
  wallet=o.wallet??wallet;projects=o.projects||[];clientStats=o.clientStats||clientStats;phase=o.phase||null;chat=o.chat||[];memories=o.memories||[];
  dishScore=o.dishScore||{};unlocked=o.unlocked||[];avoid=o.avoid||{};closeness=o.closeness??closeness;proactive=o.proactive||proactive;lastSave=o.lastSave||0;
- media=o.media||media;shop=o.shop||shop;if(o.stats&&o.stats.week)stats=o.stats;events=o.events||events;flags=o.flags||flags;linePack=o.linePack||linePack;viewerBday=o.viewerBday||viewerBday;lakad=o.lakad||lakad;hairStyle=o.hairStyle||hairStyle;love=o.love||love;laundry=o.laundry||laundry;NOV=o.nov||NOV;guitarSkill=o.guitarSkill??guitarSkill;puzzle=o.puzzle||puzzle;dogDirty=o.dogDirty??dogDirty;
+ media=o.media||media;shop=o.shop||shop;if(o.stats&&o.stats.week)stats=o.stats;events=o.events||events;flags=o.flags||flags;linePack=o.linePack||linePack;viewerBday=o.viewerBday||viewerBday;lakad=o.lakad||lakad;hairStyle=o.hairStyle||hairStyle;love=o.love||love;laundry=o.laundry||laundry;NOV=o.nov||NOV;guitarSkill=o.guitarSkill??guitarSkill;puzzle=o.puzzle||puzzle;dogDirty=o.dogDirty??dogDirty;if('visit' in o){visit=o.visit;if(!visit)V.visible=false}if(o.arcs)arcs=o.arcs;ants=o.ants||0;leak=o.leak||null;speechDrafts=o.speechDrafts||0;
 }
 function save(){const s=snapshot();lastSave=s.lastSave;store.set(KEY,s);return s}
 
@@ -1122,9 +1120,10 @@ let suggestion=null;
 function chooseNext(){
  H.away=false;
  const hf=hourF();
+ if(visitNext())return;
  if(isSleepTime(hf)){const p=urgentProject();const h2=hf<12?hf+24:hf;if(p&&p.due-simNow()<10*H1&&p.progress<95&&h2<bedtime()+3.5&&needs.energy>8)return chance(.25)&&cafeOpen(hf)&&wallet>400?planCafe('puyat'):planWork(p,true);
   if(needs.energy>80&&cafeOpen(hf)&&wallet>400&&!(today.cafe>=2)&&chance(.15))return planCafe('insomnia');
-  if(phase&&phase.id==='truecrime'&&!today.tc3am&&h2<bedtime()+3.6&&needs.energy>15&&chance(.5)){today.tc3am=true;log('Hindi makatulog. True crime docu muna. (Masamang ideya.)');return planDrama()}return planSleep()}
+  if(phase&&phase.id==='truecrime'&&!today.tc3am&&!(visit&&visit.sleeping)&&h2<bedtime()+3.6&&needs.energy>15&&chance(.5)){today.tc3am=true;log('Hindi makatulog. True crime docu muna. (Masamang ideya.)');return planDrama()}return planSleep()}
  const n=needs,slot=mealSlot(hf),rain=weather.type==='ulan',mealDue=slot&&slot!=='midnight'&&!today.ate[slot];
  const C=[];const add=(id,score,fn)=>{if(score>0)C.push([id,score,fn])};
  const hd=100-n.hunger,fd=100-n.fun,sd=100-n.social,ed=100-n.energy;
@@ -1167,6 +1166,9 @@ function chooseNext(){
  add('bathdog',(dogDirty>.7?32:2)*(hf>9&&hf<18?1:0)*(dog.away?0:1),planBathDog);
  add('puzzle',fd*.35+4,planPuzzle);
  add('class',(hf>9&&hf<21?7:0)+fd*.12,planClass);
+ add('speech',arcTaskReady('wedding')&&hf>9&&hf<23?70:0,planSpeech);
+ add('ants',arcTaskReady('ants')&&hf>7&&hf<22?75:0,planAnts);
+ add('bucket',leak&&!leak.bucket?300:0,planBucket);
  add('cafe',cafeOpen(hf)&&wallet>400&&!meetingSoon(120)&&!(today.cafe>=2)?(8+fd*0.25+(urgentProject()?15:0)+(hf<4.5?12:0)):0,()=>planCafe('kape'));
  for(const c of C){c[1]*=.55+.45*novW('act:'+c[0]);const i=recent.indexOf('a:'+c[0]);if(i===0)c[1]*=(c[0]==='work'?0.6:0.15);else if(i>0&&i<3)c[1]*=0.55;c[1]*=rnd(0.65,1.35)*phaseMod(c[0]);
   if(suggestion&&suggestion.until>simNow()&&suggestion.id===c[0])c[1]=c[1]*4+250}
@@ -1615,6 +1617,15 @@ const LAKAD={
   back:()=>['Galing salon. Bagong buhok, bagong ako. (Same problems.)','Nagpa-salon. Sabi ng stylist "trim lang," pero umiksi nang dalawang pulgada.'],
   msg:()=>['nagpa-salon ako!! ang ganda ng buhok ko ngayon, sana ma-maintain ko hanggang bukas','sabi ko trim lang. hindi trim yun. pero maganda naman. siguro.']},
  date:{label:w=>w?`date with ${w}`:'blind date na sinet-up ni Kat',with:[],hours:[18,20],look:{outfit:'date',hair:'down'},dur:[2,3.5],date:true},
+ fitting:{label:()=>'dress fitting para sa kasal ni Kat',with:['kat'],hours:[13,15],look:{outfit:'blouse',hair:'down'},dur:[2,3],
+  back:()=>['Dress fitting para sa kasal ni Kat. Ang ganda ng gown. Hindi makahinga si Tala. Worth it.','Fitting: kailangan daw i-adjust yung gown. "Kumain ka kasi ng tatlong extra rice." (Kat, 2026)'],
+  msg:()=>['galing ako sa fitting!! ang ganda ng gown ko teh. lavender. hindi ako makahinga pero maganda','fitting update: masikip ng konti yung gown. diet starts tomorrow. (bukas ulit)'],after:()=>arcNext()},
+ shower:{label:()=>'bridal shower ni Kat',with:['kat'],hours:[18,19],look:{outfit:'party',hair:'curls'},dur:[3,4],
+  back:()=>['Bridal shower ni Kat: nanalo si Tala sa tatlong games. Hindi pwedeng ikwento yung isa.','Bridal shower: umiyak si Kat, umiyak si Tala, umiyak pati yung waiter.'],
+  msg:()=>['galing ako sa bridal shower ni Kat!! hindi ko pwedeng ikwento yung mga games. ...okay ikukwento ko','ang saya ng bridal shower!! ako ang nag-host. nagkamali ako ng pangalan ng groom. dalawang beses.'],after:()=>arcNext()},
+ wedding:{label:()=>'KASAL NI KAT',with:['kat'],hours:[14,15],look:{outfit:'gown',color:'#b8a0d8',hair:'curls'},dur:[6,8],photoKind:'gown',readyCap:'Maid of honor, reporting for duty 💜',
+  back:()=>['KASAL NI KAT. Umiyak si Tala sa speech. Umiyak ang lahat sa speech. Pati yung pari.','Kasal ni Kat: nag-speech si Tala, nasalo ang bouquet (hindi sinasadya), sumayaw hanggang 11PM.'],
+  msg:()=>['TEH. KINASAL NA SI KAT. umiyak ako buong speech. umiyak din sila. at... nasalo ko yung bouquet. (wag kang mag-isip)','kasal update: speech ko, 10/10, walang dry eye. sayaw ko, 4/10. lechon, 11/10.'],after:()=>{stat('events','kasal ni Kat');arcNext()}},
 };
 let lakad=saved.lakad||{next:null,history:[]};
 let hairStyle=saved.hairStyle||{style:null,until:0};
@@ -1662,14 +1673,14 @@ function planLakad(){
    start:()=>{H.lookOut={outfit:'tee',color:outfit()}},
    tick:(dt,s)=>{const tries=['tee','date','party','sunday','blouse',look.outfit];const k=Math.min(tries.length-1,Math.floor(s.t/s.dur*tries.length));H.lookOut={outfit:tries[k],color:outfit()};if(s.t>s.dur*.6)H.hair=look.hair},
    say:late?['LATE NA KO. LATE NA KO.','otw na ko! (hindi pa ko nakakabihis)']:['ano isusuot ko... ito? hindi. ito? hindi rin.','tatlong outfit na. ito na. final na. (hindi pa)','*nagme-makeup* wag mo kong istorbohin, nasa eyeliner ako'],
-   end:()=>{H.lookOut={outfit:look.outfit,color:outfit()};H.hair=look.hair}}),
-  act({dur:4,label:'Ready na!',f:1,end:()=>photo('ready',`Ready na para sa ${L.label}!`),say:['ready na ko! ang ganda ko ba?','okay. lalabas na ko. bantayan niyo bahay.'],start:()=>{H.lookOut={outfit:look.outfit,color:outfit()};H.hair=look.hair}}),
+   end:()=>{H.lookOut={outfit:look.outfit,color:look.color||outfit()};H.hair=look.hair}}),
+  act({dur:4,label:'Ready na!',f:1,end:()=>photo(def.photoKind||'ready',def.readyCap||`Ready na para sa ${L.label}!`),say:['ready na ko! ang ganda ko ba?','okay. lalabas na ko. bantayan niyo bahay.'],start:()=>{H.lookOut={outfit:look.outfit,color:look.color||outfit()};H.hair=look.hair}}),
   go('door'),
   act({dur:rnd(def.dur[0],def.dur[1])*3600,hidden:true,label:`Nasa lakad: ${L.label}`,
    start:()=>{H.away=true;log(`Umalis para sa ${L.label}.`)},
    tick:(dt)=>{addNeed('social',dt*60/7200);addNeed('fun',dt*40/7200);addNeed('energy',-dt*15/7200);addNeed('hunger',dt*40/7200)},
    end:()=>{H.away=false;lakadReturn(L)}}),
-  act({dur:8,from:null,x:32,y:98,f:1,label:'Kakauwi lang galing lakad',start:()=>{H.lookOut={outfit:look.outfit,color:outfit()};H.hair=look.hair},say:()=>pick(['hay... pagod pero masaya','home sweet home. si Kikiam, parang isang taon akong nawala']),end:()=>{H.lookOut=null}}),
+  act({dur:8,from:null,x:32,y:98,f:1,label:'Kakauwi lang galing lakad',start:()=>{H.lookOut={outfit:look.outfit,color:look.color||outfit()};H.hair=look.hair},say:()=>pick(['hay... pagod pero masaya','home sweet home. si Kikiam, parang isang taon akong nawala']),end:()=>{H.lookOut=null}}),
  );
  setPlan(`Naghahanda para sa ${L.label}`,steps);
 }
@@ -1782,6 +1793,354 @@ function planClass(){
  setPlan('Online class: '+topic,[go('desk'),act({dur:rnd(240,480),pose:'sit',back:true,x:290,y:104,anim:'type',label:'Online class: '+topic,icon:'book',gain:{fun:10},start:()=>{screen='zoom';deskLamp=true},end:()=>{screen=null;deskLamp=false;
   log(pickNovel([`Online class: ${topic}. Natuto ng isang bagay. Nakalimutan ang tatlo.`,`Nag-attend ng online class (${topic}). Naka-off ang camera. Naka-pajama.`,`${topic}: nakinig talaga siya. Kumuha pa ng notes. Character development.`],'dia:'))},
   say:['naka-mute ako, naka-mute ako...','*taking notes*','ang bagal ng wifi, ma\'am pakiulit po']})]);
+}
+
+// ---------- visitors: barkada, family, jowa and the landlord drop by ----------
+const GUESTS={
+ kat:{name:'Kat',look:{hair:'down',hairColor:'#5a3020',skin:'#e6b890',outfit:'tee',color:'#7ac0a8',clip:'#f4c430'}},
+ paolo:{name:'Paolo',look:{hair:'short',hairColor:'#1a120e',skin:'#c8925e',outfit:'hoodie',color:'#4a6a9a'}},
+ jowa:{name:()=>love.name||'Josh',look:{hair:'short',hairColor:'#2b1b16',skin:'#d9a070',outfit:'tee',color:'#3a3a4a'}},
+ mama:{name:'Mama',look:{hair:'bun',hairColor:'#6a5a58',skin:'#d0a078',outfit:'sunday',color:'#8a5a9a',glasses:true}},
+ rudy:{name:'Mang Rudy',look:{hair:'short',hairColor:'#a8a8a8',skin:'#b88458',outfit:'polo',color:'#6a8a6a',stache:true}},
+};
+const gname=w=>{const n=(GUESTS[w]||{}).name;return typeof n==='function'?n():n||'bisita'};
+const V={who:null,x:30,y:98,f:1,pose:'stand',seat:null,visible:false,walkT:0,path:[],after:null,back:false,prop:null,expr:null,wave:0};
+let visit=saved.visit||null;
+let arcs=saved.arcs||{active:null,done:{},last:0};
+let ants=saved.ants||0,leak=saved.leak||null,speechDrafts=saved.speechDrafts||0;
+
+function guestTo(p,a={}){V.path=makePath(V,p);V.after=a;V.seat=null;V.pose='walk';V.back=false}
+function gsay(text){if(!V.visible)return;say(`${gname(V.who)}: ${text}`,'guest')}
+function updateGuest(dt){
+ if(V.wave>0)V.wave-=dt;
+ if(!V.visible||!V.path.length)return;
+ const p=V.path[0],dx=p.x-V.x,dy=p.y-V.y,d=Math.hypot(dx,dy),sp=38*dt;
+ V.pose='walk';if(Math.abs(dx)>.5)V.f=dx>0?1:-1;V.walkT+=dt;
+ if(d<=sp){V.x=p.x;V.y=p.y;V.path.shift();
+  if(!V.path.length){const a=V.after||{};V.pose=a.pose||'stand';V.seat=a.seat||null;V.back=!!a.back;if(a.f)V.f=a.f;V.after=null;if(a.then)a.then()}}
+ else{V.x+=dx/d*sp;V.y+=dy/d*sp}
+}
+// a conversation: lines alternate between Tala ('t:') and the guest ('g:'), separated by '|'
+function convo(pool,ns){let lines=[];const refill=()=>{const c=pickNovel(pool,'cv:'+ns);lines=c?c.split('|').map(s=>[s.slice(0,1),s.slice(2)]):[]};
+ return(dt,s)=>{if(catchingUp)return;s.ct=(s.ct??2.5)-dt;if(s.ct>0)return;if(!lines.length){refill();if(!lines.length)return}
+  const L=lines.shift();s.ct=lines.length?rnd(6,9):rnd(35,70);if(L[0]==='t')say(L[1]);else gsay(L[1])}}
+
+const TALK={
+ kat:['g:so... may chika ako|t:ANO. sabihin mo na|g:wag kang magagalit ha|t:magagalit na ko, sabihin mo na',
+  'g:kumusta yung puso mo?|t:ayun, tumitibok pa naman|g:yan ang spirit',
+  'g:ang linis ng bahay mo ah|t:kasi alam kong pupunta ka|g:so hindi talaga malinis|t:...hindi',
+  'g:si Siopao, galit pa rin sakin?|t:hindi siya galit, ganyan lang talaga mukha niya|g:parang galit',
+  'g:sino na yung nire-reply-an mo lately?|t:si Sir Ronald. revisions.|g:sad',
+  'g:may nakita akong bagong cafe!|t:yung bukas lang sa gabi?|g:paano mo nalaman|t:regular na ko dun teh',
+  'g:dapat mag-outing tayo|t:dapat|g:kailan|t:...dapat',
+  'g:ano yung pinapanood mo ngayon|t:wag mo kong i-judge|g:huhusgahan kita, sige na'],
+ kat_jowa:['g:SO. SINO SI '+'{n}'.toUpperCase()+'|t:wala, kaibigan lang|g:kaibigan na pinupuyat ka?|t:...',
+  'g:pakita mo nga picture ni {n}|t:wag!!|g:ay pogi. approved. (pending interview)',
+  'g:may pa-good morning pa si {n}?|t:...araw-araw|g:KINIKILIG KA|t:HINDI'],
+ kat_sawi:['g:kumain ka na ba? o umiiyak ka lang|t:pareho|g:okay, order tayo ng pizza',
+  'g:block mo na|t:na-block ko na|g:i-unblock mo para ma-block ulit, mas satisfying'],
+ paolo:['g:ate, may wifi password ka?|t:yung dati pa rin|g:...ano nga ulit yung dati',
+  'g:ate, pahiram charger|t:nasan yung sayo|g:nasa bahay. sa kabilang bahay. sa ibang bahay',
+  'g:ate ang sarap ng luto mo|t:ano kailangan mo|g:wala! ...pero may konting kailangan',
+  'g:nag-away na naman sila mama at papa sa remote|t:sino nanalo|g:yung aso',
+  'g:si Kikiam lumaki|t:tumaba|g:ah. same pala kami',
+  'g:ate, pa-crash ulit next week ha|t:hindi pa nga tapos tong crash mo'],
+ jowa:['g:ang cute ng studio mo|t:salamat... wag mong buksan yung cabinet',
+  'g:si Siopao, ayaw sakin|t:ayaw niya sa lahat|g:so special pa rin ako',
+  'g:ikaw nag-design ng poster na yan?|t:oo! ...pero yung isa binili ko|g:alin|t:secret',
+  't:anong favorite mong ulam?|g:luto mo|t:...corny|g:pero kinilig ka',
+  'g:next time, ako naman magluluto|t:marunong ka?|g:hindi, pero nanonood ako ng YouTube'],
+ mama:['g:kumakain ka ba nang maayos?|t:opo ma|g:bakit ang daming chichirya sa ref|t:...pang-emergency po',
+  'g:kailan ka mag-aasawa?|t:ma|g:nagtatanong lang ako|t:MA',
+  'g:yung anak ni Mareng Linda, nurse na sa Canada|t:good for her ma|g:ikaw kailan|t:ma, freelancer nga po ako',
+  'g:ang payat mo|t:ma, kakatimbang ko lang, hindi po|g:kain ka pa',
+  'g:si Paolo, pumupunta dito?|t:minsan, nanghihingi ng pera|g:sa akin din'],
+ rudy:['g:ay, ito pala yung tulo|t:opo, tatlong araw na po|g:bukas ko na dapat to aayusin e|t:...',
+  'g:may kape ka ba hija?|t:meron po!|g:tatlong asukal',
+  'g:yung kapitbahay mo, nagvi-videoke pa rin?|t:araw-araw po|g:ako nga yun minsan'],
+};
+const TALK_TABLE={
+ kat:['g:ang sarap nito! ikaw gumawa?|t:binili ko|g:mas masarap pa rin',
+  'g:pahingi pa|t:last na yan|g:pahingi pa rin'],
+ paolo:['g:ate, may rice pa?|t:pangatlo mo na yan|g:growing boy ako',
+  'g:ate pahingi pera pang-load lang|t:magkano|g:500|t:pang-load yun?'],
+ jowa:['g:ang sarap!|t:talaga?|g:totoo! (medyo maalat pero masarap)',
+  't:okay lang ba yung luto?|g:perfect|t:sinungaling|g:perfect pa rin'],
+ mama:['g:konting asin pa sana|t:ma, kayo yung nagluto nito|g:...konting asin pa rin',
+  'g:kain ka pa|t:busog na po ako|g:isang subo pa'],
+ rudy:['g:salamat sa kape hija|t:walang anuman po'],
+};
+const VISITS={
+ chika:{who:'kat',hours:[14,19],segs:()=>pick([['sofa','merienda'],['merienda','sofa'],['sofa']]),announce:true},
+ sleepover:{who:'paolo',hours:[18.5,20],segs:()=>['dinner','tv','sleep'],announce:true},
+ datein:{who:'jowa',hours:[17,18.5],segs:()=>['cook','dinner','movie'],announce:true},
+ mama:{who:'mama',hours:[10,11.5],sunday:true,segs:()=>['inspect','merienda','sofa'],announce:false},
+ rudy:{who:'rudy',hours:[9,15],segs:()=>['fix'],announce:true},
+};
+const ANNOUNCE={
+ chika:(n,w)=>[`pupunta si ${n} dito ${w}! maglilinis ako. (hindi)`,`si ${n} dadaan daw ${w}. may chika raw siya. KINAKABAHAN AKO`,`${n} is coming over ${w}. bibili ako ng merienda. (chichirya)`],
+ sleepover:(n,w)=>[`si ${n} makikitulog daw dito ${w}. "isang gabi lang ate." isang gabi lang daw.`,`${n} pupunta ${w}. makikikain, makikitulog, manghihingi ng pera. the usual.`],
+ datein:(n,w)=>[`si ${n} pupunta DITO ${w}. sa bahay ko. ANG GULO NG BAHAY KO`,`${n} gusto raw magluto kami dito ${w} 🥹 kailangan kong itago yung mga labahin`],
+ rudy:(n,w)=>[`finally, si ${n} pupunta na raw ${w} para sa kisame. (sana)`,`${n}: "pupunta na ko ${w} hija." naniniwala ako. siguro.`],
+};
+function scheduleVisit(type,o={}){
+ const def=VISITS[type];const d=new Date(simNow());let days=o.days??ri(0,2);
+ if(def.sunday)days=(7-d.getDay())%7;
+ d.setDate(d.getDate()+days);d.setHours(0,0,0,0);let at=d.getTime()+rnd(def.hours[0],def.hours[1])*H1;
+ if(o.now)at=simNow()+60e3;
+ else{if(at<simNow()+40*60e3)at+=(def.sunday?7:1)*86400e3;if(lakad.next&&Math.abs(lakad.next.at-at)<6*H1)at+=86400e3}
+ visit={type,who:def.who,at,stage:'set',segs:[],delays:0,since:0};
+ if(def.announce&&!o.now){const n=gname(def.who);talaMsg(pickNovel(ANNOUNCE[type](n,fmtWhen(at)),'ann:'),{important:true});log(`May bisita ${fmtWhen(at)}: si ${n}.`)}
+}
+function updateVisits(dt){
+ const now=simNow(),hf=hourF();
+ if(!visit){
+  if(hf>8&&hf<20&&chance(dt/(2.4*86400))){
+   const dating=love.status==='talking'||love.status==='dating';
+   const opts=[['chika',3],['sleepover',1.3],['datein',dating?2.6:0],['mama',nowDate().getDay()>=4?1.6:.25]].filter(o=>o[1]>0);
+   scheduleVisit(wpick(opts));
+  }
+  return}
+ if(visit.stage==='set'&&now>=visit.at){
+  const busy=H.away||(H.cur&&(H.cur.sleep||H.cur.hidden))||H.inMeeting||H.onBalcony||(lakad.next&&lakad.next.started);
+  if(busy){visit.delays++;visit.at=now+30*60e3;
+   if(visit.delays>5){const n=gname(visit.who);log(`Hindi naabutan ni ${n} si ${NAME}. "Next time na lang!"`);if(visit.type==='rudy')log('Si Mang Rudy, babalik daw. (Sana.)');visit=null}
+   return}
+  arriveVisit();return}
+ if(visit.stage==='here'&&now-visit.since>20*H1){V.visible=false;visit=null}
+}
+function interruptForGuest(){
+ const c=H.cur;if(c&&c.type==='act'&&c.end&&!c.sleep){try{c.end(c)}catch(e){}}
+ fridgeOpen=false;cooking=null;phoneGlow=false;screen=null;tableDish=null;H.lookOut=null;H.prop=null;
+}
+function arriveVisit(){
+ const n=gname(visit.who);visit.stage='here';visit.segs=VISITS[visit.type].segs();visit.since=simNow();
+ interruptForGuest();
+ Object.assign(V,{who:visit.who,x:32,y:96,f:1,pose:'stand',seat:null,visible:false,path:[],after:null,back:false,prop:null,expr:null});
+ if(!catchingUp){sfx('knock');setTimeout(()=>sfx('knock'),900)}
+ dog.react=2;
+ const greet={kat:['KAT!!!','uy, ang aga mo! (late ka ng 40 minutes)','pasok, pasok! wag mong pansinin yung kalat'],paolo:['o, Paolo. kumain ka na?','ang laki ng bag mo. ISANG GABI LANG DIBA','pasok. hubad sapatos.'],
+  jowa:[`hi ${n}... pasok ka`,`uy ${n}! ...ang bango mo. ay, wala.`,'welcome sa aking humble abode. humble talaga.'],mama:['MA?! bakit hindi kayo nag-text!','ma! ...surprise po pala','ma, sana sinabi niyo, naglinis sana ako'],rudy:['Mang Rudy! dumating kayo!','good morning po! ...hapon na pala','pasok po, nandito po yung tulo']}[visit.who];
+ const g={kat:['BESHY!!','may dala akong siomai','ang init sa labas, pahingi tubig'],paolo:['ate! may pagkain ka?','ate, isang gabi lang promise','hi ate, hi Kikiam, hi Siopao (galit pa rin siya sakin)'],
+  jowa:['hi... may dala akong dessert','ang ganda ng place mo','hello Kikiam! ...hello Siopao? (ayaw niya sakin)'],mama:['anak! may dala akong adobo','ano ba itong kalat na to','napadaan lang ako (isang oras na byahe)'],rudy:['magandang araw hija','asan yung tumutulo','pasensya na hija, busy lang']}[visit.who];
+ setPlan(`May bisita: ${n}`,[go({x:58,y:108,f:-1}),
+  act({dur:9,f:-1,label:`Binubuksan ang pinto para kay ${n}`,icon:'heart',
+   start:()=>{V.visible=true;doorbell=0;guestTo({x:36,y:112},{f:1});V.wave=2;say(pickNovel(greet,'gr:'+visit.who));setTimeout(()=>{if(V.visible)gsay(pickNovel(g,'gg:'+visit.who))},3200);
+    dog.wag=4;if(!catchingUp)sfx('happyBark');dogSet('sniff',V.x+18,V.y+12,8);
+    if(['mama','rudy','paolo'].includes(visit.who)&&!cat.away&&cat.state!=='lap'&&chance(.7)){catGoTo('fridgeTop');cat.after='watch'}},
+   end:()=>{const lg={kat:`Dumating si Kat. Unang sinabi: "may chika ako." Unang ginawa: binuksan ang ref.`,paolo:'Dumating si Paolo, may dalang malaking bag. "Isang gabi lang, ate."',
+    jowa:`Dumating si ${n}. Naglinis si ${NAME} nang 15 minuto bago siya dumating. (Itinago lang sa cabinet.)`,mama:'SURPRISE VISIT NI MAMA. May dalang adobo at isang buong listahan ng sermon.',rudy:'Dumating na si Mang Rudy, ang landlord. Tatlong araw matapos ang "bukas."'}[visit.who];
+    log(lg);highlight(`bumisita si ${n}`);stat('events','bisita: '+n);
+    if(visit.who==='mama'){inv.manok++;inv.baboy++;inv.gulay+=2}}}),
+ ]);
+}
+// called first thing by the brain while a guest is over; returns true if it set a plan
+function visitNext(){
+ if(!visit||visit.stage!=='here')return false;
+ const hf=hourF(),n=gname(visit.who);
+ if(!V.visible){Object.assign(V,{who:visit.who,visible:true,path:[],x:318,y:210,f:1});V.seat=visit.sleeping?'sleep':'sofa';V.pose=visit.sleeping?'sleep':'stand'}
+ if(visit.sleeping){if(isSleepTime(hf)||hf<5||hf>=14)return false;SEG.morning();return true}
+ const seg=visit.segs.shift();
+ if(seg&&SEG[seg]){SEG[seg]();return true}
+ SEG.bye();return true;
+}
+const tdish=k=>({kind:k,c:k==='cake'?'#c89060':k==='snack'?'#e0a040':'#7a4020',full:1});
+const SEG={
+ sofa(){const w=visit.who,n=gname(w);let pool=TALK[w]||TALK.kat;
+  if(w==='kat'){if(love.status==='talking'||love.status==='dating')pool=pool.concat(TALK.kat_jowa.map(x=>x.split('{n}').join(love.name||'siya')));if(love.status==='sawi')pool=pool.concat(TALK.kat_sawi)}
+  guestTo({x:318,y:212},{seat:'sofa'});
+  setPlan(`Chikahan with ${n}`,[go('sofa'),act({dur:rnd(1500,2800),pose:'sit',x:352,y:176,back:true,label:w==='mama'?'Nakikinig sa sermon ni Mama':`Nakikipagchikahan kay ${n}`,icon:'heart',gain:{social:80,fun:35},
+   tick:convo(pool,w),start:()=>{if(chance(.6))photo('guest',pickNovel([`Chikahan with ${n}`,`${n} at ${NAME}, three hours later`,`${n}, bumisita!`],'cap:'),{who:w})},
+   end:()=>log(pickNovel(w==='mama'?['Sermon ni Mama, part 1 to 7. Tumango si Tala sa lahat.','Nagkwentuhan sila ni Mama. Kasama ang 12 tanong tungkol sa love life.']:w==='paolo'?['Nag-chill sila ni Paolo. Ubos ang chichirya.','Kwentuhan magkapatid. Nauwi sa asaran. Normal.']:w==='rudy'?['Nag-kwentuhan sila ni Mang Rudy tungkol sa building. 1987 pa pala to.']:
+    [`Chikahan with ${n}: tatlong oras, apat na topic, isang hindi pwedeng ikwento.`,`${n} at ${NAME}: nagtawanan hanggang sumakit ang tiyan.`,`Chika session with ${n}. Napag-usapan: lahat. Natapos: wala.`],'dia:'))})]);
+ },
+ merienda(){const w=visit.who,n=gname(w);guestTo({x:98,y:214},{seat:'table'});
+  setPlan(`Merienda with ${n}`,[go('table'),act({dur:rnd(900,1600),pose:'sit',x:93,y:118,f:1,label:`Nagmemerienda kasama si ${n}`,icon:'food',gain:{social:40,hunger:30,fun:15},
+   start:()=>{tableDish=tdish(pick(['snack','cake']));if(chance(.5))photo('guesttable',pickNovel([`Merienda with ${n}`,`${n}, nakikimerienda`,`Merienda break, kasama si ${n}`],'cap:'),{who:w})},
+   tick:(dt,s)=>{convoT(s,dt,w);tableDish&&(tableDish.full=1-s.t/s.dur*.9)},
+   end:()=>{tableDish=null;plateMess();plateMess();log(pickNovel([`Nag-merienda sila ni ${n}. Ubos lahat.`,`Merienda with ${n}: pancit, puto, at isang oras ng chismis.`],'dia:'))}})]);
+ },
+ dinner(){const w=visit.who,n=gname(w);const d=chooseDish();if(d)useIng(d);const nm=d?d.name:'pancit na in-order';
+  const steps=[];
+  if(!visit.cooked){guestTo({x:318,y:212},{seat:'sofa'});
+   steps.push(go('stove'),act({dur:rnd(600,1000),back:true,anim:'stir',label:`Nagluluto ng ${nm} para sa dalawa`,icon:'food',start:()=>{cooking={dish:d||{c:'#c8a060',name:nm},burnt:false}},
+    tick:(dt,s)=>{if(chance(dt*3))emit('steam',rnd(126,136),50,{vy:-10,max:2});if(!catchingUp&&s.t>8&&!s.yelled){s.yelled=true;gsay(pick(w==='paolo'?['ate, matagal pa ba?','ate gutom na ko','ate ano ulam?']:['need help?','ang bango!']))}},
+    end:()=>{cooking=null}}));
+  }
+  steps.push(call(()=>guestTo({x:98,y:214},{seat:'table'})),go('table'),act({dur:rnd(1200,1800),pose:'sit',x:93,y:118,f:1,label:`Dinner with ${n}`,icon:'heart',gain:{hunger:80,social:50,fun:20},
+   start:()=>{tableDish={c:d?d.c:'#c8a060',full:1,kind:d?dishKind(d.id):'noodles'};today.ate.dinner=true;if(chance(.5))photo('guesttable',`Dinner with ${n}: ${nm}`,{who:w,dish:{...tableDish}})},
+   tick:(dt,s)=>{convoT(s,dt,w);tableDish&&(tableDish.full=1-s.t/s.dur*.95)},
+   end:()=>{tableDish=null;plateMess();plateMess();log(w==='paolo'?pickNovel([`Dinner with Paolo: ${nm}. Tatlong extra rice si Paolo.`,`Kumain sila ni Paolo ng ${nm}. Si Paolo ang naghugas. (Joke. Si ${NAME}.)`],'dia:'):`Dinner with ${n}: ${nm}. ${pick(['Ang sarap daw. Siguro totoo.','Kinilig si Tala sa bawat subo.','Walang nasunog. Miracle.'])}`)}}));
+  setPlan(`Dinner with ${n}`,steps);
+ },
+ cook(){const w=visit.who,n=gname(w);visit.cooked=true;const d=chooseDish();if(d)useIng(d);const nm=d?d.name:'pancit canton (deluxe)';
+  guestTo({x:108,y:102},{back:true});
+  setPlan(`Nagluluto kasama si ${n}`,[go('stove'),act({dur:rnd(900,1500),back:true,anim:'stir',label:`Nagluluto ng ${nm} kasama si ${n}`,icon:'heart',gain:{social:45,fun:30},
+   start:()=>{cooking={dish:d||{c:'#d8a040',name:nm},burnt:false};love.kiligUntil=simNow()+2*H1;photo('cooktwo',pickNovel([`Nagluto kami ni ${n}`,`Chef ${NAME} at sous chef ${n}`,`${n}, naghihiwa (mabagal)`],'cap:'),{who:w,dish:cooking.dish.c})},
+   tick:(dt,s)=>{if(chance(dt*3))emit('steam',rnd(126,136),50,{vy:-10,max:2});convoT(s,dt,w,['t:ganyan ka maghiwa?|g:artistic cut to','g:tikman ko|t:mainit pa!|g:...MAINIT NGA','t:abutin mo yung toyo|g:alin dito|t:yung may nakasulat na toyo','g:ilang minuto pa?|t:hanggang maluto|g:...okay'])},
+   end:()=>{cooking=null;log(`Nagluto sila ni ${n} ng ${nm}. Si ${n} ang naghiwa ng sibuyas. Siya rin ang umiyak.`)}})]);
+ },
+ tv(){const w=visit.who,n=gname(w);const hf=hourF();const left=((bedtime()-(hf<6?hf+24:hf))*3600);
+  guestTo({x:318,y:212},{seat:'sofa'});
+  setPlan(`Nanonood ng TV kasama si ${n}`,[go('sofa'),act({dur:clamp(left,1500,5*3600),pose:'sit',x:352,y:176,back:true,label:`Nanonood ng TV kasama si ${n}`,icon:'heart',gain:{fun:60,social:40},
+   start:()=>{screen='tv'},tick:convo(TALK[w]||TALK.paolo,w),end:()=>{screen=null;log(pickNovel([`Nanood sila ni ${n} ng teleserye. Si ${n} ang unang nakatulog.`,`TV night with ${n}: nag-agawan sa remote.`],'dia:'))}})]);
+ },
+ movie(){const w=visit.who,n=gname(w);guestTo({x:318,y:212},{seat:'sofa'});
+  setPlan(`Movie night with ${n}`,[go('sofa'),act({dur:rnd(3600,5400),pose:'sit',x:352,y:176,back:true,label:`Movie night with ${n}`,icon:'heart',gain:{fun:60,social:60},
+   start:()=>{screen='tv';love.kiligUntil=simNow()+3*H1;love.kilig=clamp(love.kilig+12,0,100);photo('guest',pickNovel([`Movie night with ${n}`,`${n} at ${NAME} (at si ${CAT} sa gitna)`],'cap:'),{who:w})},
+   tick:convo(TALK.jowa.concat(['g:ano papanoorin natin?|t:horror?|g:sige|t:joke, rom-com','t:wag kang matulog|g:hindi ako natutulog|g:zzz']),w),
+   end:()=>{screen=null;log(`Movie night with ${n}. Hindi nila natapos yung movie. Nagkwentuhan lang. (Kinikilig pa rin si ${NAME}.)`)}})]);
+ },
+ inspect(){const n=gname('mama');const messy=mess.length>=3;
+  const lines=messy?['ano ba itong mga plato na to','yung kama, hindi inaayos?','anak, may ipis ba dito?','yung mga damit, bakit nasa sahig']:['aba, malinis ah','sino naglinis dito, ikaw ba talaga?','ang ganda ng halaman mo'];
+  guestTo({x:96,y:104},{back:true,then:()=>guestTo({x:300,y:118},{then:()=>guestTo({x:226,y:196},{f:-1})})});
+  const steps=[go({x:250,y:200,f:-1}),act({dur:40,f:-1,label:'Kinakabahan habang nag-iinspect si Mama',tick:(dt,s)=>{if(catchingUp)return;s.ct=(s.ct??3)-dt;if(s.ct<=0){s.ct=9;gsay(lines[(s.ci=(s.ci||0)+1)%lines.length])}}})];
+  if(messy)steps.push(act({dur:rnd(600,900),anim:'scrub',label:'Naglilinis habang nagse-sermon si Mama',icon:'drop',say:['opo ma. opo. lilinisin ko na po.','ma, lilinisin ko naman talaga to mamaya'],
+   end:()=>{const k=mess.length;mess=[];traits.neat=clamp(traits.neat+.03,.05,.95);log(`Pinaglinis ni Mama si ${NAME}. ${k} kalat, nawala sa loob ng 15 minuto. Record.`)}}));
+  else steps.push(call(()=>{moodBoost+=8;log('Na-inspect ni Mama ang bahay. Pumasa! (First time.)')}));
+  setPlan('Inspection ni Mama',steps);
+ },
+ fix(){const n=gname('rudy');guestTo({x:196,y:118},{seat:'fix',back:true});
+  setPlan(`Pinapanood si ${n}`,[go({x:236,y:196,f:-1}),act({dur:rnd(1200,2000),f:-1,label:`Inaayos ni ${n} ang tulo`,icon:'mug',
+   start:()=>{photo('fix',pickNovel([`Finally: si ${n} at ang tulo`,`Day 3 ng "bukas": dumating si ${n}`],'cap:'))},
+   tick:(dt,s)=>{if(!catchingUp&&chance(dt*.5))sfx('hammer');convoT(s,dt,'rudy')},
+   end:()=>{leak=null;log(`Naayos ni ${n} ang tulo. Gamit: sealant, isang tasa ng kape, at 40 minutong kwento tungkol sa 1990s.`);talaMsg(pickNovel(['NAAYOS NA YUNG KISAME. after 3 days of "bukas." mahal ko na si Mang Rudy. (hindi.)','wala nang tulo!! si Mang Rudy, hero (late hero, pero hero)']),{important:true});
+    if(arcIs('leak','visit'))arcNext()}})]);
+ },
+ sleep(){const n=gname(visit.who);guestTo({x:330,y:212},{seat:'sleep',pose:'sleep',then:()=>{visit.sleeping=true}});visit.sleeping=true;
+  setPlan('Binibigyan ng kumot si '+n,[go({x:356,y:214,f:-1}),act({dur:12,f:-1,label:`Binibigyan ng kumot si ${n}`,say:[`goodnight ${n}. wag kang hihilik.`,`${n}, pag nagising ka nang maaga, ikaw magluluto`],
+   end:()=>{log(pickNovel([`Natulog si ${n} sa sofa. Hilik level: Kikiam.`,`${n} sa sofa, ${DOG} sa paanan niya. Traydor si ${DOG}.`],'dia:'));photo('sleepover',`Si ${n}, tulog sa sofa`,{who:visit.who})}})]);
+ },
+ morning(){const n=gname(visit.who);visit.sleeping=false;V.seat='sofa';V.pose='stand';
+  const amt=ri(3,10)*100;
+  setPlan(`Ginigising si ${n}`,[go({x:356,y:214,f:-1}),act({dur:10,f:-1,label:`Ginigising si ${n}`,say:[`${n}. ${n.toUpperCase()}. GISING NA.`,`${n}, may pandesal. bangon na.`]}),
+   call(()=>guestTo({x:98,y:214},{seat:'table'})),go('table'),
+   act({dur:rnd(600,1000),pose:'sit',x:93,y:118,f:1,label:`Almusal kasama si ${n}`,icon:'mug',gain:{hunger:50,social:20},start:()=>{tableDish=tdish('snack');today.ate.breakfast=true},
+    tick:(dt,s)=>{convoT(s,dt,visit.who)},end:()=>{tableDish=null;plateMess();
+     if(visit.who==='paolo'){spend(amt);log(`Bago umalis, nanghingi si Paolo ng ${peso(amt)}. "Pang-load lang, ate." Binigay ni ${NAME}. Syempre.`);talaMsg(pickNovel([`umalis na si Paolo. ${peso(amt)} ang nawala sa wallet ko. "pang-load" daw. anong load yun, 5G sa buwan?`,`si Paolo umuwi na. kinain lahat ng pandesal. nanghingi ng ${peso(amt)}. love ko yung kapatid ko. (minsan)`]),{important:true})}}})]);
+ },
+ bye(){const w=visit.who,n=gname(w);
+  guestTo({x:36,y:112},{f:-1});
+  setPlan(`Hinahatid si ${n} sa pinto`,[go({x:60,y:110,f:-1}),act({dur:8,f:-1,label:`Paalam, ${n}!`,
+   say:{kat:['ingat beh! text mo ko pag nakauwi ka','bye!! balik ka ha, may chika pa ko'],paolo:['ingat! wag kang tatambay kung saan-saan','text mo si mama pag nakauwi ka'],
+    jowa:[`ingat ${n}... text mo ko pag nakauwi ka 🥹`,`bye ${n}! salamat sa... lahat`],mama:['ingat po ma! text niyo ko pag nakauwi kayo','ma, opo, kakain po ako nang maayos'],rudy:['salamat po Mang Rudy!','ingat po! (sana di na tumulo)']}[w],
+   start:()=>{setTimeout(()=>{if(V.visible)gsay(pick({kat:['love you beh!','next week ulit!'],paolo:['bye ate! salamat sa pera!','ate, babalik ako next week'],jowa:['bye... salamat sa dinner','text kita pag nakauwi ako'],mama:['kumain ka nang gulay!','mag-asawa ka na!'],rudy:['tawagan mo lang ako hija','ingat ka dito hija']}[w]))},2500)},
+   end:()=>{V.visible=false;V.path=[];const t=visit.type;
+    if(w==='jowa'){love.kilig=clamp(love.kilig+25,0,100);love.kiligUntil=simNow()+5*H1;love.dates++;talaMsg(pickNovel([`umuwi na si ${n}. ang tahimik na ng bahay. kinikilig pa rin ako. ano ba.`,`teh. si ${n}. pumunta dito. nagluto kami. hindi pa rin ako maka-get over`]),{important:true});
+     if(love.status==='talking'&&love.dates>=3&&chance(.35)){love.status='dating';log(`Official na sila ni ${n}! (Sa may pinto pa nangyari.)`);talaMsg(`TEH. OFFICIAL NA KAMI NI ${n.toUpperCase()}. sa may pinto pa. habang paalis siya. ANG CORNY. ANG SAYA KO.`,{force:true})}}
+    else if(w==='kat')talaMsg(pickNovel(['umalis na si Kat. ang dami kong nalaman. hindi ko pwedeng sabihin. (sasabihin ko sayo mamaya)','kakaalis lang ni Kat. ang sakit ng tiyan ko kakatawa','si Kat umuwi na. naiwan niya yung payong niya. pang-apat na payong na niya dito']),{important:true});
+    else if(w==='mama')talaMsg(pickNovel(['umalis na si mama. may tatlong tupperware ako ng ulam at isang listahan ng dapat kong gawin sa buhay','si mama nag-surprise visit. buti na lang naghugas ako kahapon. (hindi ako naghugas kahapon.)']),{important:true});
+    log(`Umalis na si ${n}.`);visit=null}})]);
+ },
+};
+function convoT(s,dt,w,extra){if(!s.cv){const p=(TALK_TABLE[w]||[]).concat(extra||[],TALK[w]||[]);s.cv=convo(p,w+':t')}s.cv(dt,s)}
+
+// ---------- multi-day storylines ----------
+const ARCS={
+ wedding:{once:true,label:s=>['Engaged si Kat!','Dress fitting','Sinusulat ang MOH speech','Bridal shower','Kasal ni Kat','After ng kasal'][s],stages:[
+  {run:()=>{log('Engaged na si Kat! Si Tala ang maid of honor. Umiyak siya. Tatlong beses.');stat('events','engaged si Kat');highlight('engaged na si Kat at ako ang maid of honor');
+   talaMsg('TEH. ENGAGED NA SI KAT!!! ...AKO DAW ANG MAID OF HONOR. AKO. MAID OF HONOR. (umiiyak ako)',{force:true})},next:[16,30]},
+  {lakad:'fitting',next:[16,30]},
+  {task:'speech',need:2,next:[12,24]},
+  {lakad:'shower',next:[16,30]},
+  {lakad:'wedding',next:[10,16]},
+  {run:()=>{log('Day after ng kasal. Masakit ang paa, paos ang boses, may tatlong kahon ng leftover na lechon.');inv.baboy+=2;
+   talaMsg(pickNovel(['day after ng kasal. ang sakit ng paa ko. may lechon ako sa ref. si Kat nasa honeymoon na. sino na kakausapin ko araw-araw. (ikaw.)','post-wedding update: wala na kong boses, pero may lechon. balanced.']),{important:true})},next:null},
+ ]},
+ ants:{repeat:18,label:s=>['May langgam!','Giyera vs langgam','Tagumpay laban sa langgam'][s],stages:[
+  {run:()=>{ants=1;log('May pila ng langgam papunta sa counter. Saan sila galing. SAAN.');highlight('nagkaroon ng langgam sa counter');
+   talaMsg(pickNovel([`may LANGGAM. isang buong pila. papunta sa asukal. si ${CAT} nakatingin lang. walang tulong.`,'teh. langgam. ang dami. parang EDSA. help.']),{important:true})},next:[1,3]},
+  {task:'ants',need:3,next:[4,10]},
+  {run:()=>{ants=0;log('Wala nang langgam! Tagumpay. (Pansamantala.)');stat('events','natalo ang langgam');
+   talaMsg(pickNovel(['UPDATE: wala nang langgam. nanalo ako. suka at chalk lang ang sandata ko. tawagin mo kong heneral.','tapos na ang langgam war. ako ang panalo. si Siopao, nanood lang buong panahon.']),{important:true})},next:null},
+ ]},
+ leak:{repeat:14,needRain:true,label:s=>['Tumutulo ang kisame','"Bukas daw"','Darating na si Mang Rudy'][s],stages:[
+  {run:()=>{leak={since:simNow(),bucket:false};log('TUMUTULO ANG KISAME. Tinext si Mang Rudy. Sagot: "bukas hija."');highlight('tumulo yung kisame');
+   talaMsg('TUMUTULO YUNG KISAME. may balde na ko. tinext ko si Mang Rudy (landlord). sagot niya: "bukas hija." okay. bukas.',{important:true})},next:[18,26]},
+  {run:()=>{log('Si Mang Rudy: "bukas" ulit. Day 2 ng balde.');talaMsg(pickNovel(['update sa kisame: "bukas" ulit daw sabi ni Mang Rudy. si balde, kasama ko na. pinangalanan ko na siyang Bernard.','day 2 ng tulo. hindi pa rin dumating si Mang Rudy. si Siopao umiinom sa balde. ayoko na.']))},next:[16,24]},
+  {visit:'rudy',next:null},
+ ]},
+};
+const arcStage=()=>arcs.active&&ARCS[arcs.active.id].stages[arcs.active.stage];
+const arcIs=(id,kind)=>!!(arcs.active&&arcs.active.id===id&&arcs.active.started&&(arcStage()||{})[kind]);
+function arcNext(){const A=arcs.active;if(!A)return;const st=arcStage()||{};A.stage++;A.started=false;A.prog=0;A.at=simNow()+(st.next?rnd(st.next[0],st.next[1])*H1:0);if(!arcStage())arcEnd()}
+function arcEnd(){if(!arcs.active)return;arcs.done[arcs.active.id]=simNow();arcs.last=simNow();arcs.active=null}
+function startArc(id){arcs.active={id,stage:0,at:simNow(),started:false,prog:0}}
+function updateArcs(dt){
+ const now=simNow();
+ if(!arcs.active){
+  if(now-(arcs.last||0)<1.2*86400e3||!chance(dt/(1.1*86400)))return;
+  const opts=Object.keys(ARCS).filter(id=>{const a=ARCS[id],d=arcs.done[id];if(a.once&&d)return false;if(d&&now-d<(a.repeat||999)*86400e3)return false;if(a.needRain&&weather.type!=='ulan')return false;return true});
+  if(!opts.length)return;startArc(pick(opts));
+ }
+ const A=arcs.active,st=arcStage();if(!st){arcEnd();return}
+ if(A.started){
+  if(st.lakad&&!lakad.next){A.started=false;A.at=now+rnd(5,12)*H1;log(`Na-move ang ${LAKAD[st.lakad].label()}. Next time na lang daw.`)}
+  if(st.visit&&!visit){A.started=false;A.at=now+rnd(10,20)*H1}
+  return}
+ if(now<A.at)return;
+ if(st.run){st.run();arcNext();return}
+ if(st.lakad){if(lakad.next)return;inviteLakad(st.lakad);A.started=true;return}
+ if(st.task){A.started=true;return}
+ if(st.visit){if(visit)return;scheduleVisit(st.visit,{days:0});A.started=true;return}
+}
+function arcTaskDone(){const A=arcs.active;if(!A)return;A.prog=(A.prog||0)+1;A.lastTask=simNow();if(A.prog>=(arcStage().need||1))arcNext()}
+const arcTaskReady=id=>arcIs(id,'task')&&simNow()-(arcs.active.lastTask||0)>5*H1;
+function planSpeech(){
+ const n=++speechDrafts;
+ setPlan('Sinusulat ang maid of honor speech',[go('table'),act({dur:rnd(900,1500),pose:'sit',x:93,y:118,f:1,prop:'book',label:`Sinusulat ang MOH speech (draft ${n})`,icon:'book',gain:{fun:-5},
+  lines:['"Noong una kong makilala si Kat... kinain niya yung fishball ko." hmm. pwede.','*bura bura bura*','paano ba ko magsasalita nang hindi umiiyak','"Kat, ikaw ang..." ANO. IKAW ANG ANO','*nagpa-practice sa harap ni Kikiam* ...umalis si Kikiam'],
+  say:['okay. speech. kaya ko to.','draft '+n+'. eto na yun.'],
+  tick:(dt,s)=>{if(chance(dt/120)&&mess.length<10)mess.push({type:'paper',x:rnd(70,130),y:rnd(150,176)})},
+  end:()=>{log(pickNovel([`MOH speech, draft ${n}: tatlong pahina, dalawang joke, isang iyak.`,`Nagsulat ng speech para kay Kat. Binasa nang malakas kay ${CAT}. Natulog si ${CAT}.`,`Draft ${n} ng speech: mas maganda na. Medyo. Siguro.`],'dia:'));arcTaskDone()}})]);
+}
+function planAnts(){
+ const k=(arcs.active&&arcs.active.prog)||0;
+ if(!cat.away&&cat.state!=='lap'){catGoTo('fridgeTop');cat.after='watch'}
+ setPlan('Nakikipag-giyera sa langgam',[go('counter'),act({dur:rnd(300,600),back:true,anim:'scrub',label:['Nagpupunas ng suka sa counter','Nagdo-drawing ng chalk line laban sa langgam','Huling laban: lahat ng asukal, sa tupperware'][Math.min(k,2)],icon:'drop',
+  say:['okay mga langgam. tayong dalawa na lang. ay, kayong isang libo pala.','suka. chalk. determinasyon.',`${CAT}, tulungan mo ko. ${CAT}? ...okay.`],
+  lines:['saan kayo galing?! SAAN','may isa pa. may isa pa. MAY ISA PA',`${CAT} nakatingin lang. walang ambag.`],
+  start:()=>{photo('ants',pickNovel([`Langgam war, day ${k+1}`,`${NAME} vs. isang libong langgam`,`${CAT}: moral support (wala)`],'cap:'))},
+  end:()=>{log(pickNovel([`Langgam war, round ${k+1}: suka sa counter, chalk sa pader. Bumalik pa rin sila.`,`Round ${k+1} vs langgam. Si ${CAT}, nanood lang mula sa ref.`,`Nilinis ang counter. Tinago ang asukal. Langgam: 0. (For now.)`],'dia:'));arcTaskDone()}})]);
+}
+function planBucket(){
+ setPlan('Naglalagay ng balde sa tulo',[go({x:206,y:118,f:-1}),act({dur:8,f:-1,label:'Naglalagay ng balde sa tulo',icon:'drop',say:['ayan na, may tulo. ayan na.','balde, ikaw na bahala'],end:()=>{if(leak)leak.bucket=true;photo('leak',pickNovel(['Si Bernard (yung balde)','Tulo ng kisame, day 1',`Balde: 1. Kisame: 0.`],'cap:'))}})]);
+}
+// ---------- visit/arc drawing ----------
+function guestPlacement(){
+ if(V.seat==='sofa')return{mode:'upper',x:320,y:176,key:170,back:true};
+ if(V.seat==='table')return{mode:'upper',x:98,y:206,key:201,back:true};
+ if(V.seat==='sleep')return{mode:'lie',x:356,y:164,key:193.5};
+ if(V.seat==='fix')return{mode:'full',x:196,y:104,key:119,back:true,ladder:true};
+ return{mode:'full',x:V.x,y:V.y,key:V.y,back:V.back};
+}
+function drawGuest(t,pl){
+ const g=GUESTS[V.who];if(!g)return;const X=ROOM34;
+ if(pl.ladder){X.R(188,92,2,28,'#9aa0a8');X.R(203,92,2,28,'#9aa0a8');for(let y=96;y<120;y+=6)X.R(188,y,17,1,'#b8bec8')}
+ if(V.seat==='table'){X.rbox(91,192,14,7,X.P.w4);X.R(92,192,12,2,X.P.w5);X.R(93,199,2,6,X.P.w2);X.R(101,199,2,6,X.P.w2)}
+ const o={...g.look,f:V.f};
+ if(V.pose==='sleep'||V.seat==='sleep')o.expr='sleep';else if(V.who==='mama'&&V.pose==='walk')o.expr='angry';else if(V.wave>0||V.seat==='table')o.expr='happy';
+ if(pl.back)o.back=true;if(pl.mode==='upper')o.upper=true;
+ if(V.pose==='walk'&&!catchingUp)o.frame=[0,1,0,3][Math.floor(V.walkT*7)%4];
+ if(V.wave>0)o.wave=true;
+ const spr=TALAPX.sprite(o);
+ outlined(()=>{
+  if(pl.mode==='lie'){ctx.save();ctx.translate(pl.x,pl.y);ctx.rotate(Math.PI/2);ctx.drawImage(spr,-22,-10);ctx.restore();return}
+  ctx.save();ctx.translate(pl.x,pl.y);if(o.f<0&&!o.back)ctx.scale(-1,1);ctx.drawImage(spr,-10,-44);ctx.restore();
+ },pl.x,pl.y,pl.mode==='full'&&!pl.ladder?7:0);
+ if(pl.mode==='lie'){X.rbox(pl.x-32,pl.y-17,30,13,'#c0748a');for(let x=pl.x-29;x<pl.x-4;x+=6)X.R(x,pl.y-14,2,2,'#e09aac')}
+ V.drawTop=pl.mode==='lie'?pl.y-26:pl.y-(pl.mode==='upper'?44:46);V.drawX=pl.x;
+}
+function drawArcBits(t){
+ const X=ROOM34;
+ if(ants){const prog=(arcs.active&&arcs.active.id==='ants'&&arcs.active.prog)||0;const n=Math.round(22*(1-prog*.25));
+  for(let i=0;i<n;i++){const k=((i/n)+t*.025)%1;const x=46+k*68,y=84-k*24+Math.sin(k*30)*1.5;X.R(Math.round(x),Math.round(y),2,1,'#1a0e0a');X.R(Math.round(x)+1,Math.round(y)-1,1,1,'#3a2418')}}
+ if(leak){X.R(186,0,16,3,'rgba(120,90,60,.35)');X.R(189,3,10,2,'rgba(120,90,60,.3)');
+  if(leak.bucket&&V.seat!=='fix'){X.shadow(196,121,9,3);X.rbox(190,111,12,10,'#5a8ac0');X.R(190,111,12,2,'#8ab4e0');X.R(192,112,8,1,'#2a4a70')}}
+}
+function updateLeak(dt){
+ if(!leak||catchingUp)return;
+ if(weather.type==='ulan'&&V.seat!=='fix'&&chance(dt*1.4)){particles.push({type:'px',x:196,y:6,vx:0,vy:30,life:0,max:1.05,color:'#9fd0ff',g:140});if(chance(.35))setTimeout(()=>sfx('drip'),800)}
 }
 
 // ---------- poking Tala: context-aware, never the same line twice in a row, and she gets annoyed ----------
@@ -1981,7 +2340,7 @@ function updateDog(dt){
 // ---------- update: world ----------
 function updateWorld(dt,rdt){
  dogDirty=clamp(dogDirty+dt/(4*86400),0,1);if(dog.wet>0){dog.wet-=dt;if(chance(dt*6))emit('px',dog.x+rnd(-10,10),dog.y-rnd(6,18),{vy:-rnd(4,12),vx:rnd(-14,14),color:'#9fd0ff',max:.5,g:40})}
- updateWork(dt);updateEspresso(dt);updateShop();updateEvents(dt);updateLakad(dt);update3am(dt);
+ updateWork(dt);updateEspresso(dt);updateShop();updateEvents(dt);updateLakad(dt);updateVisits(dt);updateArcs(dt);updateGuest(dt);updateLeak(dt);update3am(dt);
  if(phase&&simNow()>phase.until)endPhase();
  closeness=clamp(closeness-dt*1/86400,0,100);
  for(const k in DECAY)needs[k]=clamp(needs[k]-DECAY[k]*dt*(k==='energy'&&H.inBed?0:1),0,100);
@@ -2089,6 +2448,7 @@ function drawMess(m){
  else if(m.type==='shard'){R(x-4,y-2,2,2,'#e8e2d6');R(x,y-1,3,2,'#e8e2d6');R(x+4,y-2,2,1,'#c8c2b6');R(x-1,y,2,1,'#c8c2b6')}
  else if(m.type==='carton'){X.shadow(x,y+1,20,4);X.block(x-9,y-12,18,5,8,'#e0b07a','#c8955a');R(x-1,y-12,2,13,'#a87840');R(x-11,y-13,5,2,'#c8955a');R(x+6,y-13,5,2,'#c8955a')}
  else if(m.type==='dish'||m.type==='box'){X.rbox(x-6,y-3,12,5,'#f0ece4');R(x-3,y-2,5,1,'#b08a5a')}
+ else if(m.type==='paper'){X.rbox(x-2,y-3,5,4,'#f4f0e6');R(x-1,y-2,2,1,'#c8c2b6');R(x+1,y-1,1,1,'#d8d2c6')}
 }
 
 // ---------- drawing: characters ----------
@@ -2122,7 +2482,7 @@ function talaPlacement(){
  if(H.pose==='lie'){if(x>396)return{mode:'lie',x:SEAT.bedLie.x,y:SEAT.bedLie.y,key:153};return{mode:'lie',x,y,key:y}}
  if(H.pose==='sit'){
   if(x>78&&x<110&&y<152)return{mode:'upper',x:93,y:143,key:140,front:true};
-  if(x>316&&x<356&&y>150)return{mode:'upper',x:336,y:176,key:170,back:true};
+  if(x>316&&x<356&&y>150)return{mode:'upper',x:V.visible&&(V.seat==='sofa'||V.seat==='sleep')?354:336,y:176,key:170,back:true};
   if(x>280&&x<312&&y<124)return{mode:'upper',x:290,y:92,key:100,back:true};
   if(x>236&&x<266&&y>118&&y<160)return{mode:'upper',x:250,y:140,key:139.6,front:true};
   if(x>396)return{mode:'full',x:430,y:148,key:153};
@@ -2263,11 +2623,12 @@ function drawLighting(t){
 function render(t){
  const s=roomState(t);
  ROOM34.drawRoom(ctx,s);
- drawDoorExtras(t);drawScreenDetail(t);drawDecor(t);
+ drawDoorExtras(t);drawScreenDetail(t);drawDecor(t);drawArcBits(t);
  const ents=ROOM34.floorItems(s);
  ents.push([153.2,decorOnBed],[121,drawCatBed]);
  for(const m of mess)if(!(m.y<156&&m.x<130&&(m.type==='dish'||m.type==='box')))ents.push([m.y,()=>drawMess(m)]);
  if(H.visible){const pl=talaPlacement();ents.push([pl.key+.3,()=>drawTala(t,pl)])}
+ if(V.visible){const gp=guestPlacement();ents.push([gp.key+.2,()=>drawGuest(t,gp)])}
  if(!cat.away){let ck=cat.y+.2;if(cat.elev){const sp=CAT_SPOTS[cat.elev];ck=sp&&sp.key!=null?sp.key:cat.y+.2}if(cat.jump)ck=Math.max(cat.y,cat.jump.y1)+.5;
   ents.push([ck,()=>outlined(()=>drawCat(t),cat.x,cat.y,cat.elev||cat.jump?0:6)])}
  if(!dog.away)ents.push([dog.y+.2,()=>outlined(()=>drawDog(t),dog.x,dog.y,10)]);
@@ -2310,6 +2671,8 @@ function updateUI(){
  const mn=[];if(media.show)mn.push(`Pinapanood: ${media.show.title} (ep ${media.show.at}/${media.show.total})`);if(media.book)mn.push(`Binabasa: ${media.book.title} (ch ${media.book.at}/${media.book.total})`);
  $('mediaNow').textContent=mn.join(' · ');
  {const rows=[];if(lakad.next)rows.push(['Susunod na lakad',`${lakad.next.label} · ${fmtWhen(lakad.next.at)}`]);if(lakad.history[0]&&!lakad.history[0].missed)rows.push(['Huling lakad',lakad.history[0].label]);
+  if(visit)rows.push(['Bisita',visit.stage==='here'?`nandito si ${gname(visit.who)}${visit.sleeping?' (tulog sa sofa)':''}`:`${gname(visit.who)} · ${fmtWhen(visit.at)}`]);
+  if(arcs.active)rows.push(['Kwento ngayon',ARCS[arcs.active.id].label(arcs.active.stage)]);
   rows.push(['Love life',love.status==='talking'?`talking stage kay ${love.name} 🥹`:love.status==='dating'?`official na sila ni ${love.name}!`:love.status==='sawi'?'sawi era (wag mong itanong)':'single, open to "sinet-up ni Kat"']);
   const el=$('lakadCard');el.innerHTML='';for(const [a,b] of rows){const d=document.createElement('div');d.className='row';const x=document.createElement('span');x.textContent=a;const y=document.createElement('span');y.textContent=b;d.append(x,y);el.append(d)}}
 }
@@ -2317,7 +2680,7 @@ function placeBubble(){
  if(bubbleT<=0){bubbleEl.classList.add('fade');return}
  const r=cv.getBoundingClientRect(),sr=$('stage').getBoundingClientRect();const sc=Math.min(r.width/W,r.height/H_);const ox=r.left-sr.left+(r.width-W*sc)/2,oy=r.top-sr.top+(r.height-H_*sc)/2;
  let bx,by;
- if(H.onBalcony){bx=H.bx||224;by=32}else if(!H.visible){bx=H.x<60?40:H.x>420?440:H.x;by=70}else{bx=H.drawX??H.x;by=(H.drawTop??H.y-46)-4}
+ if(bubbleOwner==='guest'&&V.visible){bx=V.drawX??V.x;by=(V.drawTop??V.y-46)-4}else if(H.onBalcony){bx=H.bx||224;by=32}else if(!H.visible){bx=H.x<60?40:H.x>420?440:H.x;by=70}else{bx=H.drawX??H.x;by=(H.drawTop??H.y-46)-4}
  bx=clamp(bx,46,434);by=Math.max(by,30);
  bubbleEl.style.left=(ox+bx*sc)+'px';bubbleEl.style.top=(oy+by*sc-10)+'px';
 }
@@ -2386,6 +2749,7 @@ function contextText(){
   `Online orders na parating: ${shop.pending.map(p=>p.name).join(', ')||'wala'}. Mga binili na nasa bahay na: ${shop.owned.map(id=>(ITEMS.find(i=>i.id===id)||{}).name).join(', ')||'wala'}.`,
   `Birthday ni ${viewerName}: ${['','January','February','March','April','May','June','July','August','September','October','November','December'][+viewerBday.split('-')[0]]} ${viewerBday.split('-')[1]}. Birthday mo: March 8.`,
   `Phase ngayon: ${phase?PHASES[phase.id].label:'wala'}. Craving: ${craving?dishName(craving):'wala'}.`,
+  `Bisita: ${visit?(visit.stage==='here'?`NANDITO NGAYON si ${gname(visit.who)}${visit.sleeping?' (tulog sa sofa)':''}`:`darating si ${gname(visit.who)} ${fmtWhen(visit.at)}`):'wala'}. Kwento ngayon: ${arcs.active?ARCS[arcs.active.id].label(arcs.active.stage):'wala'}${arcs.done.wedding?'. Kinasal na si Kat (ikaw ang maid of honor)':''}${leak?'. Tumutulo ang kisame, hinihintay si Mang Rudy':''}${ants?'. May langgam sa counter':''}.`,
   `Ugali: ${traitText()}`,
   `Laman ng ref: ${Object.keys(INV_LABEL).filter(k=>inv[k]>0).map(k=>INV_LABEL[k]+' '+inv[k]).join(', ')||'halos wala'}.`,
   `Gaano kayo ka-close ni ${viewerName} (0-100): ${Math.round(closeness)}.`,
@@ -2561,6 +2925,9 @@ function epiano(m,t,dur,vel,bus){const ctx=SND.ctx,f=mtof(m),g=ctx.createGain();
  a.connect(g);b.connect(bg);bg.connect(g);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vel,t+.012);g.gain.exponentialRampToValueAtTime(vel*.35,t+.45);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
  a.start(t);b.start(t);a.stop(t+dur+.05);b.stop(t+dur+.05)}
 const SFX={
+ knock(){const t=SND.ctx.currentTime,b=SND.N.sfx;for(let i=0;i<3;i++){noiseHit(t+i*.16,.05,.55,b,['lowpass',500,1]);tone('sine',150,90,t+i*.16,.08,.4,b)}},
+ hammer(){const t=SND.ctx.currentTime,b=SND.N.sfx;for(let i=0;i<2;i++){noiseHit(t+i*.28,.04,.4,b,['bandpass',1800,3]);tone('square',220,140,t+i*.28,.05,.12,b,['lowpass',1200,1])}},
+ drip(){const t=SND.ctx.currentTime,b=SND.N.sfx;tone('sine',1500,600,t,.09,.16,b)},
  ding(){const t=SND.ctx.currentTime,b=SND.N.sfx;tone('sine',988,0,t,.9,.22,b);tone('sine',784,0,t+.35,1.2,.22,b)},
  bark(){const t=SND.ctx.currentTime,b=SND.N.sfx,p=rnd(.9,1.15);for(let i=0;i<2;i++){tone('sawtooth',540*p,240*p,t+i*.24,.14,.3,b,['bandpass',950,2]);noiseHit(t+i*.24,.06,.1,b,['bandpass',1500,1])}},
  happyBark(){const t=SND.ctx.currentTime,b=SND.N.sfx;for(let i=0;i<3;i++){tone('sawtooth',720,420,t+i*.17,.1,.26,b,['bandpass',1200,2]);noiseHit(t+i*.17,.04,.08,b,['bandpass',1800,1])}},
@@ -2740,22 +3107,30 @@ const STAGE={
  cuddle(){setH({x:432,y:120,pose:'lie',inBed:true,label:'Tulog',sleep:true});lightsOff=true;catAt(422,124,'sleep','bed')},
  videoke(){setH({x:240,y:222,f:-1,prop:'mic',anim:'bob',label:'Nagvi-videoke',expr:'happy',wave:true});dogAt(204,226,'follow',1)},
  cry(){setH({x:336,y:176,pose:'sit',back:true,label:'Nanonood ng K-drama'});catAt(330,154,'sleep','sofaBack')},
+ guest(d){setH({x:352,y:176,pose:'sit',back:true,label:'Chikahan'});Object.assign(V,{who:d.who||'kat',visible:true,seat:'sofa',pose:'stand',x:318,y:212,path:[],wave:0});catAt(330,154,'sleep','sofaBack')},
+ guesttable(d){setH({x:93,y:118,pose:'sit',f:1,label:'Merienda',expr:'happy'});tableDish=d.dish&&typeof d.dish==='object'?d.dish:tdish('snack');Object.assign(V,{who:d.who||'kat',visible:true,seat:'table',pose:'stand',x:98,y:214,path:[],wave:0});dogAt(140,172,'beg',-1)},
+ cooktwo(d){setH({x:134,y:100,back:true,anim:'stir',label:'Nagluluto',expr:'kilig'});cooking={dish:{c:typeof d.dish==='string'?d.dish:'#c8b070'},burnt:false};Object.assign(V,{who:d.who||'jowa',visible:true,seat:null,pose:'stand',back:true,x:108,y:102,path:[],wave:0});dogAt(120,124,'beg',1)},
+ sleepover(d){setH({x:356,y:214,f:-1,label:'Goodnight'});Object.assign(V,{who:d.who||'paolo',visible:true,seat:'sleep',pose:'sleep',x:330,y:212,path:[],wave:0});dogAt(380,228,'sleep',-1)},
+ fix(){setH({x:236,y:196,f:-1,label:'Nanonood',expr:'happy'});Object.assign(V,{who:'rudy',visible:true,seat:'fix',pose:'stand',back:true,x:196,y:118,path:[],wave:0});leak={since:0,bucket:true}},
+ ants(){setH({x:110,y:100,back:true,anim:'scrub',label:'Langgam war'});ants=1;catAt(62,15,'watch','fridgeTop')},
+ leak(){setH({x:206,y:118,f:-1,label:'Balde',expr:'tired'});leak={since:0,bucket:true};weather.type='ulan'},
+ gown(d){STAGE.ready(d)},
  table(d){setH({x:93,y:118,pose:'sit',f:1,label:'Kumakain',expr:'happy'});tableDish=d.dish&&typeof d.dish==='object'?d.dish:{kind:'cake',c:'#c89060',full:.9};catAt(150,160,'sit')},
 };
-const FOCUS={cook:[136,66],burnt:[136,66],eat:[104,126],ready:[226,176],keyboard:[298,78],rescue:[224,52],sampay:[224,52],stare:[70,222],bathdog:[420,196],unbox:[228,186],guitar:[248,128],cuddle:[432,118],videoke:[226,196],cry:[340,140],table:[104,128]};
+const FOCUS={cook:[136,66],burnt:[136,66],eat:[104,126],ready:[226,176],keyboard:[298,78],rescue:[224,52],sampay:[224,52],stare:[70,222],bathdog:[420,196],unbox:[228,186],guitar:[248,128],cuddle:[432,118],videoke:[226,196],cry:[340,140],table:[104,128],guest:[336,150],guesttable:[98,150],cooktwo:[124,72],sleepover:[340,160],fix:[210,96],ants:[96,70],leak:[200,90],gown:[226,176]};
 function setH(o){Object.assign(H,{pose:'stand',back:false,dy:0,visible:true,inBed:false,anim:null,prop:null,wave:0,onBalcony:false,lookOut:null},o);H.cur={type:'act',t:0,dur:1,sleep:!!o.sleep};if(o.expr)H.forceExpr=o.expr;if(o.wave)H.anim='wave';if(o.lookOut)H.lookOut=o.lookOut}
 function catAt(x,y,state,elev=null,f=1){Object.assign(cat,{x,y,state,elev,jump:null,away:false,f,face:null})}
 function dogAt(x,y,state,f=1){Object.assign(dog,{x,y,tx:x,ty:y,state,f,away:false,moving:false})}
 function stagedShot(ph){
- const keepH={...H},keepCat={...cat},keepDog={...dog},keep={cooking,tableDish,fridgeOpen,screen,lightsOff,deskLamp,phoneGlow,flicker,wType:weather.type,mess:mess.slice(),parts:particles.slice(),laundryOn:laundry.onLine,bubbleT};
+ const keepH={...H},keepCat={...cat},keepDog={...dog},keepV={...V,path:V.path.slice()},keep={ants,leak,cooking,tableDish,fridgeOpen,screen,lightsOff,deskLamp,phoneGlow,flicker,wType:weather.type,mess:mess.slice(),parts:particles.slice(),laundryOn:laundry.onLine,bubbleT};
  const before=catchOffset;
- try{catchingUp=false;catchOffset=ph.t-(Date.now()+timeOffset);fridgeOpen=false;screen=null;deskLamp=false;phoneGlow=false;flicker=0;cooking=null;tableDish=null;lightsOff=false;particles.length=0;
+ try{catchingUp=false;catchOffset=ph.t-(Date.now()+timeOffset);fridgeOpen=false;screen=null;deskLamp=false;phoneGlow=false;flicker=0;cooking=null;tableDish=null;lightsOff=false;particles.length=0;V.visible=false;ants=0;leak=null;
   if(ph.data&&ph.data.weather)weather.type=ph.data.weather;
   (STAGE[ph.kind]||STAGE.table)(Object.assign({},ph.scene||{},ph.data||{}));
   render(performance.now()/1000);const F=FOCUS[ph.kind]||[H.drawX??H.x,(H.drawTop??H.y-46)+30];return grabPhoto(F[0],F[1]);
  }catch(e){return null}
  finally{catchOffset=before;for(const k of Object.keys(H))delete H[k];Object.assign(H,keepH);Object.assign(cat,keepCat);Object.assign(dog,keepDog);
-  cooking=keep.cooking;tableDish=keep.tableDish;fridgeOpen=keep.fridgeOpen;screen=keep.screen;lightsOff=keep.lightsOff;deskLamp=keep.deskLamp;phoneGlow=keep.phoneGlow;flicker=keep.flicker;weather.type=keep.wType;mess=keep.mess;particles.length=0;particles.push(...keep.parts);laundry.onLine=keep.laundryOn}
+  cooking=keep.cooking;tableDish=keep.tableDish;fridgeOpen=keep.fridgeOpen;screen=keep.screen;lightsOff=keep.lightsOff;deskLamp=keep.deskLamp;phoneGlow=keep.phoneGlow;flicker=keep.flicker;weather.type=keep.wType;mess=keep.mess;particles.length=0;particles.push(...keep.parts);laundry.onLine=keep.laundryOn;Object.assign(V,keepV);ants=keep.ants;leak=keep.leak}
 }
 function processPhotoQueue(){const q=photoQueue.splice(0).slice(-4);let n=0;for(const ph of q){const img=stagedShot(ph);if(img){addPhoto(ph.kind,ph.cap,ph.t,img);n++}}if(n)highlights.push(n>1?`may ${n} bagong litrato sa album, tingnan mo`:'may bagong litrato sa album, tingnan mo')}
 function renderAlbumBadge(){const n=album.filter(p=>p.t>albumSeen).length;const b=$('albumBadge');b.hidden=!n;b.textContent=n}
@@ -2818,8 +3193,6 @@ window.__studio={setHour(h){const d=new Date();const tgt=new Date(d);tgt.setHour
  force(n){({cook:planCook,desk:planDesk,nap:planNap,videoke:planVideoke,petcat:planPetCat,playdog:planPlayDog,cafe:()=>planCafe('kape'),espresso:()=>{esp.active=true;esp.t=0;esp.dur=120;esp.met=false;catGoTo('door');cat.after='watch'},drama:planDrama,grocery:planGrocery,shower:planShower,tidy:planTidy,work:()=>planWork(urgentProject())})[n]()},
  meetingNow(){const p=projects[0];if(p)p.meetingAt=simNow()+60e3},phase:startPhase,catchUp,talaMsg,newProject,get projects(){return projects},get chat(){return chat},get wallet(){return wallet},
  get shop(){return shop},stage:(k,cap,hr)=>{const t=new Date();if(hr!=null)t.setHours(Math.floor(hr),Math.round((hr%1)*60),0,0);photoQueue.push({kind:k,cap,t:hr!=null?t.getTime():simNow(),data:{},scene:sceneData()});processPhotoQueue()},photo,get album(){return album},openAlbum,more:{guitar:()=>planGuitar(),nails:()=>planNails(),bake:()=>planBake(),repot:()=>planRepot(),bathdog:()=>planBathDog(),puzzle:()=>planPuzzle(),klase:()=>planClass()},wb:(h,g)=>welcomeBack(h,g),get laundry(){return laundry},sampay:()=>planSampay(),tambay:()=>planTambay(),get lakad(){return lakad},get love(){return love},invite:inviteLakad,breakHeart,get snd(){return SND},get stats(){return stats},get media(){return media},checkout,openRecap,rare(id){const e=RARE.find(x=>x.id===id);e&&e.run()},
- setSpeed(s){speed=s},get mess(){return mess},get weather(){return weather},setWeather(t){weather.type=t}};
+ setSpeed(s){speed=s},stageRaw:ph=>stagedShot(ph),skip(ms){timeOffset+=ms;return catchUp(ms)},V,visitNow(t){scheduleVisit(t,{now:true});visit.at=simNow()-1},get visit(){return visit},get arcs(){return arcs},startArc,arcNow(){if(arcs.active){arcs.active.at=simNow()-1;arcs.active.lastTask=0}},arcNext,get leak(){return leak},get ants(){return ants},get mess(){return mess},get weather(){return weather},setWeather(t){weather.type=t}};
 })();
 </script>
-</body>
-</html>

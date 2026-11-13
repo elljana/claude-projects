@@ -22,6 +22,8 @@ Idle na pixel-art studio (top-down 3/4 "dollhouse" view, 480×270) na pwede mong
 - **Love life:** blind dates na sinet-up ni Kat, talking stage na may kilig, at minsan sawi. Kapag sawi siya, mas iyakin siya sa drama at "sad playlist era" ang radyo
 - **Balcony:** nagsasampay siya (at nagmamadaling kunin kapag umulan) o tumatambay, at makikita mo siya sa likod ng salamin
 - **Mga litrato:** kapag may special na moment (party outfit, si Siopao sa keyboard, sampay sa ulan, 3AM sa sulok...), kinukunan ito. Kapag wala ka, nire-recreate ang eksena sa tamang oras at ilaw pagbalik mo, kaya may pruweba ka ng mga hindi mo naabutan
+- **Mga bisita:** may kanya-kanyang itsura at linya. Si **Kat** dadaan para mag-chika o mag-merienda (at mag-interrogate kapag may jowa-chika), si **Paolo** makikikain, makikitulog sa sofa at manghihingi ng "pang-load," ang **jowa** magluluto kasama si Tala at manonood ng movie, si **Mama** may surprise visit na may dalang ulam (at inspection), at si **Mang Rudy** ang landlord na darating... sa ikatlong "bukas"
+- **Mga multi-day na kwento:** ang **kasal ni Kat** kung saan maid of honor si Tala (fitting, pagsusulat ng speech, bridal shower, kasal na naka-gown, at ang aftermath), ang **langgam invasion** na ilang araw na giyera, at ang **tulo ng kisame** tuwing umuulan na may balde hanggang dumating si Mang Rudy
 - **Linggo ni Tala:** weekly recap na pwedeng buksan kahit kailan, parang Wrapped ng buhay niya
 - **Tuloy ang buhay niya habang wala ka:** pagbalik mo, sina-simulate niya ang nangyari (hanggang 12 oras) at ikukuwento niya sa'yo
 
