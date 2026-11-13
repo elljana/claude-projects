@@ -1617,6 +1617,12 @@ const LAKAD={
   back:()=>['Galing salon. Bagong buhok, bagong ako. (Same problems.)','Nagpa-salon. Sabi ng stylist "trim lang," pero umiksi nang dalawang pulgada.'],
   msg:()=>['nagpa-salon ako!! ang ganda ng buhok ko ngayon, sana ma-maintain ko hanggang bukas','sabi ko trim lang. hindi trim yun. pero maganda naman. siguro.']},
  date:{label:w=>w?`date with ${w}`:'blind date na sinet-up ni Kat',with:[],hours:[18,20],look:{outfit:'date',hair:'down'},dur:[2,3.5],date:true},
+ barkada:{label:()=>`dinner kasama si Kat at si ${love.name||'jowa'}`,with:[],hours:[18,20],look:{outfit:'date',hair:'down'},dur:[2.5,3.5],
+  back:()=>[`Group dinner: in-interview ni Kat si ${love.exes[0]&&love.status!=='dating'?'siya':love.name}. 47 tanong. Pumasa. (Siguro.)`,`Dinner with Kat at ${love.name}. Si Kat ang nagkwento ng lahat ng nakakahiyang nangyari kay ${NAME} since college.`],
+  msg:()=>[`pinakilala ko na si ${love.name} kay Kat. 47 tanong. tatlong beses tinanong kung ano trabaho niya. PASADO DAW`,`dinner kasama si Kat at ${love.name}. ikinuwento ni Kat yung nangyari sa debut ko. papatayin ko siya.`],after:()=>{love.health=clamp((love.health??65)+4,0,95)}},
+ meetmama:{label:()=>`Sunday lunch kina mama, kasama si ${love.name||'jowa'}`,with:[],hours:[11,12],sunday:true,look:{outfit:'sunday',hair:'down'},dur:[3,4],
+  back:()=>[`Pinakilala si ${love.name} kay Mama. Tinanong kung may trabaho siya. Anim na beses.`,`Meet the Mama: si ${love.name} ang naghugas ng plato. Approved na siya. Si Paolo, nagpalibre agad.`],
+  msg:()=>[`MEET THE MAMA DONE. si mama tinanong si ${love.name} kung kailan kami magpapakasal. sa unang 10 minuto. gusto ko nang lumubog`,`pinakilala ko na si ${love.name} kay mama!! naghugas siya ng plato kaya approved na. si Paolo, nagpalibre ng sine sa kanya. NAKAKAHIYA`],after:()=>{love.health=clamp((love.health??65)+(chance(.75)?8:-6),0,100)}},
  fitting:{label:()=>'dress fitting para sa kasal ni Kat',with:['kat'],hours:[13,15],look:{outfit:'blouse',hair:'down'},dur:[2,3],
   back:()=>['Dress fitting para sa kasal ni Kat. Ang ganda ng gown. Hindi makahinga si Tala. Worth it.','Fitting: kailangan daw i-adjust yung gown. "Kumain ka kasi ng tatlong extra rice." (Kat, 2026)'],
   msg:()=>['galing ako sa fitting!! ang ganda ng gown ko teh. lavender. hindi ako makahinga pero maganda','fitting update: masikip ng konti yung gown. diet starts tomorrow. (bukas ulit)'],after:()=>arcNext()},
@@ -1636,7 +1642,7 @@ function lakadAt(def){const d=new Date(simNow());let days=ri(1,3);
  if(def.sunday){days=(7-d.getDay())%7||7}
  d.setDate(d.getDate()+days);d.setHours(ri(def.hours[0],def.hours[1]),pick([0,30]),0,0);return d.getTime()}
 function inviteLakad(type){
- const def=LAKAD[type];const w=type==='date'?(love.status==='talking'?love.name:null):def.with.length?BARKADA[pick(def.with)]:null;
+ const def=LAKAD[type];const w=type==='date'?(love.status==='talking'||love.status==='dating'?love.name:null):def.with.length?BARKADA[pick(def.with)]:null;
  lakad.next={type,with:w,at:lakadAt(def),label:def.label(w),started:false};
  log(`May lakad sa ${fmtWhen(lakad.next.at)}: ${lakad.next.label}.`);
  const lines=type==='date'&&!w?[`teh. si Kat sinet-up ako sa blind date. ${fmtWhen(lakad.next.at)}. HELP`,`blind date daw ako sa ${fmtWhen(lakad.next.at)}. sinet-up ni Kat. hindi ako pumayag. (pumayag ako.)`]
@@ -1649,17 +1655,72 @@ function updateLakad(dt){
  if(!lakad.next){
   const hf=hourF();
   if(hf>9&&hf<22&&chance(dt/(2.2*86400))){
-   const opts=[['kain',3],['party',1.2],['gig',1],['salon',.8],['sunday',nowDate().getDay()>=4?2:.4],['date',love.status==='talking'?3:(love.sawiUntil>now?0:1)]];
+   const opts=[['kain',3],['party',1.2],['gig',1],['salon',.8],['sunday',nowDate().getDay()>=4?2:.4],['date',love.status==='talking'?3:love.status==='dating'?(love.fight?0:2.4):(love.sawiUntil>now?0:1)]];
    inviteLakad(wpick(opts));
   }
  }else if(!lakad.next.started&&now>lakad.next.at+90*60e3){log(`Na-miss ang lakad (${lakad.next.label}). "Next time na lang!" (Pang-limang "next time" na.)`);lakad.history.unshift({...lakad.next,missed:true});lakad.next=null}
  if(love.status==='talking'&&!catchingUp&&chance(dt/(14*3600))&&hourF()>8&&hourF()<23){love.kiligUntil=now+40*60e3;love.kilig=clamp(love.kilig+8,0,100);
   talaMsg(pickNovel([`nag-good morning si ${love.name} 🥹 wala lang. sinasabi ko lang.`,`si ${love.name} nag-send ng meme. ang corny. kinilig ako. ano ba.`,`${love.name}: "kumain ka na?" ...AKO ANG NAGTATANONG NIYAN SA'YO DIBA`,`tinawagan ako ni ${love.name}. 2 hours. hindi ko alam saan napunta yung oras`]))}
  if(love.status==='talking'&&chance(dt/(5*86400))&&love.dates>=1&&chance(.45))breakHeart(pick(['ghosting','mutual']));
+ updateRelationship(dt);
  if(love.sawiUntil&&now>love.sawiUntil&&love.status==='sawi'){love.status='single';love.sawiUntil=0;log('Naka-move on na. Mostly. Ayaw pa rin niya ng mga love song.');talaMsg('okay na ko. officially moved on. (wag mong patugtugin yung kanta namin)',{important:true})}
 }
+// ---------- relationship: not a straight line. kilig, tampuhan, bati, milestones, and sometimes the end ----------
+function goOfficial(n){Object.assign(love,{status:'dating',name:n,since:simNow(),health:70,ms:{},fight:null,catOk:0,hoodie:false});stat('events','naging official kay '+n)}
+const JOWA_LOOK={};
+function jowaLook(){const n=love.name||'Josh';if(JOWA_LOOK[n])return JOWA_LOOK[n];let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))>>>0;
+ const pk=a=>a[(h=(h*1103515245+12345)>>>0)%a.length];
+ return JOWA_LOOK[n]={hair:pk(['short','short','curls','short']),hairColor:pk(['#2b1b16','#1a120e','#3a2418','#4a2a1a']),skin:pk(['#d9a070','#c8925e','#e6b890','#b88458']),
+  outfit:pk(['tee','tee','hoodie','polo']),color:pk(['#3a3a4a','#4a6a5a','#8a3a3a','#3a5a8a','#c8a050','#5a4a6a'])}}
+const SWEET=n=>[`si ${n} nag-send ng picture ng pusa sa kalye kasi "kamukha raw ni Siopao." hindi. pero kinilig ako`,`${n}: "ingat ka today." ...ingat din ikaw ha. (hindi ko sinend. sinend ko.)`,
+ `nag-video call kami ni ${n} habang nagluluto ako. siya raw magtitikim. through the screen.`,`si ${n} nag-order ng milk tea para sakin. walang occasion. ANO TO`,
+ `${n} kinanta yung kanta namin sa voice message. sintunado. ise-save ko forever`,`tinanong ni ${n} kung kumusta si Kikiam. HINDI AKO. SI KIKIAM. ...okay lang, mahal ko rin si Kikiam`,
+ `${n}: "proud ako sayo." dahil lang natapos ko yung deadline ko. iiyak ba ko`];
+const FIGHTS=[
+ ['late reply ng 6 oras',n=>`si ${n} hindi nag-reply ng 6 hours. tapos "sorry busy." BUSY SAAN. ...okay lang. (hindi okay)`],
+ ['"ok." na may period',n=>`nag-reply si ${n} ng "ok." MAY PERIOD. alam mo ibig sabihin non diba. ALAM MO.`],
+ ['nakalimutan yung usapan',n=>`nakalimutan ni ${n} na may usapan kami ngayon. naka-ayos na ko. naka-eyeliner na ko teh.`],
+ ['kung saan kakain',n=>`nag-away kami ni ${n} kung saan kakain. tatlong oras. hindi kami kumain. gutom na ko at galit.`],
+ ['selos sa isang like',n=>`may ni-like si ${n} na picture ng ex niya. LIKE. hindi ako galit. nagtatanong lang ako. bakit.`],
+ ['hindi pinansin yung bagong buhok',n=>`nagpagupit ako. hindi napansin ni ${n}. tatlong araw na. wala. hindi ako magsasalita hangga't hindi niya napapansin.`],
+];
+function updateRelationship(dt){
+ if(love.status!=='dating')return;
+ const now=simNow(),n=love.name,hf=hourF(),awake=hf>8&&hf<23;
+ if(love.health==null)love.health=65;if(!love.ms)love.ms={};if(!love.since)love.since=now;
+ const days=(now-love.since)/86400e3;
+ love.health=clamp(love.health-dt/86400*2.6,0,95);
+ if(!love.fight&&awake&&chance(dt/(16*3600))){love.kiligUntil=now+40*60e3;love.kilig=clamp(love.kilig+6,0,100);love.health=clamp(love.health+1.5,0,95);if(!catchingUp)talaMsg(pickNovel(SWEET(n),'sw:'))}
+ if(!love.fight&&days>2&&chance(dt/(20*86400))){love.fight={until:now+rnd(10,30)*H1,why:'yung ex niyang nagparamdam',rounds:1};love.health=clamp(love.health-rnd(14,22),0,95);moodBoost-=12;log(`Nag-message daw yung ex ni ${n}. Nag-reply si ${n}. Hindi ito okay kay ${NAME}.`);highlight(`nagparamdam yung ex ni ${n}`);talaMsg(`teh. yung EX ni ${n} nag-message sa kanya. at NAG-REPLY SIYA. "kumusta lang daw." KUMUSTA LANG DAW.`,{important:true});return}
+ if(!love.fight&&days>1.5&&chance(dt/(6*86400)*(1.8-love.health/100))){const f=pick(FIGHTS);love.fight={until:now+rnd(6,26)*H1,why:f[0],rounds:1};love.health=clamp(love.health-rnd(8,16),0,95);moodBoost-=10;
+  log(`Nag-away sila ni ${n}: ${f[0]}. Hindi sila nag-uusap. (Nag-uusap sila, pero puro "ok.")`);highlight(`nag-away kami ni ${n}`);stat('events','away with '+n);talaMsg(f[1](n),{important:true});return}
+ if(love.fight&&now>love.fight.until){const F=love.fight;
+  if(chance(.25+love.health/100*.6)){love.fight=null;love.health=clamp(love.health+rnd(5,10),0,95);love.kiligUntil=now+3*H1;moodBoost+=10;
+   log(pickNovel([`Nagbati na sila ni ${n}. May dalang pagkain si ${n}. Effective.`,`Bati na sila ni ${n} matapos ang dalawang oras na tawag. Ang "${F.why}" ay hindi na raw issue. (Issue pa rin.)`,`Nag-sorry si ${n}. Nag-sorry din si ${NAME}. Bati na. Kinikilig ulit.`],'dia:'));
+   talaMsg(pickNovel([`bati na kami ni ${n} 🥹 nag-sorry siya. nag-sorry din ako. umiyak kami pareho. ang drama namin.`,`okay na kami ni ${n}. dinalhan niya ko ng ${pick(['isaw','milk tea','fishball','cake'])}. madali akong suyuin, alam ko.`]),{important:true})}
+  else if(love.health<45&&(F.rounds>=2||chance(.5))){breakHeart('breakup');return}
+  else{F.rounds++;F.until=now+rnd(8,20)*H1;love.health=clamp(love.health-5,0,100);talaMsg(pickNovel([`hindi pa rin kami bati ni ${n}. day ${F.rounds}. si Siopao lang kakampi ko.`,`si ${n}, "sorry na." tapos wala na. yun lang? YUN LANG?`]))}
+  return}
+ if(!love.fight&&love.health<28&&chance(dt/(3*86400))){breakHeart('fade');return}
+ // milestones
+ const mo=Math.floor(days/30);
+ if(mo>=1&&love.ms.mo!==mo&&awake){love.ms.mo=mo;love.health=clamp(love.health+5,0,95);love.kiligUntil=now+4*H1;stat('events',`${mo} month${mo>1?'s':''} with ${n}`);
+  talaMsg(mo===12?`ISANG TAON NA KAMI NI ${n.toUpperCase()}. hindi ako umiiyak. (umiiyak ako)`:pickNovel([`${mo} months na kami ni ${n} today 🥹 ${chance(.5)?'naalala niya!! may bulaklak pa':'nakalimutan niya. pero naalala niya after 3 hours. pwede na.'}`,`happy monthsary sa amin ni ${n}! (${mo} na.) si Kikiam may bandana para sa okasyon`]),{important:true});
+  if(!visit&&chance(.6))scheduleVisit('datein',{days:0})}
+ if(!love.ms.kat&&days>4&&awake&&!lakad.next){love.ms.kat=1;inviteLakad('barkada')}
+ if(!love.ms.mama&&days>12&&awake&&!lakad.next&&!love.fight){love.ms.mama=1;inviteLakad('meetmama')}
+ if(!love.ms.hoodie&&days>18&&awake){love.ms.hoodie=1;love.hoodie=true;log(`Naiwan ni ${n} ang hoodie niya. Hindi na ito ibabalik. Batas yan.`);talaMsg(`naiwan ni ${n} yung hoodie niya dito. akin na to. hindi ko na ibabalik. ganyan ang batas.`)}
+ if(!love.ms.toothbrush&&days>40&&awake){love.ms.toothbrush=1;talaMsg(`may toothbrush na si ${n} dito sa bahay. TOOTHBRUSH. alam mo ba ibig sabihin non. ...hindi ko rin alam pero malaking bagay daw`,{important:true})}
+}
 function breakHeart(how){
- const n=love.name;love.status='sawi';love.exes.unshift(n);love.sawiUntil=simNow()+rnd(2,4)*86400e3;love.name=null;love.kilig=0;moodBoost-=15;stat('events','na-sawi');
+ const n=love.name,wasDating=love.status==='dating',days=wasDating?Math.max(1,Math.round((simNow()-(love.since||simNow()))/86400e3)):0;
+ Object.assign(love,{status:'sawi',name:null,kilig:0,fight:null,hoodie:false,ms:{},since:0,health:65});love.exes.unshift(n);love.sawiUntil=simNow()+(wasDating?rnd(4,8):rnd(2,4))*86400e3;moodBoost-=wasDating?25:15;stat('events','na-sawi');
+ if(lakad.next&&!lakad.next.started&&['date','barkada','meetmama'].includes(lakad.next.type))lakad.next=null;
+ if(visit&&visit.type==='datein'&&visit.stage==='set')visit=null;
+ if(how==='breakup'||how==='fade'){
+  log(how==='breakup'?`Nag-break sila ni ${n} pagkatapos ng ${days} araw. Hindi na naayos ang tampuhan. Sawi era, part ${love.exes.length}.`:`Unti-unting nanlamig. Nag-usap sila ni ${n} at nagkasundong maghiwalay. ${days} araw. Mahinahon. Masakit pa rin.`);
+  highlight(`nag-break kami ni ${n}`);
+  talaMsg(how==='breakup'?pickNovel([`teh. wala na kami ni ${n}. ayoko pang pag-usapan. (pag-usapan natin.)`,`break na kami ni ${n}. ${days} days. binura ko na yung mga picture. (naka-archive lang.)`]):`nag-usap kami ni ${n} kagabi. maayos naman. pareho naming alam na hindi na gumagana. okay lang ako. *yakap kay Kikiam nang tatlong oras*`,{force:true});return}
  log(how==='ghosting'?`Na-ghost ni ${n}. Seen zoned. Sawi era begins.`:`Nag-usap sila ni ${n}. "Hindi pa raw siya ready." Sawi era begins.`);
  talaMsg(how==='ghosting'?`si ${n}... hindi na nagre-reply. 3 days na. okay lang. (hindi okay.)`:`nag-usap kami ni ${n}. hindi pa raw siya ready. okay. naiintindihan ko. *iyak sa unan*`,{important:true});
 }
@@ -1696,7 +1757,8 @@ function lakadReturn(L){
    else{const h=pick(['pinag-usapan lang niya yung crypto buong gabi','dinala niya yung nanay niya','nag-order siya para sa'+"'"+'kin nang hindi nagtatanong','late siya ng isang oras tapos nag-split bill pa','ang ganda ng kwentuhan... tungkol sa ex niya'].map(x=>x));
     log(`Blind date: ${h}. Hindi na mauulit.`);talaMsg(`blind date update: ${h}. papatayin ko si Kat.`,{important:true})}
   }else{love.kilig=clamp(love.kilig+20,0,100);love.kiligUntil=simNow()+4*H1;log(`Date with ${L.with}. Kinikilig pa rin pag-uwi.`);talaMsg(pickNovel([`kakauwi ko lang galing date with ${L.with}. hindi ako makatulog. KINIKILIG AKO`,`si ${L.with} hinatid ako pauwi 🥹 ok lang ako. hindi ako ok. kinikilig ako.`]),{important:true});
-   if(love.dates>=3&&chance(.25)){love.status='dating';log(`Official na sila ni ${L.with}!`);talaMsg(`teh. OFFICIAL NA KAMI NI ${L.with.toUpperCase()}. wag mong sasabihin kay mama. (sasabihin ko rin mamaya)`,{force:true})}}
+   if(love.status==='dating')love.health=clamp((love.health??65)+4,0,95);
+   if(love.status==='talking'&&love.dates>=3&&chance(.25)){goOfficial(L.with);log(`Official na sila ni ${L.with}!`);talaMsg(`teh. OFFICIAL NA KAMI NI ${L.with.toUpperCase()}. wag mong sasabihin kay mama. (sasabihin ko rin mamaya)`,{force:true})}}
   return}
  log(pick(def.back(L.with)));talaMsg(pick(def.msg(L.with)),{important:true});
 }
@@ -1799,7 +1861,7 @@ function planClass(){
 const GUESTS={
  kat:{name:'Kat',look:{hair:'down',hairColor:'#5a3020',skin:'#e6b890',outfit:'tee',color:'#7ac0a8',clip:'#f4c430'}},
  paolo:{name:'Paolo',look:{hair:'short',hairColor:'#1a120e',skin:'#c8925e',outfit:'hoodie',color:'#4a6a9a'}},
- jowa:{name:()=>love.name||'Josh',look:{hair:'short',hairColor:'#2b1b16',skin:'#d9a070',outfit:'tee',color:'#3a3a4a'}},
+ jowa:{name:()=>love.name||'Josh',get look(){return jowaLook()}},
  mama:{name:'Mama',look:{hair:'bun',hairColor:'#6a5a58',skin:'#d0a078',outfit:'sunday',color:'#8a5a9a',glasses:true}},
  rudy:{name:'Mang Rudy',look:{hair:'short',hairColor:'#a8a8a8',skin:'#b88458',outfit:'polo',color:'#6a8a6a',stache:true}},
 };
@@ -1855,6 +1917,8 @@ const TALK={
   'g:yung anak ni Mareng Linda, nurse na sa Canada|t:good for her ma|g:ikaw kailan|t:ma, freelancer nga po ako',
   'g:ang payat mo|t:ma, kakatimbang ko lang, hindi po|g:kain ka pa',
   'g:si Paolo, pumupunta dito?|t:minsan, nanghihingi ng pera|g:sa akin din'],
+ paolo_jowa:['g:ate, si {n} ba manlilibre ng sine?|t:hindi|g:tanong ko lang sa kanya mamaya','g:ate, mabait ba si {n}?|t:oo naman|g:may kotse ba siya'],
+ mama_jowa:['g:kailan mo ipapakilala sakin si {n}?|t:ma, paano niyo nalaman|g:si Paolo','g:si {n}, may trabaho ba?|t:ma|g:nagtatanong lang'],
  rudy:['g:ay, ito pala yung tulo|t:opo, tatlong araw na po|g:bukas ko na dapat to aayusin e|t:...',
   'g:may kape ka ba hija?|t:meron po!|g:tatlong asukal',
   'g:yung kapitbahay mo, nagvi-videoke pa rin?|t:araw-araw po|g:ako nga yun minsan'],
@@ -1896,7 +1960,7 @@ function updateVisits(dt){
  const now=simNow(),hf=hourF();
  if(!visit){
   if(hf>8&&hf<20&&chance(dt/(2.4*86400))){
-   const dating=love.status==='talking'||love.status==='dating';
+   const dating=(love.status==='talking'||love.status==='dating')&&!love.fight;
    const opts=[['chika',3],['sleepover',1.3],['datein',dating?2.6:0],['mama',nowDate().getDay()>=4?1.6:.25]].filter(o=>o[1]>0);
    scheduleVisit(wpick(opts));
   }
@@ -1947,7 +2011,7 @@ function visitNext(){
 const tdish=k=>({kind:k,c:k==='cake'?'#c89060':k==='snack'?'#e0a040':'#7a4020',full:1});
 const SEG={
  sofa(){const w=visit.who,n=gname(w);let pool=TALK[w]||TALK.kat;
-  if(w==='kat'){if(love.status==='talking'||love.status==='dating')pool=pool.concat(TALK.kat_jowa.map(x=>x.split('{n}').join(love.name||'siya')));if(love.status==='sawi')pool=pool.concat(TALK.kat_sawi)}
+  if((love.status==='talking'||love.status==='dating')&&TALK[w+'_jowa'])pool=pool.concat(TALK[w+'_jowa'].map(x=>x.split('{n}').join(love.name||'siya')));if(w==='kat'&&love.status==='sawi')pool=pool.concat(TALK.kat_sawi)
   guestTo({x:318,y:212},{seat:'sofa'});
   setPlan(`Chikahan with ${n}`,[go('sofa'),act({dur:rnd(1500,2800),pose:'sit',x:352,y:176,back:true,label:w==='mama'?'Nakikinig sa sermon ni Mama':`Nakikipagchikahan kay ${n}`,icon:'heart',gain:{social:80,fun:35},
    tick:convo(pool,w),start:()=>{if(chance(.6))photo('guest',pickNovel([`Chikahan with ${n}`,`${n} at ${NAME}, three hours later`,`${n}, bumisita!`],'cap:'),{who:w})},
@@ -2026,8 +2090,8 @@ const SEG={
     jowa:[`ingat ${n}... text mo ko pag nakauwi ka 🥹`,`bye ${n}! salamat sa... lahat`],mama:['ingat po ma! text niyo ko pag nakauwi kayo','ma, opo, kakain po ako nang maayos'],rudy:['salamat po Mang Rudy!','ingat po! (sana di na tumulo)']}[w],
    start:()=>{setTimeout(()=>{if(V.visible)gsay(pick({kat:['love you beh!','next week ulit!'],paolo:['bye ate! salamat sa pera!','ate, babalik ako next week'],jowa:['bye... salamat sa dinner','text kita pag nakauwi ako'],mama:['kumain ka nang gulay!','mag-asawa ka na!'],rudy:['tawagan mo lang ako hija','ingat ka dito hija']}[w]))},2500)},
    end:()=>{V.visible=false;V.path=[];const t=visit.type;
-    if(w==='jowa'){love.kilig=clamp(love.kilig+25,0,100);love.kiligUntil=simNow()+5*H1;love.dates++;talaMsg(pickNovel([`umuwi na si ${n}. ang tahimik na ng bahay. kinikilig pa rin ako. ano ba.`,`teh. si ${n}. pumunta dito. nagluto kami. hindi pa rin ako maka-get over`]),{important:true});
-     if(love.status==='talking'&&love.dates>=3&&chance(.35)){love.status='dating';log(`Official na sila ni ${n}! (Sa may pinto pa nangyari.)`);talaMsg(`TEH. OFFICIAL NA KAMI NI ${n.toUpperCase()}. sa may pinto pa. habang paalis siya. ANG CORNY. ANG SAYA KO.`,{force:true})}}
+    if(w==='jowa'){love.catOk=(love.catOk||0)+1;if(love.catOk===3&&love.status==='dating'){log(`Si ${CAT}, tumabi kay ${n} sa sofa. FIRST TIME. Historic.`);talaMsg(`TEH. si ${CAT} umupo sa tabi ni ${n}. kusa. walang suhol. mas malaking milestone pa to kaysa kay mama.`,{important:true})}love.kilig=clamp(love.kilig+25,0,100);love.kiligUntil=simNow()+5*H1;love.dates++;talaMsg(pickNovel([`umuwi na si ${n}. ang tahimik na ng bahay. kinikilig pa rin ako. ano ba.`,`teh. si ${n}. pumunta dito. nagluto kami. hindi pa rin ako maka-get over`]),{important:true});
+     if(love.status==='talking'&&love.dates>=3&&chance(.35)){goOfficial(n);log(`Official na sila ni ${n}! (Sa may pinto pa nangyari.)`);talaMsg(`TEH. OFFICIAL NA KAMI NI ${n.toUpperCase()}. sa may pinto pa. habang paalis siya. ANG CORNY. ANG SAYA KO.`,{force:true})}}
     else if(w==='kat')talaMsg(pickNovel(['umalis na si Kat. ang dami kong nalaman. hindi ko pwedeng sabihin. (sasabihin ko sayo mamaya)','kakaalis lang ni Kat. ang sakit ng tiyan ko kakatawa','si Kat umuwi na. naiwan niya yung payong niya. pang-apat na payong na niya dito']),{important:true});
     else if(w==='mama')talaMsg(pickNovel(['umalis na si mama. may tatlong tupperware ako ng ulam at isang listahan ng dapat kong gawin sa buhay','si mama nag-surprise visit. buti na lang naghugas ako kahapon. (hindi ako naghugas kahapon.)']),{important:true});
     log(`Umalis na si ${n}.`);visit=null}})]);
@@ -2457,6 +2521,7 @@ function talaExpr(){
  if(H.cur&&H.cur.sleep)return'sleep';const L=H.label||'';
  if(/rant/i.test(L)||brownout&&screen==='design'||roach||(H.cur&&H.cur.panic))return'angry';
  if(heartbreak())return chance(.002)?'cry':'sad';
+ if(love.fight)return Math.floor(simNow()/600e3)%3===0?'angry':'sad';
  if(love.kiligUntil>simNow())return'kilig';
  if(/^Nanonood/.test(L)&&traits.drama>.4&&H.cur&&H.cur.t>H.cur.dur*.6)return'cry';
  if(needs.energy<25||/Puyat/.test(L))return'tired';
@@ -2467,6 +2532,7 @@ function heartbreak(){return typeof love!=='undefined'&&love&&love.sawiUntil>sim
 function talaOutfit(){
  const pj=isPajamaTime()&&!H.hoodie&&!H.dress&&!H.lookOut;
  if(H.lookOut)return{outfit:H.lookOut.outfit,color:H.lookOut.color};
+ if(!H.dress&&!H.hoodie&&love.hoodie&&love.status==='dating'&&(pj||Math.floor(simNow()/(5*H1))%4===0))return{outfit:'hoodie',color:jowaLook().color};
  return{outfit:H.dress?'blouse':H.hoodie?'hoodie':pj?'pajama':'tee',color:outfit()};
 }
 function talaOpts(){
@@ -2673,7 +2739,7 @@ function updateUI(){
  {const rows=[];if(lakad.next)rows.push(['Susunod na lakad',`${lakad.next.label} · ${fmtWhen(lakad.next.at)}`]);if(lakad.history[0]&&!lakad.history[0].missed)rows.push(['Huling lakad',lakad.history[0].label]);
   if(visit)rows.push(['Bisita',visit.stage==='here'?`nandito si ${gname(visit.who)}${visit.sleeping?' (tulog sa sofa)':''}`:`${gname(visit.who)} · ${fmtWhen(visit.at)}`]);
   if(arcs.active)rows.push(['Kwento ngayon',ARCS[arcs.active.id].label(arcs.active.stage)]);
-  rows.push(['Love life',love.status==='talking'?`talking stage kay ${love.name} 🥹`:love.status==='dating'?`official na sila ni ${love.name}!`:love.status==='sawi'?'sawi era (wag mong itanong)':'single, open to "sinet-up ni Kat"']);
+  rows.push(['Love life',love.status==='talking'?`talking stage kay ${love.name} 🥹`:love.status==='dating'?`${love.name} 💞 · ${Math.max(1,Math.round((simNow()-(love.since||simNow()))/86400e3))} araw${love.fight?' · may tampuhan 😤':''}`:love.status==='sawi'?'sawi era (wag mong itanong)':'single, open to "sinet-up ni Kat"']);
   const el=$('lakadCard');el.innerHTML='';for(const [a,b] of rows){const d=document.createElement('div');d.className='row';const x=document.createElement('span');x.textContent=a;const y=document.createElement('span');y.textContent=b;d.append(x,y);el.append(d)}}
 }
 function placeBubble(){
@@ -2755,7 +2821,7 @@ function contextText(){
   `Gaano kayo ka-close ni ${viewerName} (0-100): ${Math.round(closeness)}.`,
   `Mga hobby: nag-aaral mag-gitara (${guitarSkill<.35?'baguhan pa':guitarSkill<.7?'kaya na ang intro':'kaya na ang buong kanta'}), may jigsaw puzzle sa mesa (${Math.round(puzzle.done/puzzle.total*100)}% na: ${puzzle.name}).`,
   `Barkada mo: Kat (bestie, mahilig mag-set up ng blind date), Migs (laging late), Rina (laging may bagong jowa), Paolo (bunso mong kapatid). Susunod na lakad: ${lakad.next?lakad.next.label+', '+fmtWhen(lakad.next.at):'wala pa'}. Huling lakad: ${lakad.history[0]?lakad.history[0].label:'wala'}.`,
-  `Love life: ${love.status==='talking'?'talking stage kay '+love.name+' (kilig level '+Math.round(love.kilig)+')':love.status==='dating'?'official na kayo ni '+love.name:love.status==='sawi'?'sawi ka ngayon, kaka-ghost/break lang kay '+(love.exes[0]||'someone')+'. Malungkot ka pero nagpapakatatag, mas iyakin sa drama':'single'}. Huwag mag-imbento ng ibang detalye tungkol sa love life mo.`,
+  `Love life: ${love.status==='talking'?'talking stage kay '+love.name+' (kilig level '+Math.round(love.kilig)+')':love.status==='dating'?'official na kayo ni '+love.name+' ('+Math.max(1,Math.round((simNow()-(love.since||simNow()))/86400e3))+' araw na)'+(love.fight?'. MAY TAMPUHAN kayo ngayon dahil sa '+love.fight.why+', nagtatampo ka pa':''):love.status==='sawi'?'sawi ka ngayon, kaka-ghost/break lang kay '+(love.exes[0]||'someone')+'. Malungkot ka pero nagpapakatatag, mas iyakin sa drama':'single'}. Huwag mag-imbento ng ibang detalye tungkol sa love life mo.`,
   `Mga naaalala mo tungkol kay ${viewerName}:\n${memories.map(m=>'- '+m.text).join('\n')||'- wala pa'}`,
   `Diary mo kamakailan (pinakabago sa taas):\n${logEntries.slice(0,14).map(e=>e.t+' '+e.text).join('\n')}`,
  ].join('\n');
@@ -3193,6 +3259,6 @@ window.__studio={setHour(h){const d=new Date();const tgt=new Date(d);tgt.setHour
  force(n){({cook:planCook,desk:planDesk,nap:planNap,videoke:planVideoke,petcat:planPetCat,playdog:planPlayDog,cafe:()=>planCafe('kape'),espresso:()=>{esp.active=true;esp.t=0;esp.dur=120;esp.met=false;catGoTo('door');cat.after='watch'},drama:planDrama,grocery:planGrocery,shower:planShower,tidy:planTidy,work:()=>planWork(urgentProject())})[n]()},
  meetingNow(){const p=projects[0];if(p)p.meetingAt=simNow()+60e3},phase:startPhase,catchUp,talaMsg,newProject,get projects(){return projects},get chat(){return chat},get wallet(){return wallet},
  get shop(){return shop},stage:(k,cap,hr)=>{const t=new Date();if(hr!=null)t.setHours(Math.floor(hr),Math.round((hr%1)*60),0,0);photoQueue.push({kind:k,cap,t:hr!=null?t.getTime():simNow(),data:{},scene:sceneData()});processPhotoQueue()},photo,get album(){return album},openAlbum,more:{guitar:()=>planGuitar(),nails:()=>planNails(),bake:()=>planBake(),repot:()=>planRepot(),bathdog:()=>planBathDog(),puzzle:()=>planPuzzle(),klase:()=>planClass()},wb:(h,g)=>welcomeBack(h,g),get laundry(){return laundry},sampay:()=>planSampay(),tambay:()=>planTambay(),get lakad(){return lakad},get love(){return love},invite:inviteLakad,breakHeart,get snd(){return SND},get stats(){return stats},get media(){return media},checkout,openRecap,rare(id){const e=RARE.find(x=>x.id===id);e&&e.run()},
- setSpeed(s){speed=s},stageRaw:ph=>stagedShot(ph),skip(ms){timeOffset+=ms;return catchUp(ms)},V,visitNow(t){scheduleVisit(t,{now:true});visit.at=simNow()-1},get visit(){return visit},get arcs(){return arcs},startArc,arcNow(){if(arcs.active){arcs.active.at=simNow()-1;arcs.active.lastTask=0}},arcNext,get leak(){return leak},get ants(){return ants},get mess(){return mess},get weather(){return weather},setWeather(t){weather.type=t}};
+ setSpeed(s){speed=s},goOfficial,breakHeart,stageRaw:ph=>stagedShot(ph),skip(ms){timeOffset+=ms;return catchUp(ms)},V,visitNow(t){scheduleVisit(t,{now:true});visit.at=simNow()-1},get visit(){return visit},get arcs(){return arcs},startArc,arcNow(){if(arcs.active){arcs.active.at=simNow()-1;arcs.active.lastTask=0}},arcNext,get leak(){return leak},get ants(){return ants},get mess(){return mess},get weather(){return weather},setWeather(t){weather.type=t}};
 })();
 </script>
