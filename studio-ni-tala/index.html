@@ -1220,7 +1220,7 @@ function planCook(){
    gain:{hunger:burnt?55:78,fun:8},
    say:burnt?['kaya pa naman... siguro','ang pait. ang pait ng buhay.']:['ang sarap ko talaga magluto','extra rice pa nga','eto na yung pinakamasarap na '+dish.name+' sa Pilipinas, walang kontra',`${DOG} wag mo kong titigan nang ganyan`],
    lines:['*nguya nguya*','ang sarap... luha ng kaligayahan',`${DOG}, isa lang ha. ISA LANG.`],
-   end:()=>{tableDish=null;plateMess();if(slot)today.ate[slot]=true;remember(dish.id);traits.cookSkill=clamp(traits.cookSkill+0.015,0,1);rateDish(dish.id,burnt?-2:1);if(burnt)photo('burnt',`"Smoky flavor" daw: ${dish.name}`);else if(chance(.25))photo('eat',`${dish.name}, luto ni Chef ${NAME}`,{dish:{kind:dishKind(dish.id),c:dish.c,full:.85}});
+   end:()=>{tableDish=null;plateMess();if(slot)today.ate[slot]=true;remember(dish.id);traits.cookSkill=clamp(traits.cookSkill+0.015,0,1);rateDish(dish.id,burnt?-2:1);if(burnt)photo('burnt',pickNovel([`"Smoky flavor" daw: ${dish.name}`,`${dish.name}, crispy edition`,`RIP ${dish.name}`],'cap:'));else if(chance(.25))photo('eat',`${dish.name}, luto ni Chef ${NAME}`,{dish:{kind:dishKind(dish.id),c:dish.c,full:.85}});
     highlight(burnt?`nasunog ko yung ${dish.name}`:`nagluto ako ng ${dish.name}`);
     rollWeek();stat('cooked');if(burnt)stat('burnt');stats.week.dishes[dish.name]=(stats.week.dishes[dish.name]||0)+1;
     if(burnt)talaMsg(line('burnt',{ulam:dish.name}));
@@ -1933,7 +1933,7 @@ function catArrive(){
  if(a==='sleep'){cat.state='sleep';cat.dur=rnd(120,600)}
  else if(a==='watch'){cat.state='watch';cat.dur=rnd(40,120)}
  else if(a==='eat'){cat.state='eat';cat.dur=rnd(15,30)}
- else if(a==='keyboard'){cat.state='keyboard';cat.dur=rnd(25,60);if(H.anim==='type')photo('keyboard',`${CAT} sa keyboard. Productivity: 0.`);if(H.anim==='type'&&!catchingUp){say(pickNovel([`${CAT}!! umalis ka sa keyboard, may deadline ako`,`${CAT}, asdfjkl;;;;;;; — ayan, nag-email ka na sa boss ko`,`sige ${CAT}, ikaw na mag-work, ako na pusa`]));log(`${CAT} umupo sa keyboard. Productivity: 0.`)}}
+ else if(a==='keyboard'){cat.state='keyboard';cat.dur=rnd(25,60);if(H.anim==='type')photo('keyboard',pickNovel([`${CAT} sa keyboard. Productivity: 0.`,`Bagong intern: si ${CAT}. Walang sweldo.`,`${CAT} nag-type ng asdfjkl;;;; sa email ni Sir Ronald`,`Deadline? Hindi kilala ni ${CAT} yan.`],'cap:'));if(H.anim==='type'&&!catchingUp){say(pickNovel([`${CAT}!! umalis ka sa keyboard, may deadline ako`,`${CAT}, asdfjkl;;;;;;; — ayan, nag-email ka na sa boss ko`,`sige ${CAT}, ikaw na mag-work, ako na pusa`]));log(`${CAT} umupo sa keyboard. Productivity: 0.`)}}
  else if(a==='lap'){cat.state='lap';cat.dur=rnd(120,400);cat.lapX=H.x;if(!catchingUp){emit('heart',cat.x,cat.y-22);if(chance(.6))log(`${CAT} humiga sa ibabaw ni ${NAME}. Hindi na siya pwedeng gumalaw. Batas yan.`)}}
  else if(a==='beg'){cat.state='beg';cat.dur=rnd(20,50);if(!catchingUp)emit('q',cat.x,cat.y-26,{vy:-4,vx:0,color:'#fff'})}
  else if(a==='push'){cat.state='push';cat.dur=rnd(6,12);cat.pushed=false}
@@ -2719,7 +2719,7 @@ function grabPhoto(fx,fy){fx=fx??H.drawX??H.x;fy=fy??((H.drawTop??H.y-46)+30);co
 function saveAlbum(){album=album.slice(-16);try{localStorage.setItem('tala-album',JSON.stringify(album))}catch(e){album=album.slice(-8);try{localStorage.setItem('tala-album',JSON.stringify(album))}catch(e2){}}albumDirty=true;renderAlbumBadge()}
 function addPhoto(kind,cap,t,img){album.push({id:'ph'+t.toString(36)+ri(10,99),kind,cap,t,img});saveAlbum();if(!catchingUp)log(`📸 May bagong litrato: ${cap}`)}
 function photo(kind,cap,data={}){
- const now=simNow(),day=dateKey();const recentSame=album.concat(photoQueue).some(p=>p.kind===kind&&now-p.t<6*H1);if(recentSame)return;
+ const now=simNow(),day=dateKey();const recentSame=album.concat(photoQueue).some(p=>p.kind===kind&&now-p.t<20*H1);if(recentSame)return;
  const todayCount=album.concat(photoQueue).filter(p=>new Date(p.t).toDateString()===nowDate().toDateString()).length;if(todayCount>=6)return;
  if(catchingUp){photoQueue.push({kind,cap,t:now,data,scene:sceneData()});return}
  if(!livePhoto)livePhoto={kind,cap,t:now,at:performance.now()+1200};
