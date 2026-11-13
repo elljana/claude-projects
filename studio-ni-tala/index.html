@@ -2694,7 +2694,12 @@ function drawTala(t,pl){
   else if(H.prop==='phoneEar'&&!o.back){R(pl.x+(o.f<0?-8:6),pl.y-36,3,6,'#222')}
  },pl.x,pl.y,pl.mode==='full'?7:0);
  if(pl.mode==='lie'&&H.inBed)ROOM34.blanketOver();
- if(H.cur&&H.cur.guitar){const gx=pl.x+2,gy=pl.y-18;ROOM34.rbox(gx-6,gy,11,9,'#b8743a');R(gx-3,gy+3,4,4,'#3a2010');R(gx+4,gy-12,3,14,'#6a4020');R(gx+3,gy-14,5,3,'#4a2a10');R(gx-5,gy+1,9,1,'#d8945a')}
+ if(H.cur&&H.cur.guitar){const x0=pl.x-10,y0=pl.y-26,X=ROOM34;
+  for(let i=0;i<12;i++){R(x0+13+i,y0+3-(i>>1),1,2,'#5a3418');R(x0+13+i,y0+3-(i>>1),1,1,'#8a5a30')}
+  R(x0+25,y0-4,3,3,'#3a2010');R(x0+25,y0-4,1,1,'#e8e0d0');R(x0+27,y0-2,1,1,'#e8e0d0');
+  X.rbox(x0,y0+3,9,8,'#c07a3a');X.rbox(x0+7,y0+1,7,7,'#c07a3a');R(x0+1,y0+4,6,1,'#dc9a58');R(x0+8,y0+2,5,1,'#dc9a58');R(x0,y0+10,9,1,'#8a4a20');
+  R(x0+7,y0+4,3,3,'#2a1408');R(x0+2,y0+7,3,1,'#5a2a10');R(x0+4,y0+5,9,1,'#e8d0a0');
+  R(x0+3,y0+5,3,2,'#d9a070');R(x0+3,y0+7,2,1,'#b8804f')}
  H.drawTop=pl.mode==='lie'?pl.y-14:pl.y-(pl.mode==='upper'?44:46);H.drawX=pl.x;
 }
 function drawProp(p,hx,hy,t){
