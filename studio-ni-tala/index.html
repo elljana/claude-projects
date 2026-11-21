@@ -698,14 +698,14 @@ let closeness=saved.closeness??20;
 let proactive=saved.proactive||{day:'',count:0,last:0};
 let lastSave=saved.lastSave||0;
 function snapshot(){return{v:2,traits,firstVisit,needs,inv,mess,log:logEntries.slice(0,60),recent:recent.slice(0,10),favs,craving,cravingUntil,plantWater,today,weather,
- wallet,projects,clientStats,phase,chat:chat.slice(-40),memories:memories.slice(-25),dishScore,unlocked,avoid,closeness,proactive,media,shop,stats,events,flags,linePack,viewerBday,lakad,hairStyle,love,laundry,nov:NOV,guitarSkill,puzzle,dogDirty,visit,arcs,ants,leak,speechDrafts,appl,luck,ailment,trip,lastSave:Date.now()}}
+ wallet,projects,clientStats,phase,chat:chat.slice(-40),memories:memories.slice(-25),dishScore,unlocked,avoid,closeness,proactive,media,shop,stats,events,flags,linePack,viewerBday,lakad,hairStyle,love,laundry,nov:NOV,guitarSkill,puzzle,dogDirty,visit,arcs,ants,leak,speechDrafts,appl,luck,ailment,trip,storm,heat,water,vk,lastSave:Date.now()}}
 function applyState(o){
  Object.assign(traits,o.traits||{});Object.assign(needs,o.needs||{});Object.assign(inv,o.inv||{});
  firstVisit=o.firstVisit||firstVisit;mess=o.mess||[];logEntries=o.log||[];recent=o.recent||[];favs=o.favs||favs;craving=o.craving||null;cravingUntil=o.cravingUntil||0;
  plantWater=o.plantWater??plantWater;if(o.today&&o.today.date===dateKey())today=o.today;if(o.weather)weather=o.weather;
  wallet=o.wallet??wallet;projects=o.projects||[];clientStats=o.clientStats||clientStats;phase=o.phase||null;chat=o.chat||[];memories=o.memories||[];
  dishScore=o.dishScore||{};unlocked=o.unlocked||[];avoid=o.avoid||{};closeness=o.closeness??closeness;proactive=o.proactive||proactive;lastSave=o.lastSave||0;
- media=o.media||media;shop=o.shop||shop;if(o.stats&&o.stats.week)stats=o.stats;events=o.events||events;flags=o.flags||flags;linePack=o.linePack||linePack;viewerBday=o.viewerBday||viewerBday;lakad=o.lakad||lakad;hairStyle=o.hairStyle||hairStyle;love=o.love||love;laundry=o.laundry||laundry;NOV=o.nov||NOV;guitarSkill=o.guitarSkill??guitarSkill;puzzle=o.puzzle||puzzle;dogDirty=o.dogDirty??dogDirty;if('visit' in o){visit=o.visit;if(!visit)V.visible=false}if(o.arcs)arcs=o.arcs;ants=o.ants||0;leak=o.leak||null;speechDrafts=o.speechDrafts||0;if(o.appl)appl=o.appl;if(o.luck)luck=o.luck;ailment=o.ailment||null;trip=o.trip||null;
+ media=o.media||media;shop=o.shop||shop;if(o.stats&&o.stats.week)stats=o.stats;events=o.events||events;flags=o.flags||flags;linePack=o.linePack||linePack;viewerBday=o.viewerBday||viewerBday;lakad=o.lakad||lakad;hairStyle=o.hairStyle||hairStyle;love=o.love||love;laundry=o.laundry||laundry;NOV=o.nov||NOV;guitarSkill=o.guitarSkill??guitarSkill;puzzle=o.puzzle||puzzle;dogDirty=o.dogDirty??dogDirty;if('visit' in o){visit=o.visit;if(!visit)V.visible=false}if(o.arcs)arcs=o.arcs;ants=o.ants||0;leak=o.leak||null;speechDrafts=o.speechDrafts||0;if(o.appl)appl=o.appl;if(o.luck)luck=o.luck;ailment=o.ailment||null;trip=o.trip||null;storm=o.storm||null;heat=o.heat||null;water=o.water||null;if(o.vk)vk=o.vk;
 }
 function save(){const s=snapshot();lastSave=s.lastSave;store.set(KEY,s);return s}
 
@@ -998,7 +998,7 @@ const RARE=[
  {id:'mama',p:1/(5*86400),ok:()=>hourF()>10&&hourF()<18&&!H.away,run:()=>{doorbell=2.5;dog.react=2;inv.manok++;inv.gulay+=2;inv.itlog+=4;
   log('Nagpadala si mama ng ulam at gulay. May kasamang text: "Kumakain ka ba nang maayos?"');stat('events','padala ni mama');
   talaMsg('nagpadala si mama ng ulam at gulay. may kasamang text: "kumakain ka ba nang maayos?" hindi po ma.',{important:true})}},
- {id:'videoke',p:1/(3*86400),ok:()=>hourF()>18&&hourF()<23,run:()=>{neighborSing=simNow()+rnd(20,40)*60e3;
+ {id:'videoke',p:1/(3*86400),ok:()=>false,run:()=>{neighborSing=simNow()+rnd(20,40)*60e3;
   log('Nag-videoke yung kapitbahay. Parehong kanta, pang-limang beses na.');stat('events','videoke ng kapitbahay');
   talaMsg('yung kapitbahay nagvi-videoke na naman. same song. pang-limang beses. kabisado ko na. sasabay na ko.')}},
  {id:'raffle',p:1/(10*86400),ok:()=>true,run:()=>{const n=ri(500,2000);wallet+=n;stat('earned',n);stat('events','nanalo sa raffle');
@@ -1156,7 +1156,7 @@ function chooseNext(){
  add('petcat',sd*0.75+5,planPetCat);
  add('playdog',sd*0.65*(n.energy>30?1:0.4)+5,planPlayDog);
  add('call',sd*0.55*(hf>9&&hf<23?1:0),planCall);
- add('shower',(100-n.hygiene-25)*1.6+((hf<10&&!today.shower)?35:0),planShower);
+ add('shower',(100-n.hygiene-25)*1.6+((hf<10&&!today.shower)?35:0),()=>waterOut()&&!water.hit&&!water.remembered?planNoWater():planShower());
  const dishes=mess.filter(m=>m.type==='dish'||m.type==='box').length,other=mess.length-dishes;
  add('dishes',dishes*24*(0.4+traits.neat),planDishes);
  add('tidy',other*16*(0.4+traits.neat),planTidy);
@@ -1168,13 +1168,14 @@ function chooseNext(){
  add('bathdog',(dogDirty>.7?32:2)*(hf>9&&hf<18?1:0)*(dog.away?0:1),planBathDog);
  add('puzzle',fd*.35+4,planPuzzle);
  add('class',(hf>9&&hf<21?7:0)+fd*.12,planClass);
+ add('mall',heatNow()&&!acOn()&&hf>11&&hf<17&&wallet>1000&&!stormNow()&&!today.mall?55:0,()=>{today.mall=true;planMall()});
  add('speech',arcTaskReady('wedding')&&hf>9&&hf<23?70:0,planSpeech);
  add('ants',arcTaskReady('ants')&&hf>7&&hf<22?75:0,planAnts);
  add('bucket',leak&&!leak.bucket?300:0,planBucket);
  add('jdinner',jHere()&&jCooked&&simNow()-jCooked<3*H1&&!today.ate.dinner?220:0,planJDinner);
  add('jtv',jHere()&&hf>18.5&&hf<23?(fd*.6+30)*(love.fight?.15:1):0,planJTV);
  add('cafe',cafeOpen(hf)&&wallet>400&&!meetingSoon(120)&&!(today.cafe>=2)?(8+fd*0.25+(urgentProject()?15:0)+(hf<4.5?12:0)):0,()=>planCafe('kape'));
- for(const c of C){if(limpNow()&&['dance','yoga','videoke','playdog','balcony','grocery','sampay'].includes(c[0]))c[1]*=.05;if(brownout&&['cook','bake','desk','work','class','videoke'].includes(c[0]))c[1]*=.05;c[1]*=.55+.45*novW('act:'+c[0]);const i=recent.indexOf('a:'+c[0]);if(i===0)c[1]*=(c[0]==='work'?0.6:0.15);else if(i>0&&i<3)c[1]*=0.55;c[1]*=rnd(0.65,1.35)*phaseMod(c[0]);
+ for(const c of C){if(stormNow()&&['balcony','sampay','grocery','cafe','repot'].includes(c[0]))c[1]=0;if(stormNow()&&storm.signal>=3&&c[0]==='delivery')c[1]*=.05;if(waterOut()&&(water.hit||water.remembered)&&['shower','dishes','bathdog'].includes(c[0]))c[1]*=0;if(limpNow()&&['dance','yoga','videoke','playdog','balcony','grocery','sampay'].includes(c[0]))c[1]*=.05;if(brownout&&['cook','bake','desk','work','class','videoke'].includes(c[0]))c[1]*=.05;c[1]*=.55+.45*novW('act:'+c[0]);const i=recent.indexOf('a:'+c[0]);if(i===0)c[1]*=(c[0]==='work'?0.6:0.15);else if(i>0&&i<3)c[1]*=0.55;c[1]*=rnd(0.65,1.35)*phaseMod(c[0]);
   if(suggestion&&suggestion.until>simNow()&&suggestion.id===c[0])c[1]=c[1]*4+250}
  C.sort((a,b)=>b[1]-a[1]);
  const top=C.slice(0,4).map(c=>[c,Math.pow(c[1],1.6)]);
@@ -2084,6 +2085,7 @@ const VISITS={
  datein:{who:'jowa',hours:[16,20],segs:()=>['cook','dinner','movie'],announce:true},
  mama:{who:'mama',hours:[9,15],sunday:true,segs:()=>['inspect','merienda','sofa'],announce:false},
  rudy:{who:'rudy',hours:[9,15],segs:()=>['fix'],announce:true},
+ stranded:{who:'kat',hours:[18,22],segs:()=>['sofa','dinner','tv','sleep'],announce:false},
  repair:{who:'tech',hours:[9,16],segs:()=>['fixappl'],announce:true},
 };
 const ANNOUNCE={
@@ -2483,6 +2485,68 @@ function updateTrip(dt){
  if(now>trip.next&&hf>8&&hf<23){trip.next=now+rnd(5,9)*H1;const m=pickNovel(trip.updates||[],'trip:'+trip.id);if(m)talaMsg(m)}
 }
 
+// ---------- bagyo, heat wave, videoke ng kapitbahay, water interruption ----------
+const STORM_NAMES=['Ambo','Butchoy','Carina','Dindo','Enteng','Ferdie','Gener','Helen','Igme','Julian','Kristine','Leon','Marce','Nika','Ofel','Pepito','Querubin','Romina','Siony','Tonyo','Upang','Vicky','Warren','Yoyong','Zosimo'];
+let storm=saved.storm||null; // {name,signal,at,until,warned,started,ended}
+let heat=saved.heat||null;   // {until}
+let water=saved.water||null; // {from,to,remembered,hit}
+let vk=saved.vk||{count:0,next:0};
+const SONGS=['My Way','Total Eclipse of the Heart','Bakit Ngayon Ka Lang','Dancing Queen','Pusong Bato','I Will Always Love You','Ikaw','Through the Fire','Bang Bang','Hotdog ni Kuya (hindi namin alam ang totoong title)'];
+const stormNow=()=>storm&&storm.started&&!storm.ended;
+const heatNow=()=>heat&&heat.until>simNow();
+function updateWx(dt){
+ const now=simNow(),hf=hourF(),m=nowDate().getMonth();
+ // ---- bagyo ----
+ if(!storm&&now-(flags.lastStorm||0)>9*86400e3&&chance(dt/(((m>=5&&m<=10)?14:45)*86400))){
+  const signal=wpick([[1,4],[2,4],[3,2],[4,1]]);storm={name:STORM_NAMES[(flags.stormN=(flags.stormN||0)+1)%STORM_NAMES.length],signal,at:now+rnd(14,30)*H1,until:0,warned:false,started:false,ended:false};
+  storm.until=storm.at+(signal>=3?rnd(26,40):rnd(16,28))*H1;
+  talaMsg(pickNovel([`may bagyo daw. si ${storm.name}. Signal #${signal} daw dito pagdating bukas. nag-panic buying na ko ng sardinas`,`PAGASA: Bagyong ${storm.name}, Signal #${signal} bukas. ako: *bumili ng 12 na canton, 3 kandila, at chichirya na hindi kasama sa listahan*`],'stw:'),{important:true});
+  log(`Bagyong ${storm.name} paparating, Signal #${signal} daw. Nag-panic buying: sardinas, canton, kandila, Skyflakes.`);inv.canton+=3;inv.chichirya+=2;spend(ri(4,9)*100)}
+ if(storm&&!storm.started&&now>storm.at){storm.started=true;if(H.onBalcony&&!(H.cur&&H.cur.sleep)){H.plan=[];H.cur.t=H.cur.dur||9e9}weather={type:'ulan',until:storm.until};stat('events',`Bagyong ${storm.name} (Signal #${storm.signal})`);highlight(`dumating si Bagyong ${storm.name}, Signal #${storm.signal}`);
+  log(`Nandito na si Bagyong ${storm.name}. Signal #${storm.signal}.${storm.signal>=3?' Umuuga ang mga halaman sa balcony.':''}`);
+  talaMsg(storm.signal>=3?`SIGNAL #${storm.signal}. ang lakas ng hangin. umuuga yung bintana. si ${DOG} nasa ilalim ng kama. ako, nasa ilalim ng kumot.`:`umuulan na nang malakas. bagyo na talaga. si ${DOG} takot sa kulog, nakadikit sakin.`,{important:true});
+  if(lakad.next&&!lakad.next.started&&lakad.next.at<storm.until&&storm.signal>=2){const L=lakad.next;lakad.history.unshift({...L,missed:true});lakad.next=null;talaMsg(`cancelled yung ${L.label}. baha daw sa labas. hanggang tuhod. next time na lang. (sana)`,{important:true})}
+  if(storm.signal>=2&&!visit&&chance(.45)){visit={type:'stranded',who:'kat',at:now+rnd(2,6)*H1,stage:'set',segs:[],delays:0,since:0};talaMsg('si Kat, na-stranded malapit dito. baha daw sa kanila. dito muna siya matutulog. MAY SLEEPOVER KAMI',{important:true})}}
+ if(stormNow()){
+  weather.type='ulan';weather.until=Math.max(weather.until,now+60e3);
+  const S=storm.signal;
+  if(!brownout&&chance(dt/((S>=4?3:S>=3?6:S>=2?14:40)*3600))){brownout=now+(S>=3?rnd(6,18):rnd(1,4))*H1;log(`Brownout dahil sa bagyo. ${S>=3?'Mukhang matagal-tagal.':'Sana saglit lang.'}`);if(!catchingUp)talaMsg(pickNovel(['brownout. bagyo. kandila mode. ang romantic sana kung hindi ako takot','walang kuryente. naka-power bank na lang ako. 43%. 42%. 41%...']))}
+  if(!catchingUp&&chance(dt/(S>=3?40:90))){flash=.3;setTimeout(()=>{sfx('boom');if(!dog.away&&chance(.5)){sfx('whine');if(!(H.cur&&H.cur.sleep))dogSet('follow',H.x,H.y,40)}},rnd(300,1500))}
+  if(S>=3&&!storm.pots&&chance(dt/(5*3600))){storm.pots=true;sfx('thud');log('May nabasag sa balcony: yung paso ng halaman, lumipad sa hangin.');if(!catchingUp&&!(H.cur&&H.cur.sleep))say('AY! yung halaman ko!!')}
+  if(now>storm.until){storm.ended=true;flags.lastStorm=now;weather={type:'maulap',until:now+rnd(2,5)*H1};
+   log(`Nakalabas na si Bagyong ${storm.name}.${storm.pots?' Nililinis ang balcony: basag na paso at lupa kahit saan.':''}`);talaMsg(pickNovel([`tapos na si ${storm.name}. buhay pa kami. si ${DOG} lumabas na sa ilalim ng kama.`,`wala na yung bagyo. ${storm.pots?'RIP yung isang paso ko. ':''}maaraw na bukas daw. sana.`]),{important:true})}}
+ if(storm&&storm.ended&&now-storm.until>2*86400e3)storm=null;
+ // ---- heat wave ----
+ if(!heat&&!stormNow()&&now-(flags.lastHeat||0)>10*86400e3&&chance(dt/(((m>=2&&m<=5)?6:40)*86400))){heat={until:now+rnd(2,4)*86400e3};flags.lastHeat=now;
+  log('Heat wave. 38°C daw, pero parang 50.');talaMsg(appl.aircon.owned?'heat wave daw. 38 degrees. buti may aircon. hindi na ko lalabas. hanggang Disyembre.':`HEAT WAVE. 38 degrees. electric fan lang ako. hangin na mainit lang binubuga niya. tumutunaw na ko.`,{important:true});stat('events','heat wave')}
+ if(heat&&heat.until<now){heat=null;log('Natapos na ang heat wave. Pwede na ulit huminga.')}
+ if(heatNow()&&weather.type==='ulan')weather.type='araw';
+ // ---- videoke ng kapitbahay ----
+ if(!vk.next)vk.next=now+rnd(18,40)*H1;
+ if(!neighborSing&&now>vk.next&&(hf>=16||hf<1.5)&&!stormNow()){neighborSing=now+rnd(40,150)*60e3;vk.next=now+rnd(20,48)*H1;vk.count++;vk.song=pick(SONGS);
+  log(pickNovel([`Videoke ng kapitbahay, session #${vk.count}. "${vk.song}" na naman.`,`Nag-videoke ulit yung kapitbahay. "${vk.song}." Kabisado na ni ${NAME}.`],'vkl:'));
+  if(!catchingUp&&!(H.cur&&H.cur.sleep))talaMsg(pickNovel([`ayan na naman. videoke ng kapitbahay. "${vk.song}." pang-${vk.count} na session to.`,`"${vk.song}" na naman ang kapitbahay. sasabay na ko. hindi ko na mapigilan.`,`ito na naman siya. ${vk.song}. si ${DOG} umaalulong na rin.`],'vkm:'))}
+ if(neighborSing&&(hf>=23||hf<3)&&H.cur&&H.cur.sleep&&H.inBed&&!today.vkWoke&&chance(dt/900)){today.vkWoke=true;H.cur.t=H.cur.dur;H.plan=vkWakePlan();
+  log(`Ginising si ${NAME} ng videoke ng kapitbahay nang ${hhmm()}. "${vk.song}." Sa ganitong oras.`);highlight(`ginising ako ng videoke ng kapitbahay nang ${hhmm()}`)}
+ if(neighborSing&&!catchingUp&&!(H.cur&&H.cur.sleep)&&chance(dt/400)&&H.visible)say(pickNovel([`*kanta* ...${vk.song.toLowerCase()}... AY. nadala ako.`,'okay kuya, alam na namin na hindi mo maabot yung high note.',`pang-${vk.count} na beses na yan ngayong buwan`,'sana may score man lang na 100. para matapos na.']));
+ // ---- water interruption ----
+ if(!water&&chance(dt/(16*86400))){const d=new Date(now);d.setDate(d.getDate()+ri(2,3));d.setHours(8,0,0,0);water={from:d.getTime(),to:d.getTime()+9*H1,remembered:chance(.5),hit:false};
+  log(`May notice sa elevator: water interruption, ${fmtWhen(water.from)} hanggang 5PM. (Makakalimutan niya.)`);talaMsg(`may water interruption daw sa ${fmtWhen(water.from).replace(/ \d.*$/,'')}, 8 to 5. isusulat ko para di ko makalimutan. (makakalimutan ko)`)}
+ if(water&&now>water.to){water=null;log('Bumalik na ang tubig. Ang sarap mabuhay.')}
+}
+const waterOut=()=>water&&simNow()>water.from&&simNow()<water.to;
+function vkWakePlan(){return[act({dur:6,pose:'sit',x:430,y:140,f:1,label:'Ginising ng videoke ng kapitbahay',expr:'angry',say:[`"${vk.song}"... ALAS-DOSE NA. ALAS-DOSE.`,`KUYA. 1AM NA. "${vk.song}" PA RIN.`]}),
+ act({dur:20,pose:'sit',x:430,y:140,f:1,label:'Kinakatok ang pader (walang epekto)',start:()=>{if(!catchingUp){sfx('knock')}},say:['*katok katok* KUYA. TULOG NA PO KAMI.']}),
+ act({dur:9e4,pose:'lie',inBed:true,x:432,y:120,f:1,label:'Pilit na natutulog (may unan sa tenga)',icon:'z',sleep:true,start:()=>{lightsOff=true},tick:(dt,s)=>{addNeed('energy',dt*100/(7*3600));if(!isSleepTime())s.t=s.dur},end:()=>{lightsOff=false}})]}
+function planMall(){const cost=ri(3,8)*100;
+ setPlan('Pupunta sa mall para magpalamig',[go('dresser'),act({dur:rnd(40,80),back:true,label:'Nag-aayos para sa mall (para sa aircon)',say:['mall. libreng aircon. tara.']}),go('door'),
+  act({dur:rnd(2.5,4)*3600,hidden:true,label:'Nasa mall, nagpapalamig',start:()=>{H.away=true},tick:(dt)=>{addNeed('fun',dt*30/7200)},end:()=>{H.away=false;spend(cost);log(pickNovel([`Nagpalamig sa mall nang tatlong oras. Umuwi na may milk tea at isang bagay na hindi niya kailangan. ${peso(cost)}.`,`Mall therapy: libreng aircon, ${peso(cost)} na hindi libre.`],'dia:'));talaMsg(pickNovel([`galing ako sa mall. 3 hours. aircon. hindi ako bumili ng kahit ano. (bumili ako ng ${peso(cost)})`,'nag-window shopping ako sa mall para lang sa aircon. sulit. nakakita ako ng sapatos. hindi ko binili. NAPAKALAKAS KO']))}}),
+  act({dur:6,x:32,y:98,f:1,label:'Kakauwi galing mall',say:['ang init ulit. bakit pa ko umuwi.']})])}
+function planNoWater(kind){water.hit=true;
+ setPlan('Walang tubig!',[go('bath'),act({dur:rnd(40,70),hidden:true,label:'Sinusubukang maligo',start:()=>{H.away=false}}),
+  act({dur:12,x:452,y:206,f:-1,label:'WALANG TUBIG',expr:'angry',say:['WALANG TUBIG. may shampoo na ko sa ulo. MAY SHAMPOO NA KO SA ULO.','...water interruption pala ngayon. sinulat ko pa naman.'],
+   end:()=>{needs.hygiene=Math.max(needs.hygiene,45);log(`Nakalimutan ang water interruption. Nag-shampoo bago nalamang walang tubig. Nagbanlaw gamit ang dalawang bote ng mineral water.`);talaMsg('nakalimutan ko yung water interruption. may shampoo na ko sa ulo nung nalaman ko. nagbanlaw ako gamit ang mineral water. lahat ng mineral water ko.',{important:true})}})])}
+
 // ---------- poking Tala: context-aware, never the same line twice in a row, and she gets annoyed ----------
 let pokes=0,pokeT=0;
 function talaPoke(){
@@ -2680,7 +2744,7 @@ function updateDog(dt){
 // ---------- update: world ----------
 function updateWorld(dt,rdt){
  dogDirty=clamp(dogDirty+dt/(4*86400),0,1);if(dog.wet>0){dog.wet-=dt;if(chance(dt*6))emit('px',dog.x+rnd(-10,10),dog.y-rnd(6,18),{vy:-rnd(4,12),vx:rnd(-14,14),color:'#9fd0ff',max:.5,g:40})}
- updateWork(dt);updateEspresso(dt);updateShop();updateEvents(dt);updateLakad(dt);updateVisits(dt);updateArcs(dt);updateGuest(dt);updateLeak(dt);updateLuck(dt);updateTrip(dt);updateJowa(dt);updateJowaFx(dt);update3am(dt);
+ updateWork(dt);updateEspresso(dt);updateShop();updateEvents(dt);updateLakad(dt);updateVisits(dt);updateArcs(dt);updateGuest(dt);updateLeak(dt);updateLuck(dt);updateTrip(dt);updateWx(dt);if(heatNow()&&!acOn())moodBoost-=dt*.0015;updateJowa(dt);updateJowaFx(dt);update3am(dt);
  if(phase&&simNow()>phase.until)endPhase();
  closeness=clamp(closeness-dt*1/86400,0,100);
  for(const k in DECAY)needs[k]=clamp(needs[k]-DECAY[k]*dt*(k==='energy'&&H.inBed?0:1),0,100);
@@ -2760,12 +2824,14 @@ function drawScreenDetail(t){
 function drawDoorExtras(t){
  // weather and visitors on the balcony, seen through the sliding door
  ctx.save();ctx.beginPath();ctx.rect(190,12,68,70);ctx.clip();
- if(weather.type==='ulan'){ctx.fillStyle='rgba(200,220,255,.55)';for(let i=0;i<30;i++){const rx=190+((i*17+Math.floor(t*60)*3)%68),ry=12+((i*29+Math.floor(t*90)*5)%70);ctx.fillRect(rx,ry,1,4)}
+ if(weather.type==='ulan'){ctx.fillStyle='rgba(200,220,255,.55)';const sn=stormNow()?storm.signal:0;for(let i=0;i<30+sn*18;i++){const rx=190+((i*17+Math.floor(t*60)*(3+sn*2))%68),ry=12+((i*29+Math.floor(t*90)*5)%70);if(sn){ctx.fillRect(rx,ry,1,3);ctx.fillRect(rx-1,ry+3,1,2);ctx.fillRect(rx-2,ry+5,1,1)}else ctx.fillRect(rx,ry,1,4)}
+  if(sn>=2)for(let i=0;i<sn*2;i++){const lx=190+((t*(60+i*13)*(sn/2)+i*31)%80)-6,ly=20+((i*23+Math.sin(t*3+i)*8+70)%56);R(Math.round(lx),Math.round(ly),2,1,i%2?'#5a9a4a':'#8a6a3a')}
   for(let i=0;i<8;i++){const dx=192+((i*11)%64),dy=14+((t*(4+i%3)+i*13)%66);R(dx,dy,1,2,'rgba(220,236,255,.8)')}}
  if(H.onBalcony&&!catchingUp){const o=talaOpts();o.back=false;o.f=H.f;const spr=TALAPX.sprite(o);ctx.save();ctx.translate(Math.round(H.bx||224),80);if(o.f<0)ctx.scale(-1,1);ctx.drawImage(spr,-10,-44);ctx.restore();ctx.fillStyle='rgba(200,230,255,.12)';ctx.fillRect(190,12,68,70);H.drawX=H.bx||224;H.drawTop=36}
  if(esp.active){drawCatSprite(244,53,t,{coat:'#151018',shade:'#2a2030',chest:'#151018',eye:'#8affa0',ear:'#3a2a40',moon:true},'sit',-1)}
  const d=nowDate(),ny=(d.getMonth()===11&&d.getDate()===31&&hourF()>23.8)||(d.getMonth()===0&&d.getDate()===1&&hourF()<.6);
  if(ny&&chance(.2))for(let i=0;i<6;i++)emit('px',rnd(196,252),rnd(16,40),{vx:rnd(-14,14),vy:rnd(-14,6),max:.9,g:10,color:pick(['#ff6a8a','#ffd06a','#6affc8','#8ab0ff'])});
+ if(storm&&storm.pots){R(232,76,3,2,'#b8643a');R(237,77,2,1,'#b8643a');R(229,78,6,1,'#5a3a20');R(240,78,2,1,'#3a8a4a')}
  if(flash>0){ctx.fillStyle=`rgba(255,255,255,${flash*3})`;ctx.fillRect(190,12,68,70)}
  ctx.restore();
 }
@@ -3006,7 +3072,7 @@ function traitText(){const a=[];const n=neatNow();a.push(n>.62?'malinis sa bahay
 const cap=x=>x.charAt(0).toUpperCase()+x.slice(1);
 function updateUI(){
  $('clock').textContent=hhmm();
- $('weather').textContent=WEATHER_LABEL[weather.type]+(nowDate().getMonth()>=8?' · ber months na':'');
+ $('weather').textContent=(stormNow()?`Bagyong ${storm.name} · Signal #${storm.signal}`:heatNow()?'heat wave 🥵':WEATHER_LABEL[weather.type])+(waterOut()?' · walang tubig':'')+(nowDate().getMonth()>=8?' · ber months na':'');
  $('sub').textContent=`Day ${dayNum()} kasama mo · kasama sina ${CAT} at ${DOG}`;
  $('activity').textContent=H.label;{const u=avatarURL(H.visible||H.cur&&H.cur.sleep?talaExpr():'neutral');if($('nowAv').getAttribute('src')!==u)$('nowAv').src=u}$('thought').textContent=thoughtText;
  $('mood').textContent='mood: '+moodLabel();
@@ -3105,7 +3171,7 @@ function contextText(){
   `Online orders na parating: ${shop.pending.map(p=>p.name).join(', ')||'wala'}. Mga binili na nasa bahay na: ${shop.owned.map(id=>(ITEMS.find(i=>i.id===id)||{}).name).join(', ')||'wala'}.`,
   `Birthday ni ${viewerName}: ${['','January','February','March','April','May','June','July','August','September','October','November','December'][+viewerBday.split('-')[0]]} ${viewerBday.split('-')[1]}. Birthday mo: March 8.`,
   `Phase ngayon: ${phase?PHASES[phase.id].label:'wala'}. Craving: ${craving?dishName(craving):'wala'}.`,
-  `Kalagayan: ${[sickNow()?'MAY SAKIT ka (lagnat, sipon), mahina ang boses mo at mabagal kang mag-reply':'',limpNow()?'iika-ika ka (natisod/natapilok)':'',...Object.keys(appl).filter(isBroken).map(x=>'sira ang '+APPL_NAME[x]),brownout?'walang kuryente':'',trip?'wala ka sa bahay, nasa '+trip.where:'',appl.aircon.owned?'may aircon ka na':''].filter(Boolean).join('; ')||'okay naman'}.`,
+  `${stormNow()?`MAY BAGYO: Bagyong ${storm.name}, Signal #${storm.signal}. Takot si ${DOG} sa kulog. `:''}${heatNow()?'Heat wave ngayon, sobrang init. ':''}${neighborSing?`Nagvi-videoke na naman ang kapitbahay (${vk.song}). `:''}${waterOut()?'Water interruption ngayon, walang tubig. ':''}Kalagayan: ${[sickNow()?'MAY SAKIT ka (lagnat, sipon), mahina ang boses mo at mabagal kang mag-reply':'',limpNow()?'iika-ika ka (natisod/natapilok)':'',...Object.keys(appl).filter(isBroken).map(x=>'sira ang '+APPL_NAME[x]),brownout?'walang kuryente':'',trip?'wala ka sa bahay, nasa '+trip.where:'',appl.aircon.owned?'may aircon ka na':''].filter(Boolean).join('; ')||'okay naman'}.`,
   `Bisita: ${visit?(visit.stage==='here'?`NANDITO NGAYON si ${gname(visit.who)}${visit.sleeping?' (tulog sa sofa)':''}`:`darating si ${gname(visit.who)} ${fmtWhen(visit.at)}`):'wala'}. Kwento ngayon: ${arcs.active?ARCS[arcs.active.id].label(arcs.active.stage):'wala'}${arcs.done.wedding?'. Kinasal na si Kat (ikaw ang maid of honor)':''}${leak?'. Tumutulo ang kisame, hinihintay si Mang Rudy':''}${ants?'. May langgam sa counter':''}.`,
   `Ugali: ${traitText()}`,
   `Laman ng ref: ${Object.keys(INV_LABEL).filter(k=>inv[k]>0).map(k=>INV_LABEL[k]+' '+inv[k]).join(', ')||'halos wala'}.`,
@@ -3368,7 +3434,7 @@ function radioTick(){
  if(R.mode){const st=STATIONS[R.mode],spb=60/st.bpm/2;if(R.next<now)R.next=now+.05;
   while(R.next<now+1.6){const bar=Math.floor(R.step/8),pos=R.step%8;try{st.play({pos,bar,step:R.step},st.prog[bar%st.prog.length],R.next,spb)}catch(e){}R.next+=spb*(R.mode==='focus'||R.mode==='citypop'?1:(R.step%2?.88:1.12));R.step++}}
  if(neighborSing){if(R.nNext<now)R.nNext=now+.05;
-  while(R.nNext<now+1.6){if(Math.random()<.7)tone('square',mtof(pick([60,62,64,67,69,72])+(Math.random()<.2?12:0)),0,R.nNext,.32,.05,SND.N.neighbor);R.nNext+=.3}}
+  while(R.nNext<now+1.6){if(Math.random()<.7)tone('square',mtof(pick([60,62,64,67,69,72])+(Math.random()<.2?12:0)),0,R.nNext,.32,(hourF()>=22||hourF()<3)?.11:.06,SND.N.neighbor);R.nNext+=.3}}
 }
 // station change: a quick dial sweep and a three-note DZTL jingle
 function radioSwitch(name){
@@ -3381,7 +3447,7 @@ let lastMode='-',catPurrT=0;
 function sndUpdate(dt){
  if(!SND.on||!SND.ctx)return;const N=SND.N,P=SND.prev,ct=SND.ctx.currentTime,tg=(g,v,tc)=>g.gain.setTargetAtTime(v,ct,tc);
  const dk=darkness(),rain=weather.type==='ulan';
- const r=rain?1:0;if(r!==P.rain){tg(N.rain,.3*r,1.5);tg(N.rainBody,.45*r,1.5);P.rain=r}
+ const r=rain?(stormNow()?1+storm.signal*.3:1):0;if(r!==P.rain){tg(N.rain,.3*r,1.5);tg(N.rainBody,.45*r,1.5);P.rain=r}
  const fan=brownout?0:1;if(fan!==P.fan){tg(N.fan,.2*fan,.8);tg(N.hum,.012*fan,.8);P.fan=fan}
  const city=dk>.3?.32:.12;if(city!==P.city){tg(N.city,city,3);P.city=city}
  tg(N.sizzle,cooking?.08+Math.random()*.07:0,.05);
@@ -3555,6 +3621,6 @@ window.__studio={setHour(h){const d=new Date();const tgt=new Date(d);tgt.setHour
  force(n){({cook:planCook,desk:planDesk,nap:planNap,videoke:planVideoke,petcat:planPetCat,playdog:planPlayDog,cafe:()=>planCafe('kape'),espresso:()=>{esp.active=true;esp.t=0;esp.dur=120;esp.met=false;catGoTo('door');cat.after='watch'},drama:planDrama,grocery:planGrocery,shower:planShower,tidy:planTidy,work:()=>planWork(urgentProject())})[n]()},
  meetingNow(){const p=projects[0];if(p)p.meetingAt=simNow()+60e3},phase:startPhase,catchUp,talaMsg,newProject,get projects(){return projects},get chat(){return chat},get wallet(){return wallet},
  get shop(){return shop},stage:(k,cap,hr)=>{const t=new Date();if(hr!=null)t.setHours(Math.floor(hr),Math.round((hr%1)*60),0,0);photoQueue.push({kind:k,cap,t:hr!=null?t.getTime():simNow(),data:{},scene:sceneData()});processPhotoQueue()},photo,get album(){return album},openAlbum,more:{guitar:()=>planGuitar(),nails:()=>planNails(),bake:()=>planBake(),repot:()=>planRepot(),bathdog:()=>planBathDog(),puzzle:()=>planPuzzle(),klase:()=>planClass()},wb:(h,g)=>welcomeBack(h,g),get laundry(){return laundry},sampay:()=>planSampay(),tambay:()=>planTambay(),get lakad(){return lakad},get love(){return love},invite:inviteLakad,breakHeart,get snd(){return SND},get stats(){return stats},get media(){return media},checkout,openRecap,rare(id){const e=RARE.find(x=>x.id===id);e&&e.run()},
- setSpeed(s){speed=s},get luckState(){return luck},luck:id=>LUCK.find(e=>e.id===id).run(),get appl(){return appl},get ailment(){return ailment},get trip(){return trip},tc:id=>TC_EVENTS.find(e=>e.id===id).live(),J,propose,moveIn,planJTV,goOfficial,breakHeart,stageRaw:ph=>stagedShot(ph),skip(ms){timeOffset+=ms;return catchUp(ms)},V,visitNow(t){scheduleVisit(t,{now:true});visit.at=simNow()-1},get visit(){return visit},get arcs(){return arcs},startArc,arcNow(){if(arcs.active){arcs.active.at=simNow()-1;arcs.active.lastTask=0}},arcNext,get leak(){return leak},get ants(){return ants},get mess(){return mess},get weather(){return weather},setWeather(t){weather.type=t}};
+ setSpeed(s){speed=s},get luckState(){return luck},storm(sig){storm={name:'Test',signal:sig,at:simNow()-1,until:simNow()+20*H1,started:false,ended:false}},heat(){heat={until:simNow()+2*86400e3}},water(rem){water={from:simNow()-1,to:simNow()+5*H1,remembered:!!rem,hit:false}},vkNow(){vk.next=simNow()-1},get stormS(){return storm},luck:id=>LUCK.find(e=>e.id===id).run(),get appl(){return appl},get ailment(){return ailment},get trip(){return trip},tc:id=>TC_EVENTS.find(e=>e.id===id).live(),J,propose,moveIn,planJTV,goOfficial,breakHeart,stageRaw:ph=>stagedShot(ph),skip(ms){timeOffset+=ms;return catchUp(ms)},V,visitNow(t){scheduleVisit(t,{now:true});visit.at=simNow()-1},get visit(){return visit},get arcs(){return arcs},startArc,arcNow(){if(arcs.active){arcs.active.at=simNow()-1;arcs.active.lastTask=0}},arcNext,get leak(){return leak},get ants(){return ants},get mess(){return mess},get weather(){return weather},setWeather(t){weather.type=t}};
 })();
 </script>
