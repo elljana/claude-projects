@@ -607,6 +607,7 @@ function fan(t,on){
  X.strokeStyle='rgba(150,165,180,.7)';X.lineWidth=1;for(const r of [4,8]){X.beginPath();X.ellipse(hx+.5,hy+.5,r,r*.9,0,0,7);X.stroke()}for(let k=0;k<8;k++){const ang=k*Math.PI/4;R(Math.round(hx+Math.cos(ang)*9),Math.round(hy+Math.sin(ang)*8),1,1,'rgba(150,165,180,.9)')}
  R(hx+7,hy+8,2,1,on?P.g3:P.greyD);
 }
+function dogBedLip(){X.save();X.beginPath();X.rect(10,239,54,12);X.clip();X.lineWidth=3;X.strokeStyle='#6a4a8a';X.beginPath();X.ellipse(36,236,19.5,8,0,0,7);X.stroke();X.lineWidth=1;X.strokeStyle=P.ink;X.beginPath();X.ellipse(36,236,21.5,9.5,0,0,7);X.stroke();X.fillStyle='#8a6aa8';X.fillRect(20,244,32,1);X.restore()}
 function dogBed(){X.fillStyle=P.ink;X.beginPath();X.ellipse(36,236,22,10,0,0,7);X.fill();X.fillStyle='#6a4a8a';X.beginPath();X.ellipse(36,235,21,9,0,0,7);X.fill();X.fillStyle='#8a6aa8';X.beginPath();X.ellipse(36,236,16,6,0,0,7);X.fill();X.fillStyle='#a08ac0';X.fillRect(22,231,28,1)}
 function bigPlant(t){
  X.save();X.translate(-6,0);shadow(450,262,28,5);rbox(440,238,22,22,'#c0643e');R(441,238,20,3,'#d8784e');R(441,256,20,3,'#9a4a2e');
@@ -632,7 +633,7 @@ function drawRoom(ctx,s){X=ctx;const t=s.t;
 }
 // floor entities (drawn depth-sorted with the characters by the game; here returned as a list)
 function floorItems(s){const t=s.t;return[
- [176,()=>diningTable(t,s)],[101,()=>deskChair()],[124,()=>backStool()],[198,()=>fan(t,!s.brownout&&!s.fanOff)],[246,()=>dogBed()],[262,()=>bigPlant(t)],[182,()=>basket()],[248,()=>toys()],[138,()=>beanbag()],
+ [176,()=>diningTable(t,s)],[101,()=>deskChair()],[124,()=>backStool()],[198,()=>fan(t,!s.brownout&&!s.fanOff)],[220,()=>dogBed()],[240.6,()=>dogBedLip()],[262,()=>bigPlant(t)],[182,()=>basket()],[248,()=>toys()],[138,()=>beanbag()],
  [136,()=>coffeeTable()],[192,()=>sofaBack()],[190,()=>floorLamp(s.night)],[152,()=>bed(t,s)],[212,()=>halfWall()],[226,()=>crDoorReal()],
 ]}
 function blanketOver(){rbox(402,99,40,36,P.b2);R(403,99,38,2,P.b3);for(let y=104;y<132;y+=9)for(let x=406;x<438;x+=9){R(x,y,4,4,P.b3);px(x+1,y+1,P.b1)}R(440,99,2,36,P.b1)}
@@ -834,7 +835,7 @@ function route(a,b){
 // ---------- entities ----------
 const H={x:220,y:204,f:1,pose:'stand',prop:null,back:false,dy:0,visible:true,inBed:false,anim:null,plan:[],cur:null,label:'Nag-iisip kung ano gagawin',walkT:0,wave:0,icon:null,iconT:0,lineT:20,away:false};
 const cat={x:164,y:24,elev:'treeTop',f:1,state:'sleep',t:0,dur:60,path:[],jump:null,walkT:0,react:0,face:null};
-const dog={x:36,y:232,f:1,state:'sleep',t:0,dur:40,tx:36,ty:232,walkT:0,wag:0,react:0};
+const dog={x:36,y:239,f:1,state:'sleep',t:0,dur:40,tx:36,ty:239,walkT:0,wag:0,react:0};
 let fridgeOpen=false,cooking=null,tableDish=null,screen=null,gift=null,bowlsFull=false,ball=null,windowShake=0,doorbell=0,fallingCup=null,lightsOff=false,deskLamp=false,phoneGlow=false,kettle=0,flash=0;
 const particles=[];
 function emit(type,x,y,o={}){if(catchingUp)return;particles.push(Object.assign({type,x,y,vx:rnd(-3,3),vy:-8,life:0,max:1.6},o))}
@@ -2717,7 +2718,7 @@ const CAT_SPOTS={
  fridgeTop:{x:62,y:15,elev:1,fx:62,fy:106,key:30},treeTop:{x:164,y:24,elev:1,fx:170,fy:106,key:30},treeMid:{x:172,y:41,elev:1,fx:172,fy:106,key:30},
  counter:{x:112,y:62,elev:1,fx:112,fy:106,key:62},desk:{x:300,y:62,elev:1,fx:300,fy:110,key:62},bed:{x:422,y:124,elev:1,fx:418,fy:160,key:152.5},
  sofaBack:{x:330,y:154,elev:1,fx:330,fy:216,key:193},halfWall:{x:395,y:134,elev:1,fx:378,fy:164,key:213},beanbag:{x:250,y:128,elev:1,fx:250,fy:152,key:139.5},
- door:{x:212,y:102},sun:{x:232,y:164},dogbed:{x:36,y:232},catbed:{x:178,y:118},box:{x:0,y:0},rug:{x:300,y:228},floor:{x:160,y:232},
+ door:{x:212,y:102},sun:{x:232,y:164},dogbed:{x:36,y:239},catbed:{x:178,y:118},box:{x:0,y:0},rug:{x:300,y:228},floor:{x:160,y:232},
 };
 function catFloorPos(){if(cat.elev){const sp=CAT_SPOTS[cat.elev];if(sp&&sp.fx!=null)return{x:sp.fx,y:sp.fy,reach:true};return{x:cat.x,y:clamp(cat.y+40,104,250),reach:true}}return{x:cat.x,y:cat.y,reach:false}}
 function catLeaveHigh(){if(cat.elev){const f=catFloorPos();cat.path.push({jump:true,x:f.x,y:f.y})}}
@@ -2798,13 +2799,13 @@ function updateDog(dt){
  else if(dog.state==='eat'){if(dog.t>dog.dur){dog.state='idle';dog.t=999;bowlsFullCheck()}}
  else if(dog.t>dog.dur){
   if(H.away)dogSet('wait',40,112,rnd(30,60));
-  else if(humanSleeping)dogSet('sleep',chance(.5)?36:372,chance(.5)?232:226,rnd(200,600));
+  else if(humanSleeping){const sp=chance(.5)?[36,239]:[372,226];dogSet('sleep',sp[0],sp[1],rnd(200,600))}
   else if(tableDish&&H.pose==='sit'&&Math.abs(H.x-93)<14&&H.y<150)dogSet('beg',140,166,rnd(20,50));
   else if(H.pose==='sit'&&H.x>316&&H.x<356&&H.y>150)dogSet(chance(.6)?'lie':'sleep',296,226,rnd(60,200));
   else if(H.pose==='lie'&&!H.inBed)dogSet('sleep',clamp(H.x+20,30,380),clamp(H.y+14,110,250),rnd(100,300));
   else{const c=wpick([['follow',H.pose==='walk'?50:15],['sleep',22],['sniff',14],['lie',12],['zoom',2]]);
    if(c==='follow')dogSet('follow',H.x,H.y,rnd(15,40));
-   else if(c==='sleep')dogSet('sleep',36,232,rnd(120,400));
+   else if(c==='sleep')dogSet('sleep',36,239,rnd(120,400));
    else if(c==='sniff')dogSet('sniff',rnd(30,380),rnd(108,252),rnd(6,14));
    else if(c==='lie')dogSet('lie',clamp(H.x+rnd(-40,40),30,380),clamp(H.y+rnd(8,20),108,252),rnd(40,120));
    else{dogSet('zoom',rnd(30,380),rnd(108,252),6);if(!catchingUp)log(dia('dogzoom'))}}
