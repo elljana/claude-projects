@@ -90,6 +90,31 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .voice.playing .bars i{animation:wv .9s ease-in-out infinite;background:var(--ink)}
 .voice.playing .bars i:nth-child(3n){animation-delay:.15s}.voice.playing .bars i:nth-child(3n+1){animation-delay:.3s}
 @keyframes wv{50%{transform:scaleY(.45)}}
+.call{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;
+  background:radial-gradient(120% 70% at 50% 18%,#1c2633 0%,#0b0e13 62%,#07090c 100%);
+  padding:calc(36px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px))}
+.call-top{display:flex;flex-direction:column;align-items:center;gap:10px}
+.call-av{width:132px;height:132px;border-radius:50%;position:relative}
+.call-av svg{width:100%;height:100%;border-radius:50%;display:block}
+.call.ringing .call-av::before,.call.ringing .call-av::after{content:"";position:absolute;inset:-10px;border-radius:50%;border:2px solid var(--led);opacity:0;animation:ring 1.8s ease-out infinite}
+.call.ringing .call-av::after{animation-delay:.9s}
+@keyframes ring{0%{transform:scale(.9);opacity:.7}100%{transform:scale(1.35);opacity:0}}
+.call-name{font-family:var(--display);font-size:28px;font-weight:700;margin:6px 0 0}
+.call-status{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums;letter-spacing:.3px}
+.call-mid{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px;width:100%;max-width:440px;padding:18px 0}
+.call-sub{font-size:17px;line-height:1.5;color:var(--ink);min-height:3em;text-wrap:pretty}
+.call-sub.dim{color:var(--muted);font-style:italic}
+.call-choices{display:flex;flex-direction:column;gap:8px}
+.call-choices button{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:15px;text-align:left;animation:fadein .4s ease both}
+.call-choices button:hover{background:rgba(255,181,71,.12);border-color:var(--led)}
+.call-btns{display:flex;gap:56px;justify-content:center}
+.cbtn{width:68px;height:68px;border-radius:50%;border:0;font-size:26px;color:#fff;display:grid;place-items:center}
+.cbtn.ok{background:#2fb36d}.cbtn.no{background:#e0484f}
+.cbtn-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.callback{align-self:center;display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:8px 0;font-size:13.5px;color:var(--muted)}
+.callback button{background:#2fb36d;border:0;border-radius:999px;padding:6px 12px;color:#fff;font-weight:600;font-size:13px}
+.calllog{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.calllog button{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12.5px;color:var(--ink)}
 .av.gc{background:#07090c;color:var(--led);font-family:var(--led-font);font-size:22px;border:1px solid var(--line)}
 .av .dot{position:absolute;right:0;bottom:0;width:11px;height:11px;border-radius:50%;background:#43c28a;border:2px solid var(--panel)}
 .side-foot{display:flex;gap:6px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
@@ -185,6 +210,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 </div>
 
 <div id="drawer" class="drawer" hidden></div>
+<div id="call" class="call" hidden role="dialog" aria-label="Tawag"></div>
 
 <script>
 'use strict';
@@ -477,7 +503,7 @@ function opening(){
     [-401,'bambi','yung naka cap'],
     [-399,'jerome','Ahh ikaw yung tahimik pre. Solid ka kagabi chill na chill'],
     [-398,'bambi','haha oo pre wala naman magagawa eh'],
-    [-380,'tonyo','...hello? Lorna ito na ba... ay. Magandang umaga po sa inyong lahat. Si Tonyo po ito, yung guard. Ahh... pasensya na po sa nangyari. Nag-report na po ako sa admin. Ahh. Sige po. Kristel paano patayin ito—',31],
+    [-380,'tonyo','...hello? Lorna ito na ba... ay. Magandang umaga po sa inyong lahat. Si Tonyo po ito, yung guard. Ahh... pasensya na po sa nangyari. Nag-report na po ako sa admin. Ahh. Sige po. Kristel paano patayin ito—',17,'vm-tonyo-hello'],
     [-360,'jerome','Teka lang. Napansin nyo ba yung oras nung lumabas tayo'],
     [-359,'jerome','2:47 na'],
     [-359,'jerome','Pumasok tayo 11:47'],
@@ -525,7 +551,7 @@ function opening(){
     [-15,'lorna','Ok po magluluto muna ako. {name} anak pag nabasa mo to kumain ka ha 🙏']
   ];
   const now=Date.now();
-  S.threads.gc=L.map(([m,from,text,voice])=>({id:nid(),from,text:P(text),t:now+m*MIN,voice:voice||0}));
+  S.threads.gc=L.map(([m,from,text,voice,audio])=>({id:nid(),from,text:P(text),t:now+m*MIN,voice:voice||0,...(audio?{audio}:{})}));
   S.unread.gc=S.threads.gc.filter(x=>x.from!=='sys').length;
   S.newFrom={gc:S.threads.gc[0].t};
   // scripted reactions once the player is actually reading
@@ -599,8 +625,11 @@ function renderChat(scroll){
     const body=m.voice?voiceHTML(m):esc(m.text);
     html+=`<div class="row${me?' me':''}">${me?'':`<div class="avs">${first?avHTML(m.from,true):''}</div>`}<div class="stack">${!me&&first&&t==='gc'?`<div class="who" style="color:${c.color}">${esc(c.name)}</div>`:''}<div class="b" tabindex="-1">${body}<span class="tm">${fmtTime(m.t)}</span></div></div></div>`;
   }
+  if(t!=='gc'&&Object.keys(CALLS).some(k=>CALLS[k].from===t&&(S.calls||{})[k]&&S.calls[k].state==='missed'))
+    html+=`<div class="callback">Tumawag si ${esc(CAST[t].short)} kanina.<button type="button" id="cbBtn">Tawagan pabalik</button></div>`;
   if(!S.threads[t].length)html=`<div class="sys" style="margin-top:30vh">Pribadong usapan ninyo ni ${esc(CAST[t].name)}. Walang ibang makakabasa nito.</div>`;
   box.innerHTML=html;
+  const cb=$('cbBtn');if(cb)cb.onclick=()=>callBack(t);
   box.querySelectorAll('.voice').forEach(v=>{v.onclick=()=>playVoice(v);v.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();playVoice(v)}}});
   S.unread[t]=0;
   renderComposer();renderTyping();
@@ -629,14 +658,156 @@ const VOICE={lorna:{voice:'airy',rate:.95},jerome:{voice:'rounded',rate:1.06},ni
 function speechText(t){return String(t).replace(/\[[^\]]*\]/g,' ').replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,'').replace(/—/g,', ').replace(/\s+/g,' ').trim().slice(0,1900)}
 function markVoices(){document.querySelectorAll('.voice').forEach(v=>{const on=v.dataset.id===speakingId;v.classList.toggle('playing',on);v.querySelector('.play').textContent=on?'■':'▶'})}
 function playVoice(v){
-  const tx=v.querySelector('.tx');
-  if(!ttsFn){tx.hidden=!tx.hidden;return}
-  tx.hidden=false;const id=v.dataset.id;
-  if(speakingId===id){try{ttsFn.stop()}catch(e){};speakingId=null;markVoices();return}
+  const tx=v.querySelector('.tx');const id=v.dataset.id;
   const m=S.threads[S.active].find(x=>x.id===id);if(!m)return;
+  if(speakingId===id){AU.pause();try{ttsFn&&ttsFn.stop()}catch(e){};speakingId=null;markVoices();return}
+  if(m.audio){tx.hidden=false;try{ttsFn&&ttsFn.stop()}catch(e){};speakingId=id;markVoices();
+    playClip(m.audio).then(()=>{if(speakingId===id){speakingId=null;markVoices()}});return}
+  if(!ttsFn){tx.hidden=!tx.hidden;return}
+  tx.hidden=false;
   speakingId=id;markVoices();
   ttsFn.speak(speechText(m.text),VOICE[m.from]||{}).catch(e=>{if(e&&e.code==='not_granted'){ttsFn=null;setNotice('Naka-off ang boses. Basahin na lang ang transcript.');setTimeout(()=>setNotice(''),8000)}}).finally(()=>{if(speakingId===id){speakingId=null;markVoices()}});
 }
+
+// ------------------------------------------------- recorded audio + scripted calls
+const TONYO_BYE='Salamat po sa inyong lahat. Ingat po kayo palagi. At... wag na po kayong babalik sa building nang gabi. Wag na po.';
+const AU=new Audio();AU.preload='auto';
+let clipDone=null;
+function playClip(key){
+  return new Promise(res=>{
+    if(clipDone)clipDone();
+    let done=false;const fin=()=>{if(done)return;done=true;clipDone=null;AU.onended=AU.onerror=null;res()};clipDone=fin;
+    AU.onended=fin;AU.onerror=()=>setTimeout(fin,2500);
+    AU.src='audio/'+key+'.mp3';
+    const p=AU.play();if(p&&p.catch)p.catch(()=>setTimeout(fin,2500));
+  });
+}
+let userActed=false;
+addEventListener('pointerdown',()=>{userActed=true;unlockAudio()},{once:false,passive:true});
+addEventListener('keydown',()=>{userActed=true},{passive:true});
+let actx=null;function unlockAudio(){try{if(!actx){const C=window.AudioContext||window.webkitAudioContext;if(C)actx=new C()}if(actx&&actx.state==='suspended')actx.resume()}catch(e){}}
+let ringTimer=null;
+function ringTone(on){
+  clearInterval(ringTimer);ringTimer=null;if(!on||!actx)return;
+  const beep=()=>{try{const t=actx.currentTime;[0,.45].forEach(o=>{const g=actx.createGain();g.gain.setValueAtTime(0,t+o);g.gain.linearRampToValueAtTime(.06,t+o+.03);g.gain.linearRampToValueAtTime(0,t+o+.38);g.connect(actx.destination);
+    [440,480].forEach(f=>{const os=actx.createOscillator();os.frequency.value=f;os.connect(g);os.start(t+o);os.stop(t+o+.4)})});if(navigator.vibrate)navigator.vibrate([300,150,300])}catch(e){}};
+  beep();ringTimer=setInterval(beep,2600);
+}
+
+const CALLS={
+  tonyo1:{from:'tonyo',
+    when(){const h=new Date().getHours();return dayNum()>=2&&(S.flags.tonyoBack||(S.rel.tonyo||0)>=4)&&h>=7&&h<20},
+    start:'start',
+    nodes:{
+      start:{a:'call-tonyo-1-start',t:'Hello? Ahh... ikaw po ba yung... yung kasama namin sa elevator? Si Tonyo po ito. Yung guard. Pasensya na po, hindi po ako marunong mag-type nang mahaba, kaya tinawagan na lang kita. May oras ka po ba?',
+        c:[{t:'Opo, Mang Tonyo. Ano po yun?',n:'n2',r:1},{t:'Bakit po kayo umalis sa GC?',n:'n2b'},{t:'Busy po ako ngayon, sorry po.',n:'busy',r:-1}]},
+      n2:{a:'call-tonyo-2-unang-beses',t:'Gusto ko lang po sabihin... yung nangyari sa atin, hindi po yun ang unang beses. Matagal na po ako sa Galvez. Dalawampu\'t pitong taon. May mga bagay po akong nakita na... hindi ko na po ikinukwento kahit kanino.',
+        c:[{t:'Ano pong nakita ninyo?',n:'n3',r:1},{t:'Multo po ba yun, Mang Tonyo?',n:'n3m'}]},
+      n2b:{a:'call-tonyo-2b-bakit-umalis',t:'Ayoko lang pong maging dahilan na... na bumalik kayo dun. Pag nandiyan ako sa grupo, tatanungin niyo ako. At baka masabi ko. Pero siguro po, importante na may isa man lang na nakakaalam.',
+        c:[{t:'Ano pong kailangan kong malaman?',n:'n3'},{t:'Hindi ko po kayo pipilitin.',n:'n3s',r:2}]},
+      n3m:{a:'call-tonyo-3m-multo',t:'Hindi ko po alam kung multo, anak. Ang alam ko lang po...',next:'n3'},
+      n3s:{a:'call-tonyo-3s-salamat',t:'Salamat po. Bihira po ang ganyan. Sige po... ikukwento ko na.',next:'n3'},
+      n3:{a:'call-tonyo-3-2009',t:'Noong two thousand nine... may batang sumakay sa Elevator 2. Naka-uniporme pa. Sinusundo daw ang ate niya. Hindi na po siya lumabas. Ako po ang naka-duty nung gabing yun.',
+        c:[{t:'Hinanap po ba siya?',n:'n4'},{t:'Bakit po hindi ito nabalita?',n:'n4'}]},
+      n4:{a:'call-tonyo-4-pinatahimik',t:'Pinatahimik po ako ng management. Walang record, walang CCTV. Parang hindi po siya nag-exist. Kaya nung nakita ko kayong lumabas nang alas dos kwarenta y siyete... at nakita ko kung sino ang kasama natin sa loob... Ah. Hindi ko na po dapat sinabi yun.',
+        c:[{t:'Sino pong kasama natin sa loob?',n:'n5'},{t:'Mang Tonyo, okay lang po ba kayo?',n:'n5k',r:2}]},
+      n5:{a:'call-tonyo-5-wag-na',t:'Wag na po. Basta po... pag may nag-aya sa inyong bumalik sa elevator nang gabi, kahit sino pa po, wag po kayong sasama. Lalo na po ikaw. Sige po. Pasensya na po sa abala.',end:true},
+      n5k:{a:'call-tonyo-5k-salamat-anak',t:'Matagal na pong walang nagtanong sa akin niyan. Okay lang po ako. Basta po... pag may nag-aya sa inyong bumalik sa elevator nang gabi, wag po kayong sasama. Lalo na po ikaw. Sige po. Salamat, anak.',end:true},
+      busy:{a:'call-tonyo-busy',t:'Ay, sige po, sige po. Pasensya na po sa abala. Ingat po.',end:true}
+    },
+    onEnd(path){
+      if(path.includes('n3')){addClue('Ayon kay Mang Tonyo: noong 2009, may batang naka-uniporme na sumakay sa Elevator 2 at hindi na lumabas. Siya ang naka-duty. Pinatahimik siya ng management.');
+        S.notes.push('Tinawagan ni Mang Tonyo ang player at ikinuwento ang batang nawala sa Elevator 2 noong 2009. Binalaan niya ang player na huwag sumama kahit kanino na mag-aayang bumalik sa elevator nang gabi, "lalo na ikaw".')}
+      if(path.includes('n4'))addClue('Nakita raw ni Mang Tonyo kung "sino ang kasama" ninyo sa loob ng elevator. Ayaw niyang sabihin.');
+      if(path.includes('n5k'))S.notes.push('Tinanong ng player si Mang Tonyo kung okay lang siya. Naantig si Tonyo; "anak" na ang tawag niya sa player.');
+      if(path.includes('busy'))S.notes.push('Tumawag si Mang Tonyo pero sinabi ng player na busy siya. Nahiya si Tonyo at hindi na tumawag ulit.');
+    }}
+};
+let CALL=null;
+function fmtDur(ms){const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function callShell(c,status){
+  const el=$('call');const ch=CAST[c.from];
+  el.innerHTML=`<div class="call-top"><div class="call-av">${avatarSVG(AV[c.from])}</div><div class="call-name">${esc(ch.name)}</div><div class="call-status" id="cStatus">${esc(status)}</div></div>
+    <div class="call-mid"><div class="call-sub dim" id="cSub"></div><div class="call-choices" id="cCh"></div></div><div class="call-btns" id="cBtns"></div>`;
+  el.hidden=false;
+}
+function ring(id,opts={}){
+  const c=CALLS[id];if(!c||CALL)return;
+  CALL={id,c,path:[],started:0,replay:false};
+  callShell(c,opts.back?'Tumatawag…':'Incoming call…');
+  $('call').classList.add('ringing');
+  $('cSub').textContent=opts.back?'':'Elevator Survivors 🙏';
+  if(opts.back){$('cBtns').innerHTML='';setTimeout(()=>answer(),2200);return}
+  $('cBtns').innerHTML=`<div class="cbtn-wrap"><button class="cbtn no" id="cNo" type="button" aria-label="Tanggihan">✕</button>Decline</div><div class="cbtn-wrap"><button class="cbtn ok" id="cOk" type="button" aria-label="Sagutin">✆</button>Accept</div>`;
+  $('cOk').onclick=answer;$('cNo').onclick=()=>miss('declined');$('cOk').focus();
+  ringTone(true);
+  CALL.ringTO=setTimeout(()=>miss('missed'),32000);
+}
+function miss(kind){
+  if(!CALL)return;const {id,c}=CALL;ringTone(false);clearTimeout(CALL.ringTO);
+  S.calls=S.calls||{};S.calls[id]={state:'missed',t:Date.now()};
+  push(c.from,{id:nid(),from:'sys',text:'📞 '+(kind==='declined'?'Tinanggihan mo ang tawag ni ':'Missed call mula kay ')+CAST[c.from].name,t:Date.now()});
+  closeCall();
+}
+function answer(){
+  if(!CALL)return;ringTone(false);clearTimeout(CALL.ringTO);
+  $('call').classList.remove('ringing');$('cBtns').innerHTML=`<div class="cbtn-wrap"><button class="cbtn no" id="cEnd" type="button" aria-label="Ibaba">✕</button>End</div>`;
+  $('cEnd').onclick=()=>hangUp();
+  CALL.started=Date.now();CALL.tick=setInterval(()=>{const st=$('cStatus');if(st&&CALL)st.textContent=fmtDur(Date.now()-CALL.started)},500);
+  playNode(CALL.c.start);
+}
+function playNode(key){
+  if(!CALL)return;const n=CALL.c.nodes[key];CALL.path.push(key);CALL.node=key;
+  const sub=$('cSub'),ch=$('cCh');ch.innerHTML='';sub.classList.remove('dim');sub.textContent=n.t;
+  const token={};CALL.token=token;
+  playClip(n.a).then(()=>{
+    if(!CALL||CALL.token!==token)return;
+    if(CALL.replay){const nx=CALL.replayPath.shift();if(nx)playNode(nx);else endCall();return}
+    if(n.next)return playNode(n.next);
+    if(n.end)return endCall();
+    ch.innerHTML=n.c.map((o,i)=>`<button type="button" data-i="${i}">${esc(o.t)}</button>`).join('');
+    ch.querySelectorAll('button').forEach(b=>b.onclick=()=>{const o=n.c[+b.dataset.i];
+      if(o.r)S.rel[CALL.c.from]=(S.rel[CALL.c.from]||0)+o.r;CALL.choices=(CALL.choices||[]).concat(o.t);playNode(o.n)});
+    const f=ch.querySelector('button');if(f)f.focus();
+  });
+}
+function hangUp(){
+  if(!CALL)return;
+  if(CALL.replay){AU.pause();if(clipDone)clipDone();closeCall();return}
+  AU.pause();if(clipDone)clipDone();
+  CALL.path.push('hangup');S.notes.push('Binabaan ng player si '+CAST[CALL.c.from].name+' sa gitna ng tawag.');
+  S.rel[CALL.c.from]=(S.rel[CALL.c.from]||0)-1;endCall();
+}
+function endCall(){
+  if(!CALL)return;const {id,c,path,started,replay}=CALL;clearInterval(CALL.tick);
+  const dur=Date.now()-started;
+  if(!replay){
+    S.calls=S.calls||{};S.calls[id]={state:'done',t:Date.now(),path,dur};
+    push(c.from,{id:nid(),from:'sys',text:'📞 Tawag kay '+CAST[c.from].name+' · '+fmtDur(dur),t:Date.now()});
+    try{c.onEnd(path)}catch(e){}
+    save();
+  }
+  const st=$('cStatus');if(st)st.textContent='Natapos ang tawag · '+fmtDur(dur);
+  $('cCh').innerHTML='';$('cBtns').innerHTML='';
+  CALL=null;setTimeout(closeCall,1600);
+}
+function closeCall(){ringTone(false);if(CALL){clearInterval(CALL.tick);clearTimeout(CALL.ringTO)}CALL=null;$('call').hidden=true;$('call').classList.remove('ringing');if(!$('app').hidden){renderChat(false);renderThreads()}}
+function replayCall(id){
+  const st=(S.calls||{})[id];if(!st||!st.path||CALL)return;const c=CALLS[id];
+  const path=st.path.filter(k=>c.nodes[k]);if(!path.length)return;
+  closeDrawer();CALL={id,c,path:[],started:Date.now(),replay:true,replayPath:path.slice(1)};
+  callShell(c,'Replay');$('cBtns').innerHTML=`<div class="cbtn-wrap"><button class="cbtn no" id="cEnd" type="button" aria-label="Itigil">✕</button>Stop</div>`;
+  $('cEnd').onclick=hangUp;playNode(path[0]);
+}
+function callBack(from){const id=Object.keys(CALLS).find(k=>CALLS[k].from===from&&(S.calls||{})[k]&&S.calls[k].state==='missed');if(id)ring(id,{back:true})}
+function checkCalls(){
+  if(S.stage!=='chat'||CALL||document.hidden||$('app').hidden||!userActed||!$('drawer').hidden)return;
+  if(location.hash==='#test-call'&&!(S.calls||{}).tonyo1){ring('tonyo1');return}
+  for(const id in CALLS){if((S.calls||{})[id])continue;let ok=false;try{ok=CALLS[id].when()}catch(e){}
+    if(ok&&Math.random()<.3){ring(id);return}}
+}
+setInterval(checkCalls,20000);
+addEventListener('hashchange',checkCalls);
 
 // typing indicators
 const typingNow={};
@@ -683,9 +854,11 @@ $('btnMembers').onclick=()=>{
 };
 $('btnClues').onclick=()=>{
   openDrawer(`<h3>Mga Napansin <button type="button" data-close aria-label="Isara">×</button></h3>
-  <p class="empty">Mga detalyeng hindi tugma. Nadadagdagan habang nag-uusap kayo.</p>
+  <p class="empty">Mga detalyeng hindi tugma, at mga tawag na natanggap mo.</p>
+  ${Object.entries(S.calls||{}).filter(([k,v])=>v.state==='done'&&CALLS[k]).map(([k,v])=>`<div class="clue calllog"><div><small>Tawag · ${esc(dayLabel(v.t))}</small>${esc(CAST[CALLS[k].from].name)} · ${fmtDur(v.dur||0)}</div><button type="button" data-replay="${k}">▶ Pakinggan ulit</button></div>`).join('')}
   ${S.clues.length?S.clues.slice().reverse().map(c=>`<div class="clue"><small>${esc(c.when)}</small>${esc(c.text)}</div>`).join(''):'<p class="empty">Wala pa.</p>'}`);
 };
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-replay]');if(b)replayCall(b.dataset.replay)});
 $('btnSettings').onclick=()=>{
   openDrawer(`<h3>Settings <button type="button" data-close aria-label="Isara">×</button></h3>
   <p class="empty">Ikaw si <b>${esc(S.name)}</b>, ${esc(ORIGINS[S.origin].title.toLowerCase())}. Ika-${dayNum()} na araw mula nang insidente.</p>
@@ -715,7 +888,7 @@ function worldEvents(){
     S.flags.tonyoLeft=1;S.tonyoIn=false;
     const day2=new Date(S.startedAt);day2.setDate(day2.getDate()+1);day2.setHours(6,12,0,0);
     const t=Math.min(Date.now()-12*MIN,Math.max(day2.getTime(),S.lastSeen||0));
-    S.threads.gc.push({id:nid(),from:'tonyo',text:'Salamat po sa inyong lahat. Ingat po kayo. Wag na po kayong babalik sa building nang gabi.',t:t-2*MIN});
+    S.threads.gc.push({id:nid(),from:'tonyo',text:TONYO_BYE,voice:10,audio:'vm-tonyo-bye',t:t-2*MIN});
     S.threads.gc.push({id:nid(),from:'sys',text:'Mang Tonyo left the group.',t});
     S.threads.gc.push({id:nid(),from:'lorna',text:'Ay 😢 Mang Tonyo?? Bakit po',t:t+9*MIN});
     S.threads.gc.push({id:nid(),from:'bambi',text:'ok so hindi lang ako yung kinilabutan sa "wag na kayong babalik"',t:t+11*MIN});
@@ -808,6 +981,7 @@ ${pms}
 - Mabigat minsan, pero ang ulam ay ang mga tao at ang tawanan. Ang misteryo ay pampalasa.
 - Dahan-dahan ang mga reveal at nakadepende sa tiwala. Huwag ilabas ang lahat ng lihim. Huwag kailanman kumpirmahin ang totoo.
 - Huwag ulitin ang mga linya o biro na nasa history na.
+- Ang mga phone call ay scripted at hiwalay sa iyo: HUWAG mag-imbento na may tumawag. Pwedeng banggitin ang isang tawag kung nasa notes na ito.
 
 ${task}
 
@@ -922,6 +1096,9 @@ addEventListener('resize',()=>{if(!$('app').hidden&&!isNarrow())$('app').classLi
 function boot(){
   if(S.stage!=='chat'){showIntro();return}
   worldEvents();deliverDue();showApp();updateTitle();
+  for(const m of S.threads.gc){if(m.from!=='tonyo'||m.audio)continue;
+    if(m.text.startsWith('...hello? Lorna')){m.audio='vm-tonyo-hello';m.voice=17}
+    else if(m.text.startsWith('Salamat po sa inyong lahat')){m.audio='vm-tonyo-bye';m.voice=10;m.text=TONYO_BYE}}
   if(!S.avatar){S.avatar=JSON.parse(JSON.stringify(DEF_ME));save();setTimeout(openLook,600)}
 }
 boot();
