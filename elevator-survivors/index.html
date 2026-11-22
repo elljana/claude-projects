@@ -74,6 +74,22 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .th.unread .pv{color:var(--ink)}
 .av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:17px;color:#11151b;flex:none;position:relative}
 .av.sm{width:30px;height:30px;font-size:13px}
+.av svg{width:100%;height:100%;display:block;border-radius:50%}
+.builder{display:grid;grid-template-columns:140px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:520px){.builder{grid-template-columns:minmax(0,1fr)}.builder .pv-big{justify-self:center}}
+.pv-big{width:140px;height:140px;border-radius:50%;box-shadow:0 0 0 1px var(--line),0 14px 30px -14px rgba(0,0,0,.8)}
+.pv-big svg{width:100%;height:100%;display:block;border-radius:50%}
+.opts{display:flex;flex-direction:column;gap:14px;min-width:0}
+.og{display:flex;flex-direction:column;gap:7px}
+.og>span{font-size:11.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.og>div{display:flex;flex-wrap:wrap;gap:6px}
+.sw{width:28px;height:28px;border-radius:50%;border:2px solid transparent;box-shadow:0 0 0 1px var(--line);padding:0}
+.sw.on{border-color:var(--ink)}
+.chipb{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px;color:var(--muted)}
+.chipb.on{background:var(--led);border-color:var(--led);color:#1d1305;font-weight:600}
+.voice.playing .bars i{animation:wv .9s ease-in-out infinite;background:var(--ink)}
+.voice.playing .bars i:nth-child(3n){animation-delay:.15s}.voice.playing .bars i:nth-child(3n+1){animation-delay:.3s}
+@keyframes wv{50%{transform:scaleY(.45)}}
 .av.gc{background:#07090c;color:var(--led);font-family:var(--led-font);font-size:22px;border:1px solid var(--line)}
 .av .dot{position:absolute;right:0;bottom:0;width:11px;height:11px;border-radius:50%;background:#43c28a;border:2px solid var(--panel)}
 .side-foot{display:flex;gap:6px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
@@ -217,6 +233,93 @@ AFTER-EFFECT: wala raw. Iyon ang nakakatakot.`}
 };
 const IDS = Object.keys(CAST);
 
+// ------------------------------------------------- avatars (hand-drawn SVG, no image files)
+const SKIN=['#f6d7b8','#e8b98f','#d09a6c','#a86f47','#7a4a2c'];
+const HAIRC=['#1c1a1a','#3b2a22','#6b4630','#8a3b2a','#a8a29e','#c8a56b','#d27aa0','#5b6fd6'];
+const TOPC=['#2c6e63','#e7e5e4','#1f2937','#c2410c','#7c3aed','#be185d','#0369a1','#ca8a04'];
+const BGC=['#9fd8b0','#86b6ff','#f2a5c0','#ffd36b','#b4b0d6','#ffb796','#7dd3c7','#3b4252'];
+const HAIRS={short:'Maikli',slick:'Slick',fringe:'May bangs',curly:'Kulot',long:'Mahaba',wavy:'Wavy',bob:'Bob',bun:'Bun',buzz:'Buzz cut'};
+const ACCS={glasses:'Salamin',cap:'Cap',helmet:'Helmet',hood:'Hoodie',earrings:'Hikaw',mole:'Nunal',blush:'Blush'};
+const FACES={smile:'Nakangiti',smirk:'Smirk',flat:'Seryoso',tired:'Puyat'};
+const AV={
+  lorna:{skin:SKIN[1],hair:'curly',hairC:'#3b2a22',top:'#be185d',collar:'floral',bg:'#f2a5c0',acc:['glasses','earrings','blush'],face:'smile'},
+  jerome:{skin:SKIN[2],hair:'slick',hairC:'#1c1a1a',top:'#1d4ed8',collar:'polo',bg:'#86b6ff',acc:[],face:'smirk'},
+  nix:{skin:SKIN[1],hair:'fringe',hairC:'#1c1a1a',top:'#4b4a63',bg:'#b4b0d6',acc:['hood'],face:'tired'},
+  tonyo:{skin:SKIN[3],hair:'buzz',hairC:'#a8a29e',top:'#5b7fa6',collar:'uniform',bg:'#d2bb83',acc:['cap'],capC:'#1e3a5f',guard:1,mustache:'#8f8a84',face:'flat'},
+  bambi:{skin:SKIN[2],hair:'short',hairC:'#1c1a1a',top:'#111827',bg:'#ffd36b',acc:['cap','earrings'],capC:'#111827',face:'smirk'},
+  sol:{skin:SKIN[0],hair:'long',hairC:'#1c1a1a',top:'#f5f5f4',collar:'vneck',bg:'#ffb796',acc:['mole'],face:'smile'}
+};
+const DEF_ME={skin:SKIN[1],hair:'bob',hairC:'#1c1a1a',top:'#2c6e63',bg:'#9fd8b0',acc:[],face:'smile'};
+function avatarSVG(a){
+  const sk=a.skin,hc=a.hairC,acc=new Set(a.acc||[]),dk='#1b1d22',top=a.top;
+  const browC=hc==='#a8a29e'?'#6f6a64':hc;
+  let s=`<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="32" fill="${a.bg}"/>`;
+  const hideHair=acc.has('helmet');
+  if(!hideHair){
+    if(a.hair==='long')s+=`<path d="M15 30C14 15 23 10 32 10S50 15 49 30L51 56C45 58 41 54 41 49H23C23 54 19 58 13 56Z" fill="${hc}"/>`;
+    if(a.hair==='wavy')s+=`<path d="M15 30C14 15 23 10 32 10S50 15 49 30C52 36 48 40 51 46C47 50 44 47 42 49H22C20 47 17 50 13 46C16 40 12 36 15 30Z" fill="${hc}"/>`;
+    if(a.hair==='bob')s+=`<path d="M15 44C13 20 21 11 32 11S51 20 49 44C45 46 43 44 43 40H21C21 44 19 46 15 44Z" fill="${hc}"/>`;
+    if(a.hair==='bun')s+=`<circle cx="32" cy="10.5" r="6.5" fill="${hc}"/>`;
+  }
+  if(acc.has('hood'))s+=`<path d="M11 52C8 24 18 9 32 9S56 24 53 52Z" fill="${top}"/><path d="M11 52C8 24 18 9 32 9S56 24 53 52Z" fill="#000" opacity=".2"/>`;
+  s+=`<path d="M8 64C10 51 20 46 32 46S54 51 56 64Z" fill="${top}"/>`;
+  if(a.collar==='polo')s+=`<path d="M25 46L32 53L39 46L36.5 45L32 49.5L27.5 45Z" fill="#fff" opacity=".9"/>`;
+  if(a.collar==='floral')s+=[[19,57],[27,61],[40,58],[47,62],[34,60],[23,52],[43,52]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="1.7" fill="#fde68a" opacity=".85"/>`).join('');
+  if(a.collar==='uniform')s+=`<rect x="40" y="53" width="6.5" height="4.5" rx="1" fill="#ffd36b"/><path d="M27 46L32 51L37 46" stroke="#fff" stroke-width="1.5" fill="none" opacity=".7"/>`;
+  if(a.collar==='vneck')s+=`<path d="M27 46L32 53L37 46Z" fill="${sk}"/>`;
+  s+=`<rect x="27.5" y="38" width="9" height="10" rx="3" fill="${sk}"/><path d="M27.5 44Q32 47 36.5 44" fill="#000" opacity=".12"/>`;
+  s+=`<circle cx="19" cy="31" r="3" fill="${sk}"/><circle cx="45" cy="31" r="3" fill="${sk}"/><ellipse cx="32" cy="29.5" rx="13" ry="15" fill="${sk}"/>`;
+  const f=a.face||'smile';
+  if(f==='tired')s+=`<path d="M25.3 31.2H28.7M35.3 31.2H38.7" stroke="${dk}" stroke-width="1.6" stroke-linecap="round"/><path d="M25.3 33.7Q27 34.8 28.7 33.7M35.3 33.7Q37 34.8 38.7 33.7" stroke="#000" opacity=".28" stroke-width=".9" fill="none"/>`;
+  else s+=`<circle cx="27" cy="31" r="1.6" fill="${dk}"/><circle cx="37" cy="31" r="1.6" fill="${dk}"/>`;
+  s+=`<path d="M24.5 27.4Q27 26.2 29.5 27.2M34.5 ${f==='smirk'?'26.6':'27.2'}Q37 ${f==='smirk'?'25.4':'26.2'} 39.5 ${f==='smirk'?'26.9':'27.4'}" stroke="${browC}" stroke-width="1.3" fill="none" stroke-linecap="round"/>`;
+  if(acc.has('blush'))s+=`<circle cx="23.8" cy="35" r="2.4" fill="#f43f5e" opacity=".25"/><circle cx="40.2" cy="35" r="2.4" fill="#f43f5e" opacity=".25"/>`;
+  if(a.mustache)s+=`<path d="M27.5 37.2Q32 34.6 36.5 37.2Q32 36.4 27.5 37.2Z" fill="${a.mustache}"/>`;
+  const mouth={smile:'M28.5 38Q32 41.2 35.5 38',smirk:'M29 39Q33 40 36 37.4',flat:'M29.5 39H34.5',tired:'M30 39.2Q32 38.4 34 39.2'}[f];
+  s+=`<path d="${mouth}" stroke="${dk}" stroke-width="1.3" fill="none" stroke-linecap="round"/>`;
+  if(acc.has('mole'))s+=`<circle cx="38.6" cy="36.6" r=".8" fill="${dk}"/>`;
+  if(!hideHair){
+    const F={short:'M18 30C17 18 24 13 32 13S47 18 46 30C44 24 40 21 32 21S20 24 18 30Z',
+      slick:'M18 29C17 17 25 12 33 12S47 18 46 28C43 21 36 19 30 20S21 24 18 29Z',
+      fringe:'M18 32C16 17 24 12 32 12S48 18 46 32C45 28 43 26 41 25L39 29L36 24.5L33 28.5L30 24.5L27 28.5L24.5 25C21 27 19 29 18 32Z',
+      long:'M18 31C18 18 25 13 32 13S46 18 46 31C44 23 37 18.5 32 17.5C27 18.5 20 23 18 31Z',
+      wavy:'M18 31C18 18 25 13 32 13S46 18 46 31C44 23 37 18.5 32 17.5C27 18.5 20 23 18 31Z',
+      bob:'M17 30C17 18 24 12 32 12S47 18 47 30C42 26 38 22 34 21C30 23 23 25 17 30Z',
+      bun:'M18 29C18 19 24 14 32 14S46 19 46 29C43 23 38 20 32 20S21 23 18 29Z',
+      buzz:'M19 28C19 19 25 15 32 15S45 19 45 28C42 22 38 19.5 32 19.5S22 22 19 28Z'};
+    if(a.hair==='curly'){for(let i=0;i<=10;i++){const ang=Math.PI*(1.04+i*0.092);s+=`<circle cx="${(32+14.5*Math.cos(ang)).toFixed(1)}" cy="${(27+14*Math.sin(ang)).toFixed(1)}" r="5" fill="${hc}"/>`}s+=`<ellipse cx="32" cy="17" rx="11" ry="5" fill="${hc}"/>`}
+    else if(F[a.hair])s+=`<path d="${F[a.hair]}" fill="${hc}"/>`;
+    if(a.hair==='slick')s+=`<path d="M24 17Q31 13.5 40 16" stroke="#fff" opacity=".18" stroke-width="1.2" fill="none"/>`;
+  }
+  if(acc.has('glasses'))s+=`<g stroke="${dk}" stroke-width="1.2" fill="#fff" fill-opacity=".12"><rect x="22.5" y="28" width="9" height="6.5" rx="2.5"/><rect x="32.5" y="28" width="9" height="6.5" rx="2.5"/><path d="M31.5 30.5H32.5"/></g>`;
+  if(acc.has('hood'))s+=`<path d="M14 52C12 28 21 14 32 14S52 28 50 52H45.5C46.5 33 40 20.5 32 20.5S17.5 33 18.5 52Z" fill="${top}"/><path d="M27 47L26 55M37 47L38 55" stroke="#fff" opacity=".6" stroke-width="1"/>`;
+  if(acc.has('cap')){const c=a.capC||'#1f2937';s+=`<path d="M17.5 26.5C17 15 24 10.5 32 10.5S47 15 46.5 26.5Z" fill="${c}"/><path d="M16.5 26.3Q32 22 47.5 26.3Q47.5 29.6 32 28.6Q16.5 29.6 16.5 26.3Z" fill="${c}"/><path d="M16.5 26.3Q32 22 47.5 26.3" stroke="#000" opacity=".35" fill="none"/>`;
+    if(a.guard)s+=`<circle cx="32" cy="18.5" r="2.8" fill="#ffd36b"/>`;}
+  if(acc.has('helmet'))s+=`<path d="M15.5 27.5C14.5 14 23 8 32 8S49.5 14 48.5 27.5Z" fill="${a.capC||'#e11d48'}"/><path d="M17.5 23.5H46.5" stroke="#fff" stroke-width="1.6" opacity=".75"/><path d="M24 12Q32 9 40 12" stroke="#fff" opacity=".3" stroke-width="1.5" fill="none"/>`;
+  if(acc.has('earrings'))s+=`<circle cx="19" cy="35.5" r="1.4" fill="#f5f5f4"/><circle cx="45" cy="35.5" r="1.4" fill="#f5f5f4"/>`;
+  return s+'</svg>';
+}
+function builderHTML(a){
+  const sw=(k,list)=>list.map(c=>`<button type="button" class="sw${a[k]===c?' on':''}" style="background:${c}" data-k="${k}" data-v="${c}" aria-label="${c}"></button>`).join('');
+  const ch=(k,obj)=>Object.entries(obj).map(([v,l])=>`<button type="button" class="chipb${a[k]===v?' on':''}" data-k="${k}" data-v="${v}">${l}</button>`).join('');
+  const ac=Object.entries(ACCS).map(([v,l])=>`<button type="button" class="chipb${(a.acc||[]).includes(v)?' on':''}" data-acc="${v}">${l}</button>`).join('');
+  return `<div class="builder"><div class="pv-big">${avatarSVG(a)}</div><div class="opts">
+    <div class="og"><span>Balat</span><div>${sw('skin',SKIN)}</div></div>
+    <div class="og"><span>Buhok</span><div>${ch('hair',HAIRS)}</div></div>
+    <div class="og"><span>Kulay ng buhok</span><div>${sw('hairC',HAIRC)}</div></div>
+    <div class="og"><span>Mukha</span><div>${ch('face',FACES)}</div></div>
+    <div class="og"><span>Damit</span><div>${sw('top',TOPC)}</div></div>
+    <div class="og"><span>Background</span><div>${sw('bg',BGC)}</div></div>
+    <div class="og"><span>Extras</span><div>${ac}</div></div></div></div>`;
+}
+function mountBuilder(root,a){
+  const draw=()=>{root.innerHTML=builderHTML(a);
+    root.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{a[b.dataset.k]=b.dataset.v;draw()});
+    root.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>{const v=b.dataset.acc;a.acc=a.acc||[];
+      if(a.acc.includes(v))a.acc=a.acc.filter(x=>x!==v);else{a.acc.push(v);if(v==='helmet')a.acc=a.acc.filter(x=>x!=='cap'&&x!=='hood');if(v==='cap'||v==='hood')a.acc=a.acc.filter(x=>x!=='helmet'&&(v==='cap'?x!=='hood':x!=='cap'))}draw()})};
+  draw();
+}
+
 const ORIGINS = {
   dental:{title:'Ang Dental Assistant',meta:'26 · Dr. Ramos Dental, 3F',
     blurb:'Nag-overtime ka sa clinic. Pero sa 14th floor ka sumakay ng elevator, at hindi mo alam kung bakit.',
@@ -297,12 +400,23 @@ function showIntro(){
       <h1>Sino ka nang gabing iyon?</h1>
       <p>Alam mo ang buhay mo. Ang hindi mo alam ay kung ano ang nakita ng iba tungkol sa'yo sa loob ng elevator.</p>
       <div class="origins">${Object.entries(ORIGINS).map(([k,o])=>`<button class="origin" type="button" data-k="${k}"><span class="meta">${esc(o.meta)}</span><b>${esc(o.title)}</b><span>${esc(o.blurb)}</span></button>`).join('')}</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="go" type="button" disabled>Pumasok sa elevator</button><button class="btn ghost" id="bk" type="button">Palitan ang pangalan</button></div></div>`;
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="go" type="button" disabled>Tuloy</button><button class="btn ghost" id="bk" type="button">Palitan ang pangalan</button></div></div>`;
     let pick=S.origin;
     I.querySelectorAll('.origin').forEach(b=>{if(b.dataset.k===pick)b.classList.add('on');b.onclick=()=>{pick=b.dataset.k;I.querySelectorAll('.origin').forEach(x=>x.classList.toggle('on',x===b));$('go').disabled=false}});
     $('go').disabled=!pick;
-    $('go').onclick=()=>{S.origin=pick;S.stage='prologue';save();showIntro()};
+    $('go').onclick=()=>{S.origin=pick;S.stage='avatar';save();showIntro()};
     $('bk').onclick=()=>{S.stage='name';save();showIntro()};
+  } else if(S.stage==='avatar'){
+    if(!S.avatar)S.avatar=JSON.parse(JSON.stringify(DEF_ME));
+    I.innerHTML=`<div class="intro-inner">
+      <div class="led-panel"><span class="arrow">▼</span><span>L</span></div>
+      <h1>Ano'ng itsura mo?</h1>
+      <p>Ito ang makikita nila sa GC. Mapapalitan mo pa sa Settings.</p>
+      <div id="bld"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="go" type="button">Pumasok sa elevator</button><button class="btn ghost" id="bk" type="button">Bumalik</button></div></div>`;
+    mountBuilder($('bld'),S.avatar);
+    $('go').onclick=()=>{S.stage='prologue';save();showIntro()};
+    $('bk').onclick=()=>{S.stage='origin';save();showIntro()};
   } else if(S.stage==='prologue'){
     playPrologue();
   }
@@ -434,12 +548,12 @@ let isNarrow=()=>matchMedia('(max-width:760px)').matches;
 function showApp(){
   $('intro').hidden=true;$('app').hidden=false;
   if(isNarrow())$('app').classList.add('in-thread');
-  renderThreads();renderChat(true);tickFloor();
+  renderChat(true);renderThreads();tickFloor();
 }
 function threadTitle(t){return t==='gc'?'Elevator Survivors 🙏':CAST[t].name}
 function avHTML(t,sm){
   if(t==='gc')return `<div class="av gc${sm?' sm':''}">ES</div>`;
-  const c=CAST[t];return `<div class="av${sm?' sm':''}" style="background:${c.color}">${c.init}${!sm&&isOnline(t)?'<span class="dot"></span>':''}</div>`;
+  const c=CAST[t];return `<div class="av${sm?' sm':''}" title="${esc(c.name)}">${avatarSVG(AV[t])}${!sm&&isOnline(t)?'<span class="dot"></span>':''}</div>`;
 }
 function isOnline(id){
   const h=new Date().getHours();
@@ -487,7 +601,7 @@ function renderChat(scroll){
   }
   if(!S.threads[t].length)html=`<div class="sys" style="margin-top:30vh">Pribadong usapan ninyo ni ${esc(CAST[t].name)}. Walang ibang makakabasa nito.</div>`;
   box.innerHTML=html;
-  box.querySelectorAll('.voice').forEach(v=>v.onclick=()=>v.querySelector('.tx').hidden=!v.querySelector('.tx').hidden);
+  box.querySelectorAll('.voice').forEach(v=>{v.onclick=()=>playVoice(v);v.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();playVoice(v)}}});
   S.unread[t]=0;
   renderComposer();renderTyping();
   if(scroll){const nl=box.querySelector('.newline');if(nl)nl.scrollIntoView({block:'start'});else box.scrollTop=box.scrollHeight}
@@ -496,7 +610,7 @@ function renderChat(scroll){
 function voiceHTML(m){
   const n=26,seed=m.id.length+m.text.length;let bars='';
   for(let i=0;i<n;i++){const h=5+Math.abs(Math.sin(seed*1.7+i*1.3))*15;bars+=`<i style="height:${h.toFixed(0)}px"></i>`}
-  const d=m.voice|0;return `<div class="voice" role="button" aria-label="Voice message, pindutin para sa transcript"><div class="wave"><span class="play">▶</span><span class="bars">${bars}</span><span class="dur">${Math.floor(d/60)}:${String(d%60).padStart(2,'0')}</span></div><div class="tx" hidden>"${esc(m.text)}"</div></div>`;
+  const d=m.voice|0;return `<div class="voice${speakingId===m.id?' playing':''}" role="button" tabindex="0" data-id="${m.id}" data-from="${m.from}" aria-label="Voice message ni ${esc(CAST[m.from].short)}. Pindutin para pakinggan."><div class="wave"><span class="play" style="background:${CAST[m.from].color}">${speakingId===m.id?'■':'▶'}</span><span class="bars">${bars}</span><span class="dur">${Math.floor(d/60)}:${String(d%60).padStart(2,'0')}</span></div><div class="tx" hidden>"${esc(m.text)}"</div></div>`;
 }
 function renderComposer(){
   const w=$('composerWrap');const t=S.active;
@@ -507,6 +621,21 @@ function renderComposer(){
   box.oninput=()=>{grow();S.drafts=S.drafts||{};S.drafts[t]=box.value};
   box.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!isNarrow()){e.preventDefault();send.click()}};
   send.onclick=()=>{const v=box.value.trim();if(!v)return;box.value='';S.drafts=S.drafts||{};S.drafts[t]='';grow();playerSend(t,v);box.focus()};
+}
+
+// voice messages: spoken with the viewer's tts when available, transcript always
+let ttsFn=null,speakingId=null;
+const VOICE={lorna:{voice:'airy',rate:.95},jerome:{voice:'rounded',rate:1.06},nix:{voice:'glassy',rate:.94},tonyo:{voice:'rounded',rate:.82},bambi:{voice:'glassy',rate:1.12},sol:{voice:'buttery',rate:.92}};
+function speechText(t){return String(t).replace(/\[[^\]]*\]/g,' ').replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,'').replace(/—/g,', ').replace(/\s+/g,' ').trim().slice(0,1900)}
+function markVoices(){document.querySelectorAll('.voice').forEach(v=>{const on=v.dataset.id===speakingId;v.classList.toggle('playing',on);v.querySelector('.play').textContent=on?'■':'▶'})}
+function playVoice(v){
+  const tx=v.querySelector('.tx');
+  if(!ttsFn){tx.hidden=!tx.hidden;return}
+  tx.hidden=false;const id=v.dataset.id;
+  if(speakingId===id){try{ttsFn.stop()}catch(e){};speakingId=null;markVoices();return}
+  const m=S.threads[S.active].find(x=>x.id===id);if(!m)return;
+  speakingId=id;markVoices();
+  ttsFn.speak(speechText(m.text),VOICE[m.from]||{}).catch(e=>{if(e&&e.code==='not_granted'){ttsFn=null;setNotice('Naka-off ang boses. Basahin na lang ang transcript.');setTimeout(()=>setNotice(''),8000)}}).finally(()=>{if(speakingId===id){speakingId=null;markVoices()}});
 }
 
 // typing indicators
@@ -549,7 +678,7 @@ $('btnMembers').onclick=()=>{
   const rows=IDS.map(id=>{const c=CAST[id];const out=id==='tonyo'&&!S.tonyoIn;
     return `<div class="mem">${avHTML(id)}<div style="min-width:0"><b>${esc(c.name)}</b><span>${out?'Umalis sa group':esc(relLabel(S.rel[id]||0))}</span></div>${out?`<button class="add" type="button" data-add="tonyo">Idagdag ulit</button>`:''}</div>`}).join('');
   openDrawer(`<h3>Members <button type="button" data-close aria-label="Isara">×</button></h3>
-    <div class="mem"><div class="av" style="background:var(--me);color:var(--me-ink)">${esc(S.name[0]||'?').toUpperCase()}</div><div><b>${esc(S.name)} (ikaw)</b><span>${esc(ORIGINS[S.origin].title)}</span></div></div>${rows}`);
+    <div class="mem"><div class="av">${avatarSVG(S.avatar||DEF_ME)}</div><div><b>${esc(S.name)} (ikaw)</b><span>${esc(ORIGINS[S.origin].title)}</span></div></div>${rows}`);
   const a=$('drawer').querySelector('[data-add]');if(a)a.onclick=()=>{closeDrawer();addTonyoBack()};
 };
 $('btnClues').onclick=()=>{
@@ -561,12 +690,21 @@ $('btnSettings').onclick=()=>{
   openDrawer(`<h3>Settings <button type="button" data-close aria-label="Isara">×</button></h3>
   <p class="empty">Ikaw si <b>${esc(S.name)}</b>, ${esc(ORIGINS[S.origin].title.toLowerCase())}. Ika-${dayNum()} na araw mula nang insidente.</p>
   <p class="empty">${sampleFn?'Si Claude ang nagpapatakbo sa kanila. Gumagamit ito ng Claude usage mo tuwing may bagong usapan.':'Para makausap sila nang totoo, buksan ang page na ito sa claude.ai link nito.'}</p>
+  <button class="icon-btn" type="button" id="look" style="align-self:flex-start">Palitan ang itsura ko</button>
   <button class="danger" type="button" id="reset">Magsimula ulit (buburahin ang lahat)</button>
   <div id="confirm" hidden style="display:flex;flex-direction:column;gap:8px"><p class="empty">Sigurado ka? Mabubura ang lahat ng usapan.</p><div style="display:flex;gap:8px"><button class="danger" type="button" id="yes">Oo, burahin</button><button class="icon-btn" type="button" id="no">Huwag</button></div></div>`);
+  $('look').onclick=openLook;
   $('reset').onclick=()=>{$('confirm').hidden=false;$('reset').hidden=true};
   $('no').onclick=()=>{$('confirm').hidden=true;$('reset').hidden=false};
   $('yes').onclick=()=>{const nm=S.name;S=fresh();S.name=nm;S.stage='origin';IDS.forEach(id=>S.threads[id]=[]);save();closeDrawer();showIntro()};
 };
+function openLook(){
+  const a=JSON.parse(JSON.stringify(S.avatar||DEF_ME));
+  openDrawer(`<h3>Itsura mo <button type="button" data-close aria-label="Isara">×</button></h3><div id="bld2"></div><button class="btn" type="button" id="saveLook">I-save</button>`);
+  $('drawer').querySelector('.drawer-in').style.width='min(480px,100%)';
+  mountBuilder($('bld2'),a);
+  $('saveLook').onclick=()=>{S.avatar=a;save();closeDrawer();renderChat(false)};
+}
 function addClue(text,when){if(!text)return;if(S.clues.some(c=>c.text===text))return;S.clues.push({text,when:when||('Araw '+dayNum()),t:Date.now()});if(S.clues.length>60)S.clues.shift()}
 function dayNum(){if(!S.startedAt)return 1;const a=new Date(S.startedAt),b=new Date();return 1+Math.round((new Date(b.getFullYear(),b.getMonth(),b.getDate())-new Date(a.getFullYear(),a.getMonth(),a.getDate()))/DAY)}
 
@@ -664,7 +802,7 @@ ${gc||'(wala pa)'}
 ${pms}
 
 ## PARAAN NG PAGSULAT
-- Totoong group chat: maiikling bubble, hiwa-hiwalay, Taglish na natural sa Maynila. Bawat character ay may sariling ortograpiya at boses (sundin ang sheet). Si Nix lowercase. Si Sol walang typo. Si Tonyo halos voice messages (voice: bilang ng segundo, 8 hanggang 70).
+- Totoong group chat: maiikling bubble, hiwa-hiwalay, Taglish na natural sa Maynila. Bawat character ay may sariling ortograpiya at boses (sundin ang sheet). Si Nix lowercase. Si Sol walang typo. Si Tonyo halos voice messages (voice: bilang ng segundo, 8 hanggang 70). Ang iba ay paminsan-minsan lang mag-voice message: si Lorna pag mahaba ang kwento o nagluluto, si Bambi pag nagmamadali o nakainom, si Jerome pag nasa biyahe. Halos hindi si Nix at Sol (kaya malaking bagay pag ginawa nila). Isulat ang voice message na parang transcript ng totoong pagsasalita: may "ahh", may paputol-putol, may ingay sa background sa [brackets].
 - Walang narration, walang *aksyon*, walang stage directions. Text lang na parang tunay na chat. Pwedeng ilarawan ang larawan o sticker sa [brackets].
 - May friction, asaran, at tunay na personalidad. Hindi lahat sumasang-ayon sa player. Hindi sila therapist. Puwede ang bastos na biro at mura (R-16 na humor, walang tahasang sex).
 - Mabigat minsan, pero ang ulam ay ang mga tao at ang tawanan. Ang misteryo ay pampalasa.
@@ -769,8 +907,8 @@ async function saveRemote(){if(!dbDoc||dbBusy)return;dbBusy=true;try{await dbDoc
 async function initRuntime(){
   const cl=window.claude;
   if(!cl||typeof cl.use!=='function'){if(S.stage==='chat')setNotice('Buksan ang claude.ai link ng page na ito para makausap sila nang totoo.');return}
-  const [smp,usr,db]=await Promise.all([cl.use('sample'),cl.use('user'),cl.use('db')]);
-  sampleFn=smp||null;
+  const [smp,usr,db,tts]=await Promise.all([cl.use('sample'),cl.use('user'),cl.use('db'),cl.use('tts')]);
+  sampleFn=smp||null;ttsFn=tts||null;
   if(db&&usr){try{const id=await usr.id();if(id){dbDoc=db.doc('data/users/'+id+'/elevator');const snap=await dbDoc.get();
     if(snap.exists){const o=JSON.parse(JSON.stringify(snap.data()));if(o&&o.v===1&&(o.lastSeen||0)>(S.lastSeen||0)+5000){S=o;IDS.forEach(id=>{S.threads[id]=S.threads[id]||[]});boot()}}
     await saveRemote()}}catch(e){dbDoc=null}}
@@ -784,6 +922,7 @@ addEventListener('resize',()=>{if(!$('app').hidden&&!isNarrow())$('app').classLi
 function boot(){
   if(S.stage!=='chat'){showIntro();return}
   worldEvents();deliverDue();showApp();updateTitle();
+  if(!S.avatar){S.avatar=JSON.parse(JSON.stringify(DEF_ME));save();setTimeout(openLook,600)}
 }
 boot();
 initRuntime();
