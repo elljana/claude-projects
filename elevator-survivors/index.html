@@ -1,0 +1,790 @@
+<title>Elevator Survivors</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&family=VT323&display=swap">
+<style>
+/* Layout: a night-mode messenger. Thread list on the left, chat on the right; on phones one pane at a time. The only ornament is the elevator's amber floor indicator. Deliberately single dark theme: it is always 11:47 PM here. */
+:root{
+  --bg:#0c0f14; --panel:#131820; --panel-2:#1a2029; --line:#252d39; --ink:#e7ebf0; --muted:#8b95a3; --dim:#5d6775;
+  --led:#ffb547; --led-dim:#5a3d12; --me:#2c6e63; --me-ink:#eafaf6; --danger:#e5737a;
+  --c-lorna:#f2a5c0; --c-jerome:#86b6ff; --c-nix:#b4b0d6; --c-tonyo:#d2bb83; --c-bambi:#ffd36b; --c-sol:#ffb796;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --led-font:"VT323","Courier New",monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.4;overflow:hidden}
+button{font-family:var(--body);color:var(--ink);cursor:pointer}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--led);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- onboarding ---------- */
+.intro{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:50;overflow-y:auto;
+  padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.intro-inner{width:100%;max-width:560px;display:flex;flex-direction:column;gap:22px;margin:auto}
+.led-panel{align-self:flex-start;display:flex;align-items:center;gap:10px;background:#07090c;border:1px solid var(--line);border-radius:6px;padding:6px 12px;font-family:var(--led-font);font-size:26px;color:var(--led);text-shadow:0 0 8px rgba(255,181,71,.55);letter-spacing:2px}
+.led-panel .arrow{font-size:18px}
+.intro h1{font-family:var(--display);font-weight:700;font-size:clamp(30px,7vw,44px);line-height:1.02;margin:0;text-wrap:balance}
+.intro p{margin:0;color:var(--muted);max-width:60ch}
+.field{display:flex;flex-direction:column;gap:8px}
+.field label{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.field input{font:inherit;font-size:20px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--ink)}
+.btn{background:var(--led);color:#1d1305;border:0;border-radius:999px;padding:12px 22px;font-weight:700;font-size:15px;align-self:flex-start}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.origins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:520px){.origins{grid-template-columns:minmax(0,1fr)}}
+.origin{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.origin:hover{border-color:#3a4554}
+.origin.on{border-color:var(--led);box-shadow:0 0 0 1px var(--led)}
+.origin b{font-family:var(--display);font-size:18px;font-weight:700}
+.origin .meta{font-size:12px;color:var(--led);letter-spacing:.6px;text-transform:uppercase;font-weight:600}
+.origin span{color:var(--muted);font-size:14px}
+.prologue{min-height:60vh;display:flex;flex-direction:column;justify-content:center;gap:14px;cursor:pointer}
+.pline{font-size:clamp(18px,4.4vw,22px);line-height:1.45;margin:0;animation:fadein .9s ease both;max-width:34ch}
+.pline.quiet{color:var(--muted);font-size:16px}
+.pline.time{font-family:var(--led-font);color:var(--led);font-size:28px;letter-spacing:2px;text-shadow:0 0 8px rgba(255,181,71,.5)}
+.tap{color:var(--dim);font-size:13px;margin-top:10px}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.notif{background:var(--panel-2);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;gap:12px;align-items:center;animation:fadein .8s ease both;max-width:420px}
+.notif .ic{width:40px;height:40px;border-radius:10px;background:#07090c;display:grid;place-items:center;font-family:var(--led-font);color:var(--led);font-size:22px;flex:none}
+.notif b{display:block;font-size:14px}
+.notif span{font-size:13px;color:var(--muted)}
+
+/* ---------- app shell ---------- */
+.app{height:100%;display:grid;grid-template-columns:300px minmax(0,1fr)}
+@media (max-width:760px){.app{grid-template-columns:minmax(0,1fr)}.app.in-thread .side{display:none}.app:not(.in-thread) .main{display:none}}
+.side{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;
+  padding-left:env(safe-area-inset-left,0px)}
+.side-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 14px 10px}
+.side-top h2{font-family:var(--display);font-size:20px;margin:0;font-weight:700}
+.floor{font-family:var(--led-font);font-size:22px;color:var(--led);background:#07090c;border:1px solid var(--line);border-radius:5px;padding:1px 9px;text-shadow:0 0 6px rgba(255,181,71,.5);letter-spacing:1px;min-width:62px;text-align:center;font-variant-numeric:tabular-nums}
+.floor.glitch{color:#ff6b6b;text-shadow:0 0 10px rgba(255,80,80,.7)}
+.threads{overflow-y:auto;flex:1;padding:4px 8px 12px;display:flex;flex-direction:column;gap:2px}
+.th{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px;border-radius:10px;border:0;background:transparent;text-align:left;width:100%}
+.th:hover{background:var(--panel-2)}
+.th.on{background:#1e2531}
+.th .nm{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.th .pv{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.th .rt{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:11px;color:var(--dim)}
+.badge{background:var(--led);color:#1d1305;font-weight:700;font-size:11px;border-radius:999px;min-width:19px;height:19px;padding:0 5px;display:grid;place-items:center}
+.th.unread .pv{color:var(--ink)}
+.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:17px;color:#11151b;flex:none;position:relative}
+.av.sm{width:30px;height:30px;font-size:13px}
+.av.gc{background:#07090c;color:var(--led);font-family:var(--led-font);font-size:22px;border:1px solid var(--line)}
+.av .dot{position:absolute;right:0;bottom:0;width:11px;height:11px;border-radius:50%;background:#43c28a;border:2px solid var(--panel)}
+.side-foot{display:flex;gap:6px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.side-foot button{flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px;color:var(--muted)}
+
+.main{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--bg)}
+.chat-head{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--panel);
+  padding-right:max(12px,env(safe-area-inset-right,0px))}
+.chat-head .back{display:none;background:transparent;border:0;font-size:22px;padding:4px 8px;color:var(--muted)}
+@media (max-width:760px){.chat-head .back{display:block}}
+.chat-head .ti{flex:1;min-width:0}
+.chat-head .ti b{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-head .ti span{font-size:12px;color:var(--muted)}
+.icon-btn{background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;color:var(--muted)}
+.notice{font-size:12.5px;color:var(--muted);background:var(--panel);border-bottom:1px solid var(--line);padding:7px 14px;text-align:center}
+.notice[hidden]{display:none}
+.msgs{flex:1;overflow-y:auto;padding:14px 12px 8px;display:flex;flex-direction:column;gap:2px;
+  padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+.day{align-self:center;font-size:11.5px;color:var(--dim);letter-spacing:.8px;text-transform:uppercase;margin:14px 0 8px;font-weight:600}
+.sys{align-self:center;font-size:12.5px;color:var(--muted);margin:6px 0;text-align:center;max-width:80%}
+.newline{align-self:stretch;display:flex;align-items:center;gap:10px;color:var(--led);font-size:11.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin:10px 0}
+.newline::before,.newline::after{content:"";flex:1;height:1px;background:var(--led-dim)}
+.row{display:flex;gap:8px;align-items:flex-end;max-width:min(78%,560px)}
+.row.me{align-self:flex-end;flex-direction:row-reverse}
+.row .avs{width:30px;flex:none}
+.stack{display:flex;flex-direction:column;gap:2px;min-width:0}
+.row.me .stack{align-items:flex-end}
+.who{font-size:12px;font-weight:700;margin:8px 0 2px 4px}
+.b{background:var(--panel-2);padding:8px 12px;border-radius:16px;white-space:pre-wrap;overflow-wrap:anywhere;position:relative}
+.row.me .b{background:var(--me);color:var(--me-ink)}
+.b .tm{display:none;font-size:11px;color:var(--dim);margin-left:8px}
+.b:hover .tm,.b:focus .tm{display:inline}
+.row.me .b .tm{color:#b9e6dc}
+.voice{display:flex;flex-direction:column;gap:6px;cursor:pointer;min-width:190px}
+.voice .wave{display:flex;align-items:center;gap:8px}
+.voice .play{width:28px;height:28px;border-radius:50%;background:var(--c-tonyo);color:#11151b;display:grid;place-items:center;font-size:12px;flex:none}
+.voice .bars{display:flex;gap:2px;align-items:center;height:22px;flex:1}
+.voice .bars i{display:block;width:3px;border-radius:2px;background:var(--muted)}
+.voice .dur{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.voice .tx{font-size:13.5px;color:var(--muted);font-style:italic}
+.typing{min-height:22px;font-size:12.5px;color:var(--muted);padding:0 16px 4px}
+.typing i{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--muted);margin-left:3px;animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
+.composer{display:flex;gap:8px;align-items:flex-end;padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--panel);
+  padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+.composer textarea{flex:1;min-width:0;resize:none;font:inherit;background:var(--panel-2);border:1px solid var(--line);border-radius:20px;padding:10px 14px;color:var(--ink);max-height:120px;line-height:1.35}
+.composer button{background:var(--led);color:#1d1305;border:0;border-radius:50%;width:42px;height:42px;font-size:18px;font-weight:700;flex:none}
+.composer button:disabled{opacity:.35}
+.left-note{padding:12px 16px calc(14px + env(safe-area-inset-bottom,0px));text-align:center;color:var(--muted);font-size:13px;border-top:1px solid var(--line);background:var(--panel)}
+
+/* drawers */
+.drawer{position:fixed;inset:0;background:rgba(4,6,9,.6);z-index:40;display:flex;justify-content:flex-end}
+.drawer-in{width:min(380px,100%);height:100%;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;
+  padding:calc(14px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) 16px;gap:14px;overflow-y:auto}
+.drawer h3{font-family:var(--display);margin:0;font-size:20px;display:flex;justify-content:space-between;align-items:center}
+.drawer h3 button{background:transparent;border:0;color:var(--muted);font-size:22px}
+.mem{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0}
+.mem b{font-size:15px;display:block}
+.mem span{font-size:12.5px;color:var(--muted)}
+.mem .add{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12.5px}
+.clue{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+.clue small{display:block;color:var(--dim);font-size:11.5px;margin-bottom:3px;letter-spacing:.6px;text-transform:uppercase}
+.empty{color:var(--muted);font-size:14px}
+.danger{background:transparent;border:1px solid #5a2a2e;color:var(--danger);border-radius:8px;padding:8px 12px;align-self:flex-start}
+.flash{animation:flash .9s ease}
+@keyframes flash{0%{filter:none}20%{filter:brightness(.25) contrast(1.4)}40%{filter:none}55%{filter:brightness(.4)}100%{filter:none}}
+</style>
+
+<div id="intro" class="intro" hidden></div>
+
+<div id="app" class="app" hidden>
+  <aside class="side">
+    <div class="side-top"><h2>Mga Chat</h2><div class="floor" id="floor" title="Elevator 2">▲ 1</div></div>
+    <div class="threads" id="threads"></div>
+    <div class="side-foot">
+      <button id="btnClues" type="button">Mga Napansin</button>
+      <button id="btnSettings" type="button">Settings</button>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="chat-head">
+      <button class="back" id="back" type="button" aria-label="Bumalik sa mga chat">‹</button>
+      <div id="headAv"></div>
+      <div class="ti"><b id="headTitle"></b><span id="headSub"></span></div>
+      <button class="icon-btn" id="btnMembers" type="button">Members</button>
+    </div>
+    <div class="notice" id="notice" hidden></div>
+    <div class="msgs" id="msgs" aria-live="polite"></div>
+    <div class="typing" id="typing"></div>
+    <div id="composerWrap"></div>
+  </main>
+</div>
+
+<div id="drawer" class="drawer" hidden></div>
+
+<script>
+'use strict';
+// =====================================================================
+//  ELEVATOR SURVIVORS
+//  Spoiler warning: the STORY BIBLE below is the secret truth of the
+//  story. The player isn't meant to read it.
+// =====================================================================
+
+const CAST = {
+  lorna:{name:'Tita Lorna',short:'Lorna',init:'L',color:'var(--c-lorna)',age:58,
+    sheet:`58, babae, retired public school teacher, biyuda, nakatira mag-isa sa Pasig. Gumawa ng GC. Mother hen: "anak" ang tawag sa lahat, "po" kahit sa mas bata, maraming 🙏😊😢, "..." sa dulo, at minsan biglang ALL CAPS na voice-to-text na sablay ("NIX ANAK KUMAIN KA NA BA PERIOD"). Nagpapadala ng good morning na may bulaklak (ilarawan lang bilang "[good morning image: rosas, 'Blessed Tuesday!']"). PINAKAMADUMI MAGBIRO sa buong GC pero inosente ang delivery at may 🙏 pa ("ang laki naman nyan anak 🙏 yung ulam ha"). Malambing kay Nix, parang lola. Hindi umaamin na takot siya.
+SINABI NIYA: galing siya sa dentista sa 3F (pustiso emergency). TOTOO: pumunta siya sa building dahil may nakita siyang address sa lumang sulat ng anak niyang si Migs (31), na anim na taon na niyang hindi kinakausap matapos ang malaking away tungkol sa pagkatao ni Migs (bakla si Migs; hindi siya pumunta sa kasal nito sa Taiwan). Gusto na niyang humingi ng tawad pero hindi niya alam paano. Hindi na nakatira doon si Migs.
+SA ELEVATOR NAKITA NG IBA: si Lorna sa isang airport, hawak ang regalo, hindi lumalapit.
+WANT: mapatawad. Masarap magluto. Nanonood ng Kdrama. Takot sa katahimikan ng bahay niya.
+AFTER-EFFECT: naaamoy niya ang sampaguita tuwing 11:47 PM.`},
+  jerome:{name:'Jerome',short:'Jerome',init:'J',color:'var(--c-jerome)',age:34,
+    sheet:`34, lalaki, team lead sa Northgate Solutions (BPO, 7F, night shift). Manyak ang demeanor: malandi, may innuendo sa lahat, "pakshet", "pre", 😏🔥, nagko-comment sa itsura, feeling alpha, mayabang, defensive. Medyo cringe pero minsan nakakatawa talaga. Sumusulat nang may tamang capitalization pero walang ingat sa punctuation. Akala niya kakampi niyang "lalaki" si Bambi at gusto niyang wingman ito. Asar kay Bambi pag binabalik nito ang landi niya.
+SINABI NIYA: may "meeting" lang sa taas. TOTOO: kanya ang unit 1408. Hiwalay na sila ng asawa niyang si Karen nang tatlong taon pero kasal pa sila on paper dahil hindi niya kaya ang annulment (₱300k+). Walang pangloloko. Hindi niya ito ipinapaliwanag; mas gusto niyang isipin ng iba na playboy siya kaysa malaman na malungkot at bigo siya.
+SA ELEVATOR NAKITA NG IBA: si Jerome na matanda na, mag-isa sa 1408, at walang tumatawag.
+MASK: ang landi ay pantakip. Unti-unti lang lalabas, depende sa tiwala.
+AFTER-EFFECT: hindi siya makatulog sa 1408; lagi niyang naririnig ang elevator sa hallway kahit walang gumagamit.`},
+  nix:{name:'Nix',short:'Nix',init:'N',color:'var(--c-nix)',age:19,
+    sheet:`19, lalaki, scholar na 2nd year Comsci sa isang university sa Makati, naka-hoodie lagi. LOWERCASE LANG, maikli, tuyo, walang emoji maliban sa bihirang "lol" o "💀". Pinakamagaling sa deadpan one-liners sa buong GC. "ok" ang default. Seen ng seen. Sumasagot nang buo kay Tita Lorna lang (pero palihim siyang maalaga sa lahat). Night owl.
+SINABI NIYA: may inabot sa tito niya. TOTOO: wala siyang tito doon. Doon siya natutulog sa 24-hour study hub sa 5F o sa hagdanan, dahil ayaw niyang umuwi; ang tatay niya ay lasinggero at ang nanay niya ay nasa Saudi. Hindi niya ito sinasabi kahit kanino.
+SA ELEVATOR NAKITA NG IBA: isang batang Nix na nakaupo sa labas ng pinto, nakikinig sa sigawan.
+WANT: makapagtapos at makaalis. Mahilig sa lumang horror games at sa pusa ng building (si Pandesal).
+AFTER-EFFECT: minsan nagigising siya sa hagdanan ng ibang floor na hindi niya maalala kung paano siya napunta.`},
+  tonyo:{name:'Mang Tonyo',short:'Tonyo',init:'T',color:'var(--c-tonyo)',age:67,
+    sheet:`67, lalaki, security guard ng Galvez Tower mula pa 1998. Ang apo niyang si Kristel ang nag-set up ng phone niya. Halos hindi nagta-type: "ok.", "salamat po", "Gd am". Pag mahaba ang sasabihin, VOICE MESSAGE (voice:true) na magulo ang transcript, may "ahh", may naputol, minsan nakikipag-usap pa sa iba sa background ("Kristel paano ito"). Magalang, "po" sa lahat. Bawat message niya ay may bigat.
+TOTOO: noong Oktubre 2009, naka-duty siya nang makita niyang sumakay sa Elevator 2 ang isang 15-anyos na batang lalaki na naka-uniporme, si Paolo, para sunduin ang ate niya. Hindi na lumabas ang bata. Walang record, walang CCTV. Inutusan siyang manahimik ng management. Hindi niya napatawad ang sarili niya. Alam niyang walang 13th floor ang building, pero may button space sa pagitan ng 12 at 14 sa Elevator 2.
+SA ELEVATOR NAKITA NG IBA: si Tonyo na mas bata, nakatayo sa harap ng nakasarang elevator, umiiyak.
+Ayaw niyang bumalik ang grupo sa elevator. Siya ang pinakamaraming alam pero pinakamahirap kausapin. Lalabas lang ang kwento niya sa PM, at kung may tiwala na siya.`},
+  bambi:{name:'Bambi',short:'Bambi',init:'B',color:'var(--c-bambi)',age:27,
+    sheet:`27, lalaki, bading pero hindi out sa lahat. Totoong pangalan: Benedict Ocampo; "Bambi" mula college. Freelance events host/emcee (corporate events, kasal, debut). Sa elevator, siya yung pogi na naka-cap, earphones, tahimik at chill. Sa GC: UNTI-UNTING LUMALABAS ANG CHAOS. Unang araw, polite at "bro" mode ("haha oo pre"). Habang tumatagal at lumalalim ang gabi, lumalabas ang tunay: walang filter, malandi, makulit, nagpo-propose ng delikadong plano ("sino gusto bumalik sa elevator mamayang gabi"), lowercase, "HAHAHAHA", "teh" (pag nadulas), 🤭💀. CODE-SWITCH depende sa kausap: kay Jerome, "pre" at bro; kay Lorna, mabait na apo; kay Sol, maingat at medyo kinakabahan; sa player, depende sa tiwala. Lihim niyang type si Jerome at minsan nadudulas ang landi niya; hindi ito napapansin ni Jerome (sa simula).
+SINABI NIYA: "wala lang". TOTOO: may ka-date siya mula sa app na taga-14F; hindi sumipot. Napahiya siya.
+SA ELEVATOR NAKITA NG IBA: si Bambi na bata, sinasampal ng tatay niya dahil nakita siyang naka-lipstick ng nanay niya.
+Takot na takot siya sa katahimikan, kaya maingay siya. Hindi siya basta comic relief; may lalim.
+AFTER-EFFECT: ang phone niya ay nag-a-autocorrect ng random na salita sa "Paolo".`},
+  sol:{name:'Sol',short:'Sol',init:'S',color:'var(--c-sol)',age:33,
+    sheet:`33, babae, freelance translator. Malambing, kalmado, maalaga, laging may tamang sasabihin. Kumpletong English sentences na may tamang grammar at punctuation, minsan may Tagalog. WALANG TYPO KAHIT KAILAN. Naaalala niya ang mga detalye at birthday ng lahat kahit walang nagsabi sa kanya. Hindi siya nagmamadali. Sobrang bait niya na nakakaduda. Nakakausap niya nang mahinahon kahit si Mang Tonyo.
+TOTOO (pinakamalaking lihim, PINAKAHULING ilalabas): Soledad Reyes. Si Paolo Reyes ang nakababata niyang kapatid na nawala sa Elevator 2 noong 2009. Ilang taon na siyang sumasakay sa Elevator 2 tuwing 11:47 PM, naghihintay na "bumukas ulit" ang 13. Alam niya ang mga patakaran nang higit sa iba. Gusto niyang gamitin ang grupo para makabalik at makuha si Paolo. Mabuti siyang tao pero desperado siya, at handa siyang magsinungaling.
+SA ELEVATOR NAKITA NG IBA: IBA-IBA ANG NAKITA NG BAWAT ISA tungkol sa kanya: kay Lorna, isang batang umiiyak sa ospital; kay Jerome, isang babaeng naka-wedding dress na mag-isa; kay Nix, isang babaeng nakatayo sa ulan sa bubong; kay Bambi, isang matandang babae na kamukha niya; kay Tonyo, siya mismo, 17 anyos, sumisigaw sa lobby (si Tonyo lang ang nakakilala sa kanya).
+SINABI NIYA: "I visit a friend in the building sometimes."
+AFTER-EFFECT: wala raw. Iyon ang nakakatakot.`}
+};
+const IDS = Object.keys(CAST);
+
+const ORIGINS = {
+  dental:{title:'Ang Dental Assistant',meta:'26 · Dr. Ramos Dental, 3F',
+    blurb:'Nag-overtime ka sa clinic. Pero sa 14th floor ka sumakay ng elevator, at hindi mo alam kung bakit.',
+    belief:'Dental assistant sa Dr. Ramos Dental (3F). Nag-overtime sa inventory. Ang hindi niya maipaliwanag: sumakay siya sa elevator sa 14th floor.',
+    clue:'Sumakay ka sa Elevator 2 sa 14th floor. Wala kang kahit anong dahilan para pumunta roon.',
+    seen:'nakatayo ang player sa isang madilim na hallway na may mga pintong may numerong 13XX, kumakatok, tinatawag ang pangalang "Paolo"',
+    pro:['Dental assistant ka sa Dr. Ramos Dental, 3rd floor ng Galvez Tower.','Nag-overtime ka sa inventory. Pagod, gutom, gusto mo nang umuwi.','Pinindot mo ang down button.','Bumukas ang pinto. Ang nakasulat sa panel sa loob: 14.','Hindi mo maalala kung paano ka napunta sa 14th floor.']},
+  applicant:{title:'Ang Applicant',meta:'23 · final interview, 7F',
+    blurb:'May final interview ka sa isang BPO nang 10 PM. Kinabukasan, sinabi ng HR na wala kang naka-schedule.',
+    belief:'Fresh grad, may final interview daw sa Northgate Solutions (7F) nang 10 PM para sa night shift account. Natapos ng 11:40. Hindi niya maalala ang mukha ng interviewer.',
+    clue:'Ayon sa email mo, ang interview mo ay sa "Room 1301". Walang 13th floor ang Galvez Tower.',
+    seen:'nakaupo ang player sa isang interview room na walang bintana, sa harap ng isang batang naka-uniporme na nagtatanong: "kailan mo ako susunduin?"',
+    pro:['Final interview mo sa Northgate Solutions. 10:00 PM, sabi ng email. Night shift account.','Natapos ka nang 11:40. Mabait ang interviewer. Ang dami niyang tanong tungkol sa pamilya mo.','Hindi mo maalala ang mukha niya.','Naka-blazer ka pa nang pumasok ka sa Elevator 2.']},
+  kapatid:{title:'Ang Kapatid',meta:'28 · unit 1412',
+    blurb:'Dinalhan mo ng ulam ang kapatid mo sa condo. Tatlong buwan na pala siyang hindi nakatira doon.',
+    belief:'Dinalhan ng sinigang ang kapatid niyang si Jo sa unit 1412. Walang sumagot. Iniwan ang tupperware sa pinto. Hindi pa niya alam na tatlong buwan nang lumipat si Jo.',
+    clue:'Kinabukasan, sinabi ni Jo sa text: "ha? tatlong buwan na akong wala sa 1412. kanino mo iniwan yung sinigang?"',
+    seen:'yakap-yakap ng player ang isang batang lalaki na naka-school uniform, parehong umiiyak, sa loob ng mismong elevator',
+    pro:['Dinalhan mo ng sinigang ang kapatid mong si Jo sa unit 1412.','Kumatok ka nang tatlong beses. Walang sumagot. Bukas ang ilaw sa ilalim ng pinto.','Iniwan mo ang tupperware sa doorknob.','Sa elevator mo lang naalala: ilang linggo na kayong hindi nag-uusap.']},
+  rider:{title:'Ang Delivery Rider',meta:'25 · pick-up sa 9F',
+    blurb:'Pick-up sa sarado nang spa sa 9th floor. Ang drop-off address: "Galvez Tower, Elevator 2."',
+    belief:'Delivery rider. Order: dalawang milk tea, pick-up sa Serenity Wellness (9F), para kay "Paolo". Drop-off: "Galvez Tower, Elevator 2". Sarado ang spa pero nandoon ang milk tea, pawis pa ang baso.',
+    clue:'Ang order mo ay para kay "Paolo". Drop-off: Galvez Tower, Elevator 2. Wala nang record ang order sa app kinabukasan.',
+    seen:'nakaabot ang player ng milk tea sa isang batang lalaki na naka-uniporme, at ngumiti ang bata at sinabing "salamat, ate/kuya, ang tagal mo"',
+    pro:['Isang order: dalawang milk tea. Pick-up sa Serenity Wellness, 9th floor.','Para kay "Paolo." Drop-off address: Galvez Tower, Elevator 2.','Akala mo typo.','Sarado na ang spa. Patay ang ilaw. Pero nasa counter ang dalawang milk tea, pawis pa ang baso.']}
+};
+
+const BIBLE = `ANG TOTOO (lihim, hindi kailanman sasabihin nang diretso):
+Ang Galvez Tower (Makati, itinayo 1979, 22 palapag) ay walang 13th floor. Sa panel ng Elevator 2, may blangkong espasyo sa pagitan ng 12 at 14. Paminsan-minsan, tuwing 11:47 PM, ang Elevator 2 ay humihinto "sa pagitan": isang lugar na parang dilaw na hallway na puno ng pintong 13XX, kung saan nakikita ng mga tao ang pinakamabigat na tinatago nila at ng mga kasama nila. Hindi tumatakbo ang oras doon nang pareho. Noong 2009, si Paolo Reyes (15) ay naiwan doon. Sa gabi ng insidente, walo talaga sila sa loob: ang ikawalo ay si Paolo, na naka-school uniform, nakaupo sa sulok, at hindi pa rin tumatanda. Ilan lang ang nakakaalala sa kanya, malabo.
+Nawala ang anim (at ang player) mula 11:47 PM hanggang 2:47 AM. Walang brownout ayon sa Meralco. Walang record ang building admin ng anumang stall. Walang CCTV ng kahit ano. Para silang nawala sa mundo.
+Ang player ay nakarating na roon DATI, at hindi niya ito naaalala. Kilala siya ni Paolo. Ito ang dahilan kung bakit ayaw sabihin ng iba sa player ang nakita nila tungkol sa kanya. Si Sol ang may pinakamaraming hinala tungkol dito.
+Panuntunan ng misteryo: HUWAG KAILANMAN kumpirmahin kung supernatural, sci-fi o sikolohikal ito. Dapat palaging may posibleng ordinaryong paliwanag at posibleng hindi. Pinagtatalunan ito ng grupo (si Jerome ang skeptic, si Lorna ang relihiyosa, si Bambi ang excited, si Nix ang tahimik na naniniwala, si Sol ang parang may alam). Dahan-dahan ang mga reveal. Mas importante ang tao kaysa sa misteryo.
+Mga karaniwang after-effect: naririnig ng lahat ang "ding" ng elevator tuwing 11:47 PM saan man sila; tatlong minutong late ang mga orasan nila; minsan nahuhuli ang repleksyon nila sa salamin; panaginip ng dilaw na hallway.`;
+
+const BEATS = [
+  'Araw 1: debriefing. Lahat nagsisinungaling tungkol sa dahilan nila. Awkward, nag-aamoy-amoy pa sila. Gusto ni Lorna na mag-pray. Si Bambi ay polite pa, "pre" mode. Si Jerome sinusubukang i-explain nang lohikal.',
+  'Araw 2: Umalis si Mang Tonyo sa GC (nangyari na ito sa system message kung umalis na siya). Napag-usapan ang "ding" nang 11:47 PM. Unang lumalabas ang chaos ni Bambi pag gabi.',
+  'Araw 3: Sinabi ng building admin kay Jerome na walang stall sa logs. Naibuking na kay Jerome ang unit 1408. Nagpo-propose si Bambi na bumalik sila sa elevator. Tutol si Lorna.',
+  'Araw 4: Nagsimulang mag-autocorrect sa "Paolo" ang phone ni Bambi. Hindi na-explain. Si Sol ay biglang tahimik nang ilang oras, tapos bumalik na parang walang nangyari.',
+  'Araw 5: Nag-picture si Nix ng panel ng Elevator 2: may blangkong puwang sa pagitan ng 12 at 14. Pinagtatalunan kung normal lang ito sa lumang building.',
+  'Araw 6: Napag-usapan ang pagkikita nang personal (kape, o kainan sa bahay ni Lorna). Pwedeng mangyari off-screen, at ikukuwento pagkatapos.',
+  'Araw 7+: Mas malalim na mga reveal, nakadepende sa tiwala. Ang plano ng ilan na bumalik sa Elevator 2 nang 11:47 PM. Ang kwento ni Tonyo (kung naibalik siya at may tiwala). Ang tungkol kay Paolo. Mabagal. Slice of life din: trabaho, pagkain, chismis, asaran, mga personal na problema.'
+];
+
+const SCHED = {lorna:'gising 5AM-10PM, aktibo sa umaga at hapon', jerome:'night shift: gising 3PM-7AM, nagme-message tuwing break', nix:'gising 10AM-2PM at 9PM-5AM; seen-zone ang hapon', tonyo:'duty 6AM-6PM, bihirang mag-phone, tulog nang 9PM', bambi:'gising 11AM-4AM, pinakaingay sa gabi', sol:'laging gising, pero laging online tuwing 11:47 PM'};
+
+// ------------------------------------------------- state
+const LS='elevator-survivors-v1';
+let S = load();
+function fresh(){return {v:1,stage:'name',name:'',origin:'',startedAt:0,threads:{gc:[]},unread:{},rel:{lorna:2,jerome:0,nix:0,tonyo:1,bambi:1,sol:3},notes:[],clues:[],tonyoIn:true,flags:{},queue:[],active:'gc',lastSeen:0,lastCatch:0,lastReadAt:{}}}
+function load(){try{const o=JSON.parse(localStorage.getItem(LS)||'null');if(o&&o.v===1)return o}catch(e){}return fresh()}
+let saveT=null;
+function save(){S.lastSeen=Date.now();try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){};clearTimeout(saveT);saveT=setTimeout(saveRemote,1500)}
+IDS.forEach(id=>{S.threads[id]=S.threads[id]||[]});
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const P=s=>String(s).replace(/\{name\}/g,S.name);
+let uid=Date.now()%1e6;const nid=()=>(++uid).toString(36)+Math.random().toString(36).slice(2,5);
+const MIN=60e3,HOUR=36e5,DAY=864e5;
+
+// ------------------------------------------------- onboarding
+function showIntro(){
+  $('app').hidden=true;const I=$('intro');I.hidden=false;
+  if(S.stage==='name'){
+    I.innerHTML=`<div class="intro-inner">
+      <div class="led-panel"><span class="arrow">▼</span><span>11:47</span></div>
+      <h1>Elevator Survivors</h1>
+      <p>Pitong estranghero ang sumakay sa Elevator 2 ng Galvez Tower nang 11:47 PM. Lumabas kayo nang 2:47 AM. Walang brownout. Walang record. Walang nakapansin na nawala kayo.</p>
+      <div class="field"><label for="nm">Ano ang pangalan mo?</label><input id="nm" maxlength="20" autocomplete="off" placeholder="Pangalan mo sa GC" value="${esc(S.name)}"></div>
+      <button class="btn" id="go" type="button" disabled>Tuloy</button></div>`;
+    const nm=$('nm'),go=$('go');const upd=()=>go.disabled=!nm.value.trim();nm.oninput=upd;upd();nm.focus();
+    nm.onkeydown=e=>{if(e.key==='Enter'&&nm.value.trim())go.click()};
+    go.onclick=()=>{S.name=nm.value.trim().slice(0,20);S.stage='origin';save();showIntro()};
+  } else if(S.stage==='origin'){
+    I.innerHTML=`<div class="intro-inner">
+      <div class="led-panel"><span class="arrow">▼</span><span>?</span></div>
+      <h1>Sino ka nang gabing iyon?</h1>
+      <p>Alam mo ang buhay mo. Ang hindi mo alam ay kung ano ang nakita ng iba tungkol sa'yo sa loob ng elevator.</p>
+      <div class="origins">${Object.entries(ORIGINS).map(([k,o])=>`<button class="origin" type="button" data-k="${k}"><span class="meta">${esc(o.meta)}</span><b>${esc(o.title)}</b><span>${esc(o.blurb)}</span></button>`).join('')}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="go" type="button" disabled>Pumasok sa elevator</button><button class="btn ghost" id="bk" type="button">Palitan ang pangalan</button></div></div>`;
+    let pick=S.origin;
+    I.querySelectorAll('.origin').forEach(b=>{if(b.dataset.k===pick)b.classList.add('on');b.onclick=()=>{pick=b.dataset.k;I.querySelectorAll('.origin').forEach(x=>x.classList.toggle('on',x===b));$('go').disabled=false}});
+    $('go').disabled=!pick;
+    $('go').onclick=()=>{S.origin=pick;S.stage='prologue';save();showIntro()};
+    $('bk').onclick=()=>{S.stage='name';save();showIntro()};
+  } else if(S.stage==='prologue'){
+    playPrologue();
+  }
+}
+
+function prologueLines(){
+  const o=ORIGINS[S.origin];
+  return [...o.pro.map(t=>({t})),
+    {t:'11:47 PM',c:'time'},
+    {t:'Pito kayo sa loob ng Elevator 2, kasama ka.'},
+    {t:'Isang tita na naka-floral blouse, may hawak na rosaryo. Isang lalaking naka-blue polo na amoy-pabango kahit sa dulo ng araw. Isang payat na batang naka-hoodie. Si Manong guard, may flashlight. Isang pogi na naka-cap at earphones, nakasandal sa sulok.'},
+    {t:'At isang babaeng naka-puti na ngumiti sa\'yo, parang kilala ka niya.'},
+    {t:'Namatay ang ilaw.'},
+    {t:'May narinig kang "ding." Pero walang gumagalaw.',c:'quiet'},
+    {t:'Lumamig. Hindi ganung klase ng lamig na galing sa aircon.'},
+    {t:'Sa dilim, may nagbanggit ng pangalan mo. Hindi mo kilala ang boses.'},
+    {t:'May nakita ka sa sulok. Isang batang naka-school uniform, nakaupo, nakatingin sa\'yo.'},
+    {t:'Walo na kayo? Hindi. Pito lang kayo.',c:'quiet'},
+    {t:'2:47 AM',c:'time'},
+    {t:'Bumukas ang pinto sa lobby. Walang technician. Walang nag-aabang. Normal ang ilaw.'},
+    {t:'Walang tumingin sa\'yo nang diretso.'},
+    {t:'Hindi mo maalala ang tatlong oras na iyon.',c:'quiet'}];
+}
+function playPrologue(){
+  const I=$('intro');const L=prologueLines();let i=0;
+  I.innerHTML=`<div class="intro-inner"><div class="prologue" id="pro" role="button" tabindex="0" aria-label="Ituloy"></div><div class="tap" id="tap">Pindutin para ituloy</div><button class="btn ghost" id="skip" type="button">Laktawan</button></div>`;
+  const pro=$('pro');
+  const step=()=>{
+    if(i>=L.length){finishPrologue();return}
+    if(pro.children.length>=4)pro.innerHTML='';
+    const p=document.createElement('p');p.className='pline'+(L[i].c?' '+L[i].c:'');p.textContent=L[i].t;pro.appendChild(p);i++;
+  };
+  pro.onclick=step;pro.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();step()}};
+  $('skip').onclick=finishPrologue;step();pro.focus();
+}
+function finishPrologue(){
+  const I=$('intro');
+  I.innerHTML=`<div class="intro-inner"><p class="pline quiet">Kinabukasan.</p>
+    <div class="notif"><div class="ic">ES</div><div><b>Tita Lorna added you to "Elevator Survivors 🙏"</b><span>37 bagong mensahe</span></div></div>
+    <button class="btn" id="open" type="button">Buksan</button></div>`;
+  $('open').onclick=startChat;$('open').focus();
+}
+
+// ------------------------------------------------- opening backlog
+function opening(){
+  const o=S.origin;
+  const L=[
+    [-470,'sys','Tita Lorna created the group "Elevator Survivors 🙏"'],
+    [-470,'sys','Tita Lorna added Jerome, Nix, Mang Tonyo, Bambi, Sol and {name}'],
+    [-468,'lorna','Good morning mga anak!!! 🙏😊 Ako po si Lorna yung naka floral kagabi. Ginawa ko po itong GC para sa debriefing natin. Salamat sa Diyos at buhay tayong lahat 🙏🙏'],
+    [-466,'lorna','Kinuha ko po number nyo sa logbook ni Mang Tonyo hehe sorry na po 😊'],
+    [-440,'jerome','Morning. Jerome here. Yung naka blue polo'],
+    [-439,'jerome','Ma\'am anong debriefing hahaha di naman tayo NBI'],
+    [-437,'lorna','Para po maproseso natin anak. Nabasa ko sa Facebook importante daw yun after ng trauma 😊'],
+    [-410,'sol','Good morning, everyone. Sol here. Thank you for doing this, Tita Lorna. I didn\'t sleep much either.'],
+    [-409,'sol','I hope everyone got home safe.'],
+    [-402,'bambi','morning po. bambi'],
+    [-401,'bambi','yung naka cap'],
+    [-399,'jerome','Ahh ikaw yung tahimik pre. Solid ka kagabi chill na chill'],
+    [-398,'bambi','haha oo pre wala naman magagawa eh'],
+    [-380,'tonyo','...hello? Lorna ito na ba... ay. Magandang umaga po sa inyong lahat. Si Tonyo po ito, yung guard. Ahh... pasensya na po sa nangyari. Nag-report na po ako sa admin. Ahh. Sige po. Kristel paano patayin ito—',31],
+    [-360,'jerome','Teka lang. Napansin nyo ba yung oras nung lumabas tayo'],
+    [-359,'jerome','2:47 na'],
+    [-359,'jerome','Pumasok tayo 11:47'],
+    [-357,'bambi','3 hours lang naman pre baka mabagal lang talaga yung technician'],
+    [-356,'jerome','Walang technician na dumating pre. Bumukas lang mag isa'],
+    [-340,'sol','I checked the building\'s page. There\'s no advisory about an outage last night. Meralco shows no interruption in our area either.'],
+    [-338,'lorna','Baka di lang po na-post anak 😊'],
+    [-330,'nix','walang brownout kagabi'],
+    [-330,'nix','gising ako 2 blocks away. may kuryente buong gabi'],
+    [-328,'bambi','...'],
+    [-327,'bambi','ok so nasan tayo for 3 hours'],
+    [-310,'lorna','Mga anak wag na po natin isipin yan. Ang importante ligtas tayo 🙏'],
+    [-309,'lorna','Btw bakit nga pala kayo nandun nang ganung oras? 😊 Ako po galing dentist sa 3rd floor'],
+    [-305,'jerome','Tita sarado na clinic nun 😂'],
+    [-304,'lorna','Emergency po. Pustiso 😊'],
+    [-300,'jerome','Ako may meeting lang sa taas. Work'],
+    [-299,'bambi','hmm anong meeting ng 11pm sa 14th floor eh condo lang yun pre 😏'],
+    [-298,'jerome','Ikaw ano ginagawa mo dun pre'],
+    [-298,'bambi','wala lang 🤷'],
+    [-290,'sol','I visit a friend in the building sometimes.'],
+    [-288,'lorna','Nix anak ikaw? 😊'],
+    [-287,'nix','tito ko po'],
+    [-287,'nix','may inabot lang'],
+    ...({
+      dental:[[-270,'lorna','Si {name} po diba sa 14th floor sumakay? Akala ko po taga clinic sya sa baba 🤔']],
+      applicant:[[-270,'jerome','Yung {name} ba yung naka blazer? Applicant ata samin sa Northgate. Wala naman kaming interview na ganun kalate ah']],
+      kapatid:[[-270,'sol','{name} mentioned a sibling in 1412, right? I think that unit has been empty for a while.']],
+      rider:[[-270,'bambi','yung rider sino nag order sa kanya ng ganung oras sa 9th floor. sarado na yung spa na yun ah']]
+    })[o],
+    [-250,'sol','Has anyone heard from {name}?'],
+    [-249,'lorna','Oo nga po!! {name} anak ok ka lang?? Hindi ka pa nagrereply 😢'],
+    [-248,'jerome','Baka tulog pa. Grabe yung itsura nya nung lumabas tayo eh'],
+    [-247,'bambi','pre'],
+    [-247,'jerome','Ano?'],
+    [-246,'bambi','wag mo na banggitin'],
+    [-245,'nix','wag nyong sabihin sa kanya'],
+    [-244,'sol','Agreed.'],
+    [-200,'sol','Mae, if you see this, take your time. We\'re here.'],
+    [-199,'sol','Sorry. {name}. Autocorrect.'],
+    [-120,'lorna','Ayoko lang po maging weird pero may narinig ba kayong "ding" kaninang madaling araw? Mag isa lang ako sa bahay 😅'],
+    [-118,'bambi','tita wag naman ganyan ang aga aga'],
+    [-60,'jerome','Pre si Mang Tonyo ba nakakabasa nito'],
+    [-58,'tonyo','ok.'],
+    [-55,'bambi','HAHAHAHAHA'],
+    [-15,'lorna','Ok po magluluto muna ako. {name} anak pag nabasa mo to kumain ka ha 🙏']
+  ];
+  const now=Date.now();
+  S.threads.gc=L.map(([m,from,text,voice])=>({id:nid(),from,text:P(text),t:now+m*MIN,voice:voice||0}));
+  S.unread.gc=S.threads.gc.filter(x=>x.from!=='sys').length;
+  S.newFrom={gc:S.threads.gc[0].t};
+  // scripted reactions once the player is actually reading
+  S.queue=[
+    {due:now+40e3,thread:'gc',from:'lorna',text:P('{name}!!! nakita ko po nag seen ka 😭 Ok ka lang ba anak??')},
+    {due:now+75e3,thread:'gc',from:'bambi',text:'uy gising na'},
+    {due:now+4*MIN,thread:'pm',from:'sol',text:P('Hi {name}. I didn\'t want to crowd you in the group. How are you, really?')}
+  ];
+}
+
+function startChat(){
+  S.stage='chat';S.startedAt=Date.now();S.lastCatch=Date.now();opening();
+  addClue(ORIGINS[S.origin].clue,'Simula');
+  addClue('Pumasok kayo nang 11:47 PM. Lumabas kayo nang 2:47 AM. Walang brownout ayon sa Meralco.','Simula');
+  S.active='gc';save();showApp();
+}
+
+// ------------------------------------------------- app UI
+let isNarrow=()=>matchMedia('(max-width:760px)').matches;
+function showApp(){
+  $('intro').hidden=true;$('app').hidden=false;
+  if(isNarrow())$('app').classList.add('in-thread');
+  renderThreads();renderChat(true);tickFloor();
+}
+function threadTitle(t){return t==='gc'?'Elevator Survivors 🙏':CAST[t].name}
+function avHTML(t,sm){
+  if(t==='gc')return `<div class="av gc${sm?' sm':''}">ES</div>`;
+  const c=CAST[t];return `<div class="av${sm?' sm':''}" style="background:${c.color}">${c.init}${!sm&&isOnline(t)?'<span class="dot"></span>':''}</div>`;
+}
+function isOnline(id){
+  const h=new Date().getHours();
+  return ({lorna:h>=5&&h<22,jerome:h>=15||h<7,nix:(h>=10&&h<14)||h>=21||h<5,tonyo:h>=6&&h<18&&new Date().getMinutes()<20,bambi:h>=11||h<4,sol:true})[id];
+}
+function lastMsg(t){const a=S.threads[t];return a.length?a[a.length-1]:null}
+function preview(m){if(!m)return 'Wala pang mensahe';if(m.from==='sys')return m.text;const who=m.from==='me'?'Ikaw: ':(S.active!==m.from&&CAST[m.from]&&m.thread!=='pm'?CAST[m.from].short+': ':'');return who+(m.voice?'🎤 Voice message':m.text)}
+function renderThreads(){
+  const order=['gc',...IDS.filter(id=>S.threads[id].length)].sort((a,b)=>((lastMsg(b)||{}).t||0)-((lastMsg(a)||{}).t||0));
+  const rest=IDS.filter(id=>!S.threads[id].length);
+  $('threads').innerHTML=[...order,...rest].map(t=>{
+    const m=lastMsg(t),u=S.unread[t]||0;
+    const pv=t==='gc'?preview(m):(m?(m.from==='me'?'Ikaw: ':'')+(m.voice?'🎤 Voice message':m.text):'Mag-message nang pribado');
+    return `<button class="th${S.active===t&&!isNarrow()?' on':''}${u?' unread':''}" type="button" data-t="${t}">${avHTML(t)}<div style="min-width:0"><div class="nm">${esc(threadTitle(t))}</div><div class="pv">${esc(pv)}</div></div><div class="rt">${m?fmtShort(m.t):''}${u?`<span class="badge">${u>99?'99+':u}</span>`:''}</div></button>`;
+  }).join('');
+  $('threads').querySelectorAll('.th').forEach(b=>b.onclick=()=>openThread(b.dataset.t));
+}
+function openThread(t){
+  if(S.active!==t){S.newFrom=S.newFrom||{};S.newFrom[t]=S.unread[t]?firstUnreadTime(t):0}
+  S.active=t;$('app').classList.add('in-thread');renderChat(true);renderThreads();save();
+}
+function firstUnreadTime(t){const a=S.threads[t].filter(m=>m.from!=='me'&&m.from!=='sys');const n=S.unread[t]||0;return n&&a.length>=n?a[a.length-n].t:0}
+$('back').onclick=()=>{$('app').classList.remove('in-thread');renderThreads()};
+
+function fmtTime(t){return new Date(t).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'})}
+function dayLabel(t){const d=new Date(t),n=new Date();const a=new Date(d.getFullYear(),d.getMonth(),d.getDate()),b=new Date(n.getFullYear(),n.getMonth(),n.getDate());const diff=Math.round((b-a)/DAY);
+  if(diff===0)return 'Ngayon';if(diff===1)return 'Kahapon';return ['Linggo','Lunes','Martes','Miyerkules','Huwebes','Biyernes','Sabado'][d.getDay()]+', '+d.toLocaleDateString('en-PH',{month:'short',day:'numeric'})}
+function fmtShort(t){const l=dayLabel(t);return l==='Ngayon'?fmtTime(t):l==='Kahapon'?'Kahapon':l.split(',')[0]}
+
+function renderChat(scroll){
+  const t=S.active;const box=$('msgs');
+  $('headAv').innerHTML=avHTML(t,false);$('headTitle').textContent=threadTitle(t);
+  if(t==='gc'){const n=1+IDS.filter(id=>id!=='tonyo'||S.tonyoIn).length;$('headSub').textContent=n+' members';$('btnMembers').hidden=false}
+  else{$('headSub').textContent=isOnline(t)?'Active now':CAST[t].age+' · '+(t==='tonyo'?'guard, Galvez Tower':'Elevator 2 survivor');$('btnMembers').hidden=true}
+  const nf=(S.newFrom||{})[t]||0;
+  let html='',lastDay='',lastFrom='',shownNew=false;
+  for(const m of S.threads[t]){
+    const dl=dayLabel(m.t);if(dl!==lastDay){html+=`<div class="day">${dl}</div>`;lastDay=dl;lastFrom=''}
+    if(nf&&!shownNew&&m.t>=nf&&m.from!=='me'){html+=`<div class="newline">Bagong mensahe</div>`;shownNew=true;lastFrom=''}
+    if(m.from==='sys'){html+=`<div class="sys">${esc(m.text)}</div>`;lastFrom='';continue}
+    const me=m.from==='me',c=CAST[m.from];
+    const first=m.from!==lastFrom;lastFrom=m.from;
+    const body=m.voice?voiceHTML(m):esc(m.text);
+    html+=`<div class="row${me?' me':''}">${me?'':`<div class="avs">${first?avHTML(m.from,true):''}</div>`}<div class="stack">${!me&&first&&t==='gc'?`<div class="who" style="color:${c.color}">${esc(c.name)}</div>`:''}<div class="b" tabindex="-1">${body}<span class="tm">${fmtTime(m.t)}</span></div></div></div>`;
+  }
+  if(!S.threads[t].length)html=`<div class="sys" style="margin-top:30vh">Pribadong usapan ninyo ni ${esc(CAST[t].name)}. Walang ibang makakabasa nito.</div>`;
+  box.innerHTML=html;
+  box.querySelectorAll('.voice').forEach(v=>v.onclick=()=>v.querySelector('.tx').hidden=!v.querySelector('.tx').hidden);
+  S.unread[t]=0;
+  renderComposer();renderTyping();
+  if(scroll){const nl=box.querySelector('.newline');if(nl)nl.scrollIntoView({block:'start'});else box.scrollTop=box.scrollHeight}
+  noticeUpdate();
+}
+function voiceHTML(m){
+  const n=26,seed=m.id.length+m.text.length;let bars='';
+  for(let i=0;i<n;i++){const h=5+Math.abs(Math.sin(seed*1.7+i*1.3))*15;bars+=`<i style="height:${h.toFixed(0)}px"></i>`}
+  const d=m.voice|0;return `<div class="voice" role="button" aria-label="Voice message, pindutin para sa transcript"><div class="wave"><span class="play">▶</span><span class="bars">${bars}</span><span class="dur">${Math.floor(d/60)}:${String(d%60).padStart(2,'0')}</span></div><div class="tx" hidden>"${esc(m.text)}"</div></div>`;
+}
+function renderComposer(){
+  const w=$('composerWrap');const t=S.active;
+  w.innerHTML=`<div class="composer"><textarea id="box" rows="1" placeholder="${t==='gc'?'Mag-message sa GC…':'Mag-message kay '+esc(CAST[t].short)+'…'}" aria-label="Mensahe"></textarea><button id="send" type="button" aria-label="Ipadala">➤</button></div>`;
+  const box=$('box'),send=$('send');
+  const draft=(S.drafts||{})[t];if(draft)box.value=draft;
+  const grow=()=>{box.style.height='auto';box.style.height=Math.min(box.scrollHeight,120)+'px'};grow();
+  box.oninput=()=>{grow();S.drafts=S.drafts||{};S.drafts[t]=box.value};
+  box.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!isNarrow()){e.preventDefault();send.click()}};
+  send.onclick=()=>{const v=box.value.trim();if(!v)return;box.value='';S.drafts=S.drafts||{};S.drafts[t]='';grow();playerSend(t,v);box.focus()};
+}
+
+// typing indicators
+const typingNow={};
+function renderTyping(){
+  const t=S.active;const who=Object.keys(typingNow).filter(k=>typingNow[k]===t);
+  $('typing').innerHTML=who.length?`${esc(who.map(w=>CAST[w].short).join(', '))} ${who.length>1?'are':'is'} typing<i></i><i></i><i></i>`:'';
+}
+
+function push(thread,msg,opts={}){
+  const arr=S.threads[thread];arr.push(msg);arr.sort((a,b)=>a.t-b.t);
+  if(arr.length>400)arr.splice(0,arr.length-400);
+  const viewing=S.active===thread&&!document.hidden&&!$('app').hidden&&($('app').classList.contains('in-thread')||!isNarrow());
+  if(msg.from!=='me'&&msg.from!=='sys'&&!viewing)S.unread[thread]=(S.unread[thread]||0)+1;
+  if(!opts.quiet){if(viewing){const box=$('msgs');const near=box.scrollHeight-box.scrollTop-box.clientHeight<160;renderChat(false);if(near||msg.from==='me')box.scrollTop=box.scrollHeight}renderThreads();updateTitle()}
+  save();
+}
+function updateTitle(){const n=Object.values(S.unread).reduce((a,b)=>a+(b||0),0);document.title=(n?'('+n+') ':'')+'Elevator Survivors'}
+function sysMsg(thread,text){push(thread,{id:nid(),from:'sys',text,t:Date.now()})}
+
+// ------------------------------------------------- the floor indicator
+let floorN=1;
+function tickFloor(){
+  const el=$('floor');const now=new Date();
+  const witching=now.getHours()===23&&now.getMinutes()===47;
+  if(witching){el.textContent='■ 13';el.classList.add('glitch');if(!S.flags['ding'+now.toDateString()]){S.flags['ding'+now.toDateString()]=1;document.body.classList.add('flash');setTimeout(()=>document.body.classList.remove('flash'),900);save()}}
+  else{el.classList.remove('glitch');
+    if(Math.random()<.35){const dir=Math.random()<.5?-1:1;floorN=Math.min(22,Math.max(1,floorN+dir));if(floorN===13)floorN+=dir}
+    el.textContent=(Math.random()<.5?'▲ ':'▼ ')+floorN;
+    if(Math.random()<.006){el.textContent='▲ 13';el.classList.add('glitch');setTimeout(()=>{el.classList.remove('glitch')},350)}}
+}
+setInterval(()=>{if(!$('app').hidden)tickFloor()},4000);
+
+// ------------------------------------------------- drawers
+function openDrawer(html){const d=$('drawer');d.innerHTML=`<div class="drawer-in">${html}</div>`;d.hidden=false;d.onclick=e=>{if(e.target===d)closeDrawer()};d.querySelector('[data-close]').onclick=closeDrawer;d.querySelector('[data-close]').focus()}
+function closeDrawer(){$('drawer').hidden=true}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('drawer').hidden)closeDrawer()});
+function relLabel(v){return v<-3?'iwas sa\'yo':v<3?'estranghero pa':v<8?'kakilala':v<15?'palagay ang loob sa\'yo':'tropa na kayo'}
+$('btnMembers').onclick=()=>{
+  const rows=IDS.map(id=>{const c=CAST[id];const out=id==='tonyo'&&!S.tonyoIn;
+    return `<div class="mem">${avHTML(id)}<div style="min-width:0"><b>${esc(c.name)}</b><span>${out?'Umalis sa group':esc(relLabel(S.rel[id]||0))}</span></div>${out?`<button class="add" type="button" data-add="tonyo">Idagdag ulit</button>`:''}</div>`}).join('');
+  openDrawer(`<h3>Members <button type="button" data-close aria-label="Isara">×</button></h3>
+    <div class="mem"><div class="av" style="background:var(--me);color:var(--me-ink)">${esc(S.name[0]||'?').toUpperCase()}</div><div><b>${esc(S.name)} (ikaw)</b><span>${esc(ORIGINS[S.origin].title)}</span></div></div>${rows}`);
+  const a=$('drawer').querySelector('[data-add]');if(a)a.onclick=()=>{closeDrawer();addTonyoBack()};
+};
+$('btnClues').onclick=()=>{
+  openDrawer(`<h3>Mga Napansin <button type="button" data-close aria-label="Isara">×</button></h3>
+  <p class="empty">Mga detalyeng hindi tugma. Nadadagdagan habang nag-uusap kayo.</p>
+  ${S.clues.length?S.clues.slice().reverse().map(c=>`<div class="clue"><small>${esc(c.when)}</small>${esc(c.text)}</div>`).join(''):'<p class="empty">Wala pa.</p>'}`);
+};
+$('btnSettings').onclick=()=>{
+  openDrawer(`<h3>Settings <button type="button" data-close aria-label="Isara">×</button></h3>
+  <p class="empty">Ikaw si <b>${esc(S.name)}</b>, ${esc(ORIGINS[S.origin].title.toLowerCase())}. Ika-${dayNum()} na araw mula nang insidente.</p>
+  <p class="empty">${sampleFn?'Si Claude ang nagpapatakbo sa kanila. Gumagamit ito ng Claude usage mo tuwing may bagong usapan.':'Para makausap sila nang totoo, buksan ang page na ito sa claude.ai link nito.'}</p>
+  <button class="danger" type="button" id="reset">Magsimula ulit (buburahin ang lahat)</button>
+  <div id="confirm" hidden style="display:flex;flex-direction:column;gap:8px"><p class="empty">Sigurado ka? Mabubura ang lahat ng usapan.</p><div style="display:flex;gap:8px"><button class="danger" type="button" id="yes">Oo, burahin</button><button class="icon-btn" type="button" id="no">Huwag</button></div></div>`);
+  $('reset').onclick=()=>{$('confirm').hidden=false;$('reset').hidden=true};
+  $('no').onclick=()=>{$('confirm').hidden=true;$('reset').hidden=false};
+  $('yes').onclick=()=>{const nm=S.name;S=fresh();S.name=nm;S.stage='origin';IDS.forEach(id=>S.threads[id]=[]);save();closeDrawer();showIntro()};
+};
+function addClue(text,when){if(!text)return;if(S.clues.some(c=>c.text===text))return;S.clues.push({text,when:when||('Araw '+dayNum()),t:Date.now()});if(S.clues.length>60)S.clues.shift()}
+function dayNum(){if(!S.startedAt)return 1;const a=new Date(S.startedAt),b=new Date();return 1+Math.round((new Date(b.getFullYear(),b.getMonth(),b.getDate())-new Date(a.getFullYear(),a.getMonth(),a.getDate()))/DAY)}
+
+// ------------------------------------------------- scripted world events
+function worldEvents(){
+  const d=dayNum();
+  if(d>=2&&!S.flags.tonyoLeft){
+    S.flags.tonyoLeft=1;S.tonyoIn=false;
+    const day2=new Date(S.startedAt);day2.setDate(day2.getDate()+1);day2.setHours(6,12,0,0);
+    const t=Math.min(Date.now()-12*MIN,Math.max(day2.getTime(),S.lastSeen||0));
+    S.threads.gc.push({id:nid(),from:'tonyo',text:'Salamat po sa inyong lahat. Ingat po kayo. Wag na po kayong babalik sa building nang gabi.',t:t-2*MIN});
+    S.threads.gc.push({id:nid(),from:'sys',text:'Mang Tonyo left the group.',t});
+    S.threads.gc.push({id:nid(),from:'lorna',text:'Ay 😢 Mang Tonyo?? Bakit po',t:t+9*MIN});
+    S.threads.gc.push({id:nid(),from:'bambi',text:'ok so hindi lang ako yung kinilabutan sa "wag na kayong babalik"',t:t+11*MIN});
+    S.unread.gc=(S.unread.gc||0)+3;
+  }
+}
+function addTonyoBack(){
+  S.tonyoIn=true;S.flags.tonyoBack=(S.flags.tonyoBack||0)+1;
+  sysMsg('gc',S.name+' added Mang Tonyo to the group.');
+  if(S.flags.tonyoBack===1)setTimeout(()=>{pendingAsk.add('gc');scheduleAsk('gc',`[Ibinalik ng player si Mang Tonyo sa GC. Mag-react ang grupo; si Tonyo ay maaaring sumagot ng maikli o voice message, o hindi agad.]`)},1500);
+  renderChat(false);
+}
+
+// ------------------------------------------------- scheduled delivery (no AI calls)
+function deliverDue(){
+  if(S.stage!=='chat')return;
+  const now=Date.now();const due=S.queue.filter(q=>q.due<=now);if(!due.length)return;
+  S.queue=S.queue.filter(q=>q.due>now);
+  for(const q of due){
+    const thread=q.thread==='pm'?q.from:'gc';
+    if(thread==='gc'&&q.from==='tonyo'&&!S.tonyoIn)continue;
+    push(thread,{id:nid(),from:q.from,text:q.text,t:Math.min(q.due,now),voice:q.voice||0});
+  }
+}
+setInterval(deliverDue,8000);
+
+// ------------------------------------------------- Claude: the cast
+let sampleFn=null,busy=false;const pendingAsk=new Set();let askTimer=null,askNote={};
+function scheduleAsk(thread,note){if(note)askNote[thread]=(askNote[thread]?askNote[thread]+'\n':'')+note;pendingAsk.add(thread);clearTimeout(askTimer);askTimer=setTimeout(runAsk,2600)}
+function playerSend(thread,text){
+  push(thread,{id:nid(),from:'me',text,t:Date.now()});
+  if(!sampleFn){offlineReply(thread,text);return}
+  scheduleAsk(thread);
+}
+function offlineReply(thread,text){
+  const pool=thread==='gc'?[['lorna','Ay {name} anak 😊 andito ka na pala 🙏'],['bambi','uy'],['nix','ok'],['jerome','Haha oo nga']]:[[thread,thread==='nix'?'ok':thread==='tonyo'?'ok.':'Hi {name} 😊']];
+  const [from,msg]=pool[Math.floor(Math.random()*pool.length)];
+  showTypingThen(from,thread,P(msg),2500);
+}
+function showTypingThen(from,thread,text,ms,voice){
+  return new Promise(res=>{typingNow[from]=thread;renderTyping();setTimeout(()=>{delete typingNow[from];push(thread,{id:nid(),from,text,t:Date.now(),voice:voice||0});renderTyping();res()},ms)});
+}
+
+function fmtLine(m){const who=m.from==='me'?S.name+' (player)':m.from==='sys'?'[system]':CAST[m.from].name;const d=new Date(m.t);
+  return `[${dayLabel(m.t)} ${fmtTime(m.t)}] ${who}: ${m.voice?'(voice message) ':''}${m.text}`}
+
+function buildPrompt(mode,thread,extra){
+  const o=ORIGINS[S.origin];const d=dayNum();const now=new Date();
+  const castTxt=IDS.map(id=>`### ${CAST[id].name} (id: ${id})\n${CAST[id].sheet}\nOras: ${SCHED[id]}\nTiwala sa player: ${S.rel[id]||0} (${relLabel(S.rel[id]||0)})`).join('\n\n');
+  const seenTxt=`Ang nakita ng iba tungkol sa player sa elevator (LIHIM, ayaw nilang sabihin sa player; pwede lang magpahiwatig nang malabo, at buong detalye lang kung napakataas na ng tiwala at araw 7 pataas): ${o.seen}.`;
+  const gc=S.threads.gc.slice(-45).map(fmtLine).join('\n');
+  const pms=IDS.filter(id=>S.threads[id].length).map(id=>{const n=thread===id?30:4;return `--- PM ni ${CAST[id].name} at ng player (huling ${n}) ---\n`+S.threads[id].slice(-n).map(fmtLine).join('\n')}).join('\n\n');
+  const beat=BEATS[Math.min(d,BEATS.length)-1];
+  let task='';
+  if(mode==='reply'){
+    task = thread==='gc'
+      ? `GAWAIN: Kakasend lang ng player ng mensahe sa GC. Isulat ang susunod na ilang mensahe sa GC (1 hanggang 6). Hindi lahat sasagot; sasagot lang ang gising at may pakialam. Pwedeng mag-usap-usap sila sa isa't isa, hindi lang sa player. Pwedeng may isang mag-PM sa player pagkatapos kung bagay.`
+      : `GAWAIN: Kakasend lang ng player ng mensahe kay ${CAST[thread].name} sa PM. Sumagot si ${CAST[thread].name} (1 hanggang 4 na bubble), sa sarili niyang boses. Mas tapat at personal ang tao sa PM kaysa sa GC. Kung tulog o busy siya ayon sa oras niya, pwedeng maikli, o ilagay sa "later" ang sagot.`;
+  } else if(mode==='catchup'){
+    task = `GAWAIN: Bumalik ang player sa app matapos mawala nang ${extra.gapText}. Isulat ang nangyari sa GC (at mga PM sa player kung bagay) HABANG WALA SIYA, sa "backlog", na may "minutesAgo" (1 hanggang ${extra.gapMin}). Sundin ang oras ng bawat character. Bilang: mga ${extra.count} mensahe sa kabuuan. Ituloy ang mga kwento, may bagong chika, at isulong nang kaunti ang beat ng araw. Huwag puro tungkol sa player. Kung natagalan sumagot ang player sa isang tao, pwedeng may mag-follow up.`;
+  }
+  if(extra&&extra.note)task+=`\nKONTEKSTO: ${extra.note}`;
+  return `Ikaw ang manunulat at nagpapatakbo ng isang interactive na group chat story na "Elevator Survivors". Isusulat mo ang mga mensahe ng mga character. Ang player ay totoong tao na nagta-type bilang ${S.name}.
+
+${BIBLE}
+
+## ANG PLAYER
+Pangalan: ${S.name}. Pinanggalingan: ${o.title}. ${o.belief}
+${seenTxt}
+
+## CAST
+${castTxt}
+
+## KASALUKUYAN
+Ngayon: ${dayLabel(now)} ${fmtTime(now)} (oras ng player). Araw ${d} mula sa insidente.
+Beat ng araw: ${beat}
+Nasa GC si Mang Tonyo: ${S.tonyoIn?'oo':'HINDI (umalis siya; hindi siya pwedeng mag-post sa GC, pero pwede siyang i-PM ng player o siya mismo mag-PM)'}.
+Mga natatandaan (notes): ${S.notes.length?S.notes.map(n=>'- '+n).join('\n'):'wala pa'}
+Mga clue na alam na ng player: ${S.clues.map(c=>c.text).join(' | ')}
+
+## GC (huling mga mensahe)
+${gc||'(wala pa)'}
+
+${pms}
+
+## PARAAN NG PAGSULAT
+- Totoong group chat: maiikling bubble, hiwa-hiwalay, Taglish na natural sa Maynila. Bawat character ay may sariling ortograpiya at boses (sundin ang sheet). Si Nix lowercase. Si Sol walang typo. Si Tonyo halos voice messages (voice: bilang ng segundo, 8 hanggang 70).
+- Walang narration, walang *aksyon*, walang stage directions. Text lang na parang tunay na chat. Pwedeng ilarawan ang larawan o sticker sa [brackets].
+- May friction, asaran, at tunay na personalidad. Hindi lahat sumasang-ayon sa player. Hindi sila therapist. Puwede ang bastos na biro at mura (R-16 na humor, walang tahasang sex).
+- Mabigat minsan, pero ang ulam ay ang mga tao at ang tawanan. Ang misteryo ay pampalasa.
+- Dahan-dahan ang mga reveal at nakadepende sa tiwala. Huwag ilabas ang lahat ng lihim. Huwag kailanman kumpirmahin ang totoo.
+- Huwag ulitin ang mga linya o biro na nasa history na.
+
+${task}
+
+## OUTPUT
+JSON lang, walang ibang text:
+{"now":[{"thread":"gc"|"pm","from":"<id>","text":"...","voice":0}],
+ "backlog":[{"thread":"gc"|"pm","from":"<id>","text":"...","voice":0,"minutesAgo":0}],
+ "later":[{"thread":"gc"|"pm","from":"<id>","text":"...","voice":0,"inMinutes":0}],
+ "rel":{"<id>":0},
+ "notes":["maiikling bagong katotohanan na dapat tandaan, kung meron"],
+ "clue":null,
+ "tonyo":null}
+- "now": mga mensaheng darating ngayon (para sa reply mode). "backlog": para sa catchup mode lang. "later": 0 hanggang 3 mensaheng darating sa susunod na 5 hanggang 180 minuto (follow-up, bagong usapan, isang PM), para buhay ang chat kahit hindi nagta-type ang player.
+- thread "pm" = pribadong mensahe ng "from" sa player.
+- "rel": pagbabago ng tiwala (-3 hanggang +3) ng mga character na naapektuhan ng ginawa ng player ngayon; {} kung wala.
+- "clue": isang pangungusap kung may bagong mahalagang detalye na natuklasan ng player ngayon, kung hindi null. Bihira lang.
+- "tonyo": "leave" o "join" kung umalis o bumalik si Tonyo sa GC ngayon, kung hindi null.
+- ids: lorna, jerome, nix, tonyo, bambi, sol.`;
+}
+
+async function callCast(prompt){
+  const r=await sampleFn.json(prompt,{modelTier:'default',cache:false});
+  return r&&typeof r==='object'?r:{};
+}
+function setNotice(t){const n=$('notice');n.textContent=t||'';n.hidden=!t}
+function noticeUpdate(){}
+
+async function runAsk(){
+  if(busy){clearTimeout(askTimer);askTimer=setTimeout(runAsk,3000);return}
+  const threads=[...pendingAsk];pendingAsk.clear();if(!threads.length)return;
+  busy=true;
+  // rough "someone's typing" while Claude thinks
+  const thinkers=threads.map(t=>t==='gc'?pickLikely():t);
+  threads.forEach((t,i)=>{typingNow[thinkers[i]]=t});renderTyping();
+  try{
+    for(const thread of threads){
+      const note=askNote[thread];delete askNote[thread];
+      const res=await callCast(buildPrompt('reply',thread,{note}));
+      threads.forEach((t,i)=>{if(typingNow[thinkers[i]]===t)delete typingNow[thinkers[i]]});renderTyping();
+      await applyResult(res,'reply');
+    }
+  }catch(e){handleErr(e)}
+  finally{busy=false;Object.keys(typingNow).forEach(k=>delete typingNow[k]);renderTyping();save()}
+}
+function pickLikely(){const on=IDS.filter(id=>isOnline(id)&&(id!=='tonyo'||S.tonyoIn)&&id!=='tonyo');return on[Math.floor(Math.random()*on.length)]||'lorna'}
+function validFrom(f){return IDS.includes(f)}
+async function applyResult(res,mode){
+  const now=Date.now();
+  if(res.rel&&typeof res.rel==='object')for(const[k,v]of Object.entries(res.rel))if(validFrom(k)&&typeof v==='number')S.rel[k]=Math.max(-10,Math.min(30,(S.rel[k]||0)+Math.max(-3,Math.min(3,v))));
+  if(Array.isArray(res.notes))for(const n of res.notes)if(typeof n==='string'&&n.trim()){S.notes.push(n.trim().slice(0,200));}
+  if(S.notes.length>45)S.notes.splice(0,S.notes.length-45);
+  if(typeof res.clue==='string'&&res.clue.trim())addClue(res.clue.trim().slice(0,240));
+  if(res.tonyo==='leave'&&S.tonyoIn){S.tonyoIn=false;sysMsg('gc','Mang Tonyo left the group.')}
+  if(res.tonyo==='join'&&!S.tonyoIn){S.tonyoIn=true;sysMsg('gc','Mang Tonyo joined the group.')}
+  if(Array.isArray(res.later))for(const m of res.later.slice(0,3)){if(!validFrom(m.from)||!m.text)continue;const mins=Math.max(3,Math.min(240,+m.inMinutes||30));S.queue.push({due:now+mins*MIN,thread:m.thread==='pm'?'pm':'gc',from:m.from,text:String(m.text),voice:+m.voice||0})}
+  if(S.queue.length>12)S.queue=S.queue.sort((a,b)=>a.due-b.due).slice(0,12);
+  if(mode==='catchup'&&Array.isArray(res.backlog)){
+    const gapMin=Math.max(1,Math.round((now-(S.lastSeenBefore||now))/MIN));
+    for(const m of res.backlog){if(!validFrom(m.from)||!m.text)continue;
+      const thread=m.thread==='pm'?m.from:'gc';if(thread==='gc'&&m.from==='tonyo'&&!S.tonyoIn)continue;
+      const ago=Math.max(1,Math.min(gapMin,+m.minutesAgo||1));
+      push(thread,{id:nid(),from:m.from,text:String(m.text),t:now-ago*MIN+Math.random()*20e3,voice:+m.voice||0},{quiet:true});}
+    renderThreads();renderChat(true);updateTitle();
+  }
+  if(Array.isArray(res.now)){
+    for(const m of res.now.slice(0,8)){if(!validFrom(m.from)||!m.text)continue;
+      const thread=m.thread==='pm'?m.from:'gc';if(thread==='gc'&&m.from==='tonyo'&&!S.tonyoIn)continue;
+      const txt=String(m.text);const ms=Math.min(4200,700+txt.length*28)+Math.random()*600;
+      await showTypingThen(m.from,thread,txt,ms,+m.voice||0);}
+  }
+  save();
+}
+function handleErr(e){
+  const c=e&&e.code;
+  if(c==='not_granted'||c==='sampling_disabled'||c==='capability_disabled'||c==='capability_removed'||c==='not_declared'){sampleFn=null;setNotice('Hindi pinayagan si Claude sa page na ito, kaya hindi sila makakasagot ngayon. Pwede mo itong buksan ulit para payagan.')}
+  else if(c==='rate_limited'||c==='queue_overflow'){setNotice('Ang dami nilang chika. Teka lang, subukan mo ulit mamaya.');setTimeout(()=>setNotice(''),15000)}
+  else{setNotice('Nawala ang signal sa elevator. Subukan ulit mag-send.');setTimeout(()=>setNotice(''),12000)}
+}
+
+let catching=false;
+async function catchUp(){
+  if(!sampleFn||S.stage!=='chat'||catching)return;
+  const gap=Date.now()-(S.lastCatch||0);if(gap<25*MIN)return;
+  catching=true;S.lastSeenBefore=S.lastCatch;
+  const gapMin=Math.round(gap/MIN);
+  const gapText=gapMin<120?gapMin+' minuto':gapMin<2880?Math.round(gapMin/60)+' oras':Math.round(gapMin/1440)+' araw';
+  const count=Math.max(4,Math.min(28,Math.round(4+gapMin/25)));
+  setNotice('Nagkukwentuhan sila habang wala ka…');
+  try{const res=await callCast(buildPrompt('catchup',null,{gapText,gapMin:Math.min(gapMin,10080),count}));S.lastCatch=Date.now();setNotice('');await applyResult(res,'catchup')}
+  catch(e){handleErr(e)}
+  finally{catching=false;save()}
+}
+
+// ------------------------------------------------- runtime + remote save
+let dbDoc=null,dbBusy=false;
+async function saveRemote(){if(!dbDoc||dbBusy)return;dbBusy=true;try{await dbDoc.set(JSON.parse(JSON.stringify(S)))}catch(e){if(e&&['revoked','invalid_argument','not_granted','quota_exceeded'].includes(e.code))dbDoc=null}finally{dbBusy=false}}
+async function initRuntime(){
+  const cl=window.claude;
+  if(!cl||typeof cl.use!=='function'){if(S.stage==='chat')setNotice('Buksan ang claude.ai link ng page na ito para makausap sila nang totoo.');return}
+  const [smp,usr,db]=await Promise.all([cl.use('sample'),cl.use('user'),cl.use('db')]);
+  sampleFn=smp||null;
+  if(db&&usr){try{const id=await usr.id();if(id){dbDoc=db.doc('data/users/'+id+'/elevator');const snap=await dbDoc.get();
+    if(snap.exists){const o=JSON.parse(JSON.stringify(snap.data()));if(o&&o.v===1&&(o.lastSeen||0)>(S.lastSeen||0)+5000){S=o;IDS.forEach(id=>{S.threads[id]=S.threads[id]||[]});boot()}}
+    await saveRemote()}}catch(e){dbDoc=null}}
+  if(!sampleFn&&S.stage==='chat')setNotice('Buksan ang claude.ai link ng page na ito para makausap sila nang totoo.');
+  if(sampleFn)catchUp();
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){save();saveRemote()}else if(S.stage==='chat'){deliverDue();catchUp();if(!$('app').hidden){renderChat(false);renderThreads()}}});
+addEventListener('pagehide',()=>{save();saveRemote()});
+addEventListener('resize',()=>{if(!$('app').hidden&&!isNarrow())$('app').classList.add('in-thread')});
+
+function boot(){
+  if(S.stage!=='chat'){showIntro();return}
+  worldEvents();deliverDue();showApp();updateTitle();
+}
+boot();
+initRuntime();
+</script>
