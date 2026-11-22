@@ -810,7 +810,8 @@ const novW=k=>1/(1+(NOV.c[k]||0)*1.2);
 function novUse(k){NOV.c[k]=(NOV.c[k]||0)+1}
 function pickNovel(arr,ns=''){if(!arr||!arr.length)return'';novDay();const w=arr.map(x=>[x,novW(ns+x)*(saidRecent.includes(x)?.03:1)+.0001]);const c=wpick(w);novUse(ns+c);return c}
 function pickFresh(arr){return pickNovel(arr)}
-function say(text,owner='human'){if(catchingUp||!text)return;saidRecent.push(text);if(saidRecent.length>12)saidRecent.shift();bubbleEl.textContent=text;bubbleEl.classList.remove('fade');bubbleT=5.5;bubbleOwner=owner;if(owner==='human'){thoughtText='“'+text+'”'}}
+function say(text,owner='human'){if(catchingUp||!text)return;saidRecent.push(text);if(saidRecent.length>12)saidRecent.shift();bubbleEl.textContent=text;bubbleEl.classList.remove('fade');bubbleT=5.5;bubbleOwner=owner;if(owner==='human'){thoughtText='“'+text+'”'}
+ try{const VP={human:520,kat:610,paolo:300,jowa:250,mama:430,rudy:210,tech:280};const w=owner==='guest'?V.who:owner==='jowa'?'jowa':'human';if(!/^\*/.test(text))babble(VP[w]||400,Math.min(9,Math.ceil(text.length/7)),false)}catch(e){}}
 
 // ---------- spots (480x270 top-down 3/4 room; y is where the feet touch the floor) ----------
 const BACKY=104,FRONTY=216,CORR=190;
@@ -1442,7 +1443,7 @@ function planPlayDog(){
 function planCall(){
  const who=pick(['bestie','nanay niya','ex (bakit?!)','kapatid','group chat (video call)']);
  const lines=who==='nanay niya'?['opo ma, kumakain ako','hindi pa ma, wala pa kong jowa','opo, nagdadasal ako... minsan']:who.startsWith('ex')?['hello? ...bakit ka napatawag','okay lang ako. masaya ako. (hindi.)']:['ANO?! sila na ulit?!','teh, CHIKA MO NA','hindi ako nagulat. medyo nagulat.','grabe siya. grabe talaga.'];
- setPlan('Kausap sa phone si '+who,[go('sofa'),act({dur:rnd(150,330),pose:'sit',x:336,y:176,back:true,prop:'phoneEar',label:'Kausap sa phone si '+who,icon:'bang',gain:{social:45,fun:12},say:lines,lines,
+ setPlan('Kausap sa phone si '+who,[go('sofa'),act({dur:rnd(150,330),pose:'sit',x:336,y:176,back:true,prop:'phoneEar',label:'Kausap sa phone si '+who,icon:'bang',gain:{social:45,fun:12},say:lines,lines,tick:(dt,s)=>{s.bb=(s.bb??3)-dt;if(s.bb<=0){s.bb=rnd(3,7);babble(rnd(300,600),ri(3,8),true)}},
   end:()=>log(who.startsWith('ex')?'Tumawag yung ex. Hindi natin pag-uusapan.':`Nakipag-chismisan sa ${who}. ${pick(['May bagong tea.','Isang oras. Isang oras talaga.','Puro "hala" at "talaga?" lang yung naririnig.'])}`)})]);
 }
 function planShower(){
@@ -1509,7 +1510,7 @@ function planMeeting(p,interrupted){
   act({dur:6,label:'Nagpapalit ng blouse (pang-itaas lang)',start:()=>{H.dress=true},say:interrupted?['AY MAY MEETING PALA AKO','HALA 2 MINUTES NA LANG','teka teka teka, blouse!']:['blouse sa taas, pajama sa baba. professional.','okay. game face.']}),
   go('desk'),
   act({dur:rnd(300,560),pose:'sit',back:true,x:296,y:104,label:`Zoom meeting kasama si ${C.name}`,icon:'bang',gain:{social:8,fun:-10,energy:-4},
-   start:()=>{screen='zoom'},say:MEETING_LINES,lines:MEETING_LINES,
+   start:()=>{screen='zoom'},tick:(dt,s)=>{s.bb=(s.bb??2)-dt;if(s.bb<=0){s.bb=rnd(2.5,6);babble(rnd(170,430),ri(4,9),true)}},say:MEETING_LINES,lines:MEETING_LINES,
    end:()=>{screen=null;p.meetingAt=null;p.kickoff=false;
     if(!kick&&p.stage==='working'&&p.progress>40)p.progress=clamp(p.progress-rnd(5,15),20,100);
     stat('meetings');log(kick?`Kickoff meeting with ${C.name} para sa ${p.kind}. "${pick(C.brief)}" daw.`:`Revision meeting with ${C.name}. Mas maraming notes kaysa sa inaasahan.`);highlight(`nag-meeting kami ni ${C.name}`)}}),
@@ -3428,6 +3429,8 @@ function epiano(m,t,dur,vel,bus){const ctx=SND.ctx,f=mtof(m),g=ctx.createGain();
  const a=ctx.createOscillator();a.type='sine';a.frequency.value=f;const b=ctx.createOscillator();b.type='triangle';b.frequency.value=f*2;b.detune.value=5;const bg=ctx.createGain();bg.gain.value=.22;
  a.connect(g);b.connect(bg);bg.connect(g);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vel,t+.012);g.gain.exponentialRampToValueAtTime(vel*.35,t+.45);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
  a.start(t);b.start(t);a.stop(t+dur+.05);b.stop(t+dur+.05)}
+function babble(base,n,muffled){if(!SND.on||!SND.ctx||catchingUp)return;const t0=SND.ctx.currentTime+.02,b=SND.N.sfx;
+ for(let i=0;i<n;i++){const f=base*rnd(.85,1.22),gap=rnd(.07,.1);tone('triangle',f,f*rnd(.88,1.12),t0+i*gap,.055,muffled?.06:.075,b,muffled?['lowpass',800,1]:['lowpass',2800,1]);if(muffled&&i%3===0)noiseHit(t0+i*gap,.04,.015,b,['bandpass',1200,2])}}
 const SFX={
  knock(){const t=SND.ctx.currentTime,b=SND.N.sfx;for(let i=0;i<3;i++){noiseHit(t+i*.16,.05,.55,b,['lowpass',500,1]);tone('sine',150,90,t+i*.16,.08,.4,b)}},
  hammer(){const t=SND.ctx.currentTime,b=SND.N.sfx;for(let i=0;i<2;i++){noiseHit(t+i*.28,.04,.4,b,['bandpass',1800,3]);tone('square',220,140,t+i*.28,.05,.12,b,['lowpass',1200,1])}},
