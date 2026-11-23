@@ -74,7 +74,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .th.unread .pv{color:var(--ink)}
 .av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:17px;color:#11151b;flex:none;position:relative}
 .av.sm{width:30px;height:30px;font-size:13px}
-.av svg{width:100%;height:100%;display:block;border-radius:50%}
+.av svg,.av img,.call-av img{width:100%;height:100%;display:block;border-radius:50%;object-fit:cover}
 .builder{display:grid;grid-template-columns:140px minmax(0,1fr);gap:20px;align-items:start}
 @media (max-width:520px){.builder{grid-template-columns:minmax(0,1fr)}.builder .pv-big{justify-self:center}}
 .pv-big{width:140px;height:140px;border-radius:50%;box-shadow:0 0 0 1px var(--line),0 14px 30px -14px rgba(0,0,0,.8)}
@@ -188,16 +188,16 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 
 <div id="app" class="app" hidden>
   <aside class="side">
-    <div class="side-top"><h2>Mga Chat</h2><div class="floor" id="floor" title="Elevator 2">▲ 1</div></div>
+    <div class="side-top"><h2>Chats</h2><div class="floor" id="floor" title="Elevator 2">▲ 1</div></div>
     <div class="threads" id="threads"></div>
     <div class="side-foot">
-      <button id="btnClues" type="button">Mga Napansin</button>
+      <button id="btnClues" type="button">Clues</button>
       <button id="btnSettings" type="button">Settings</button>
     </div>
   </aside>
   <main class="main">
     <div class="chat-head">
-      <button class="back" id="back" type="button" aria-label="Bumalik sa mga chat">‹</button>
+      <button class="back" id="back" type="button" aria-label="Back to chats">‹</button>
       <div id="headAv"></div>
       <div class="ti"><b id="headTitle"></b><span id="headSub"></span></div>
       <button class="icon-btn" id="btnMembers" type="button">Members</button>
@@ -210,7 +210,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 </div>
 
 <div id="drawer" class="drawer" hidden></div>
-<div id="call" class="call" hidden role="dialog" aria-label="Tawag"></div>
+<div id="call" class="call" hidden role="dialog" aria-label="Call"></div>
 
 <script>
 'use strict';
@@ -264,9 +264,9 @@ const SKIN=['#f6d7b8','#e8b98f','#d09a6c','#a86f47','#7a4a2c'];
 const HAIRC=['#1c1a1a','#3b2a22','#6b4630','#8a3b2a','#a8a29e','#c8a56b','#d27aa0','#5b6fd6'];
 const TOPC=['#2c6e63','#e7e5e4','#1f2937','#c2410c','#7c3aed','#be185d','#0369a1','#ca8a04'];
 const BGC=['#9fd8b0','#86b6ff','#f2a5c0','#ffd36b','#b4b0d6','#ffb796','#7dd3c7','#3b4252'];
-const HAIRS={short:'Maikli',slick:'Slick',fringe:'May bangs',curly:'Kulot',long:'Mahaba',wavy:'Wavy',bob:'Bob',bun:'Bun',buzz:'Buzz cut'};
-const ACCS={glasses:'Salamin',cap:'Cap',helmet:'Helmet',hood:'Hoodie',earrings:'Hikaw',mole:'Nunal',blush:'Blush'};
-const FACES={smile:'Nakangiti',smirk:'Smirk',flat:'Seryoso',tired:'Puyat'};
+const HAIRS={short:'Short',slick:'Slick',fringe:'Bangs',curly:'Curly',long:'Long',wavy:'Wavy',bob:'Bob',bun:'Bun',buzz:'Buzz cut'};
+const ACCS={glasses:'Glasses',cap:'Cap',helmet:'Helmet',hood:'Hoodie',earrings:'Earrings',mole:'Beauty mark',blush:'Blush'};
+const FACES={smile:'Smile',smirk:'Smirk',flat:'Serious',tired:'Sleepless'};
 const AV={
   lorna:{skin:SKIN[1],hair:'curly',hairC:'#3b2a22',top:'#be185d',collar:'floral',bg:'#f2a5c0',acc:['glasses','earrings','blush'],face:'smile'},
   jerome:{skin:SKIN[2],hair:'slick',hairC:'#1c1a1a',top:'#1d4ed8',collar:'polo',bg:'#86b6ff',acc:[],face:'smirk'},
@@ -276,6 +276,7 @@ const AV={
   sol:{skin:SKIN[0],hair:'long',hairC:'#1c1a1a',top:'#f5f5f4',collar:'vneck',bg:'#ffb796',acc:['mole'],face:'smile'}
 };
 const DEF_ME={skin:SKIN[1],hair:'bob',hairC:'#1c1a1a',top:'#2c6e63',bg:'#9fd8b0',acc:[],face:'smile'};
+function portrait(id){return `<img src="portraits/${id}.jpg" alt="" loading="lazy" onerror="this.replaceWith(document.createRange().createContextualFragment(avatarSVG(AV['${id}'])))">`}
 function avatarSVG(a){
   const sk=a.skin,hc=a.hairC,acc=new Set(a.acc||[]),dk='#1b1d22',top=a.top;
   const browC=hc==='#a8a29e'?'#6f6a64':hc;
@@ -330,11 +331,11 @@ function builderHTML(a){
   const ch=(k,obj)=>Object.entries(obj).map(([v,l])=>`<button type="button" class="chipb${a[k]===v?' on':''}" data-k="${k}" data-v="${v}">${l}</button>`).join('');
   const ac=Object.entries(ACCS).map(([v,l])=>`<button type="button" class="chipb${(a.acc||[]).includes(v)?' on':''}" data-acc="${v}">${l}</button>`).join('');
   return `<div class="builder"><div class="pv-big">${avatarSVG(a)}</div><div class="opts">
-    <div class="og"><span>Balat</span><div>${sw('skin',SKIN)}</div></div>
-    <div class="og"><span>Buhok</span><div>${ch('hair',HAIRS)}</div></div>
-    <div class="og"><span>Kulay ng buhok</span><div>${sw('hairC',HAIRC)}</div></div>
-    <div class="og"><span>Mukha</span><div>${ch('face',FACES)}</div></div>
-    <div class="og"><span>Damit</span><div>${sw('top',TOPC)}</div></div>
+    <div class="og"><span>Skin</span><div>${sw('skin',SKIN)}</div></div>
+    <div class="og"><span>Hair</span><div>${ch('hair',HAIRS)}</div></div>
+    <div class="og"><span>Hair color</span><div>${sw('hairC',HAIRC)}</div></div>
+    <div class="og"><span>Expression</span><div>${ch('face',FACES)}</div></div>
+    <div class="og"><span>Top</span><div>${sw('top',TOPC)}</div></div>
     <div class="og"><span>Background</span><div>${sw('bg',BGC)}</div></div>
     <div class="og"><span>Extras</span><div>${ac}</div></div></div></div>`;
 }
@@ -347,30 +348,30 @@ function mountBuilder(root,a){
 }
 
 const ORIGINS = {
-  dental:{title:'Ang Dental Assistant',meta:'26 · Dr. Ramos Dental, 3F',
-    blurb:'Nag-overtime ka sa clinic. Pero sa 14th floor ka sumakay ng elevator, at hindi mo alam kung bakit.',
+  dental:{title:'The Dental Assistant',meta:'26 · Dr. Ramos Dental, 3F',
+    blurb:'You worked late at the clinic. But you got into the elevator on the 14th floor, and you have no idea why.',
     belief:'Dental assistant sa Dr. Ramos Dental (3F). Nag-overtime sa inventory. Ang hindi niya maipaliwanag: sumakay siya sa elevator sa 14th floor.',
-    clue:'Sumakay ka sa Elevator 2 sa 14th floor. Wala kang kahit anong dahilan para pumunta roon.',
+    clue:'You boarded Elevator 2 on the 14th floor. You had no reason at all to be up there.',
     seen:'nakatayo ang player sa isang madilim na hallway na may mga pintong may numerong 13XX, kumakatok, tinatawag ang pangalang "Paolo"',
-    pro:['Dental assistant ka sa Dr. Ramos Dental, 3rd floor ng Galvez Tower.','Nag-overtime ka sa inventory. Pagod, gutom, gusto mo nang umuwi.','Pinindot mo ang down button.','Bumukas ang pinto. Ang nakasulat sa panel sa loob: 14.','Hindi mo maalala kung paano ka napunta sa 14th floor.']},
-  applicant:{title:'Ang Applicant',meta:'23 · final interview, 7F',
-    blurb:'May final interview ka sa isang BPO nang 10 PM. Kinabukasan, sinabi ng HR na wala kang naka-schedule.',
+    pro:['You\'re a dental assistant at Dr. Ramos Dental, on the 3rd floor of Galvez Tower.','You stayed late doing inventory. Tired, hungry, ready to go home.','You pressed the down button.','The doors opened. The panel inside read: 14.','You can\'t remember how you got to the 14th floor.']},
+  applicant:{title:'The Applicant',meta:'23 · final interview, 7F',
+    blurb:'You had a final interview at a BPO at 10 PM. The next day, HR said you were never on the schedule.',
     belief:'Fresh grad, may final interview daw sa Northgate Solutions (7F) nang 10 PM para sa night shift account. Natapos ng 11:40. Hindi niya maalala ang mukha ng interviewer.',
-    clue:'Ayon sa email mo, ang interview mo ay sa "Room 1301". Walang 13th floor ang Galvez Tower.',
+    clue:'Your interview email says "Room 1301". Galvez Tower has no 13th floor.',
     seen:'nakaupo ang player sa isang interview room na walang bintana, sa harap ng isang batang naka-uniporme na nagtatanong: "kailan mo ako susunduin?"',
-    pro:['Final interview mo sa Northgate Solutions. 10:00 PM, sabi ng email. Night shift account.','Natapos ka nang 11:40. Mabait ang interviewer. Ang dami niyang tanong tungkol sa pamilya mo.','Hindi mo maalala ang mukha niya.','Naka-blazer ka pa nang pumasok ka sa Elevator 2.']},
-  kapatid:{title:'Ang Kapatid',meta:'28 · unit 1412',
-    blurb:'Dinalhan mo ng ulam ang kapatid mo sa condo. Tatlong buwan na pala siyang hindi nakatira doon.',
+    pro:['Final interview at Northgate Solutions. 10:00 PM, the email said. Night shift account.','You finished at 11:40. The interviewer was kind. They asked a lot of questions about your family.','You can\'t remember their face.','You were still in your blazer when you stepped into Elevator 2.']},
+  kapatid:{title:'The Sibling',meta:'28 · unit 1412',
+    blurb:'You brought food to your sibling\'s condo. They moved out three months ago.',
     belief:'Dinalhan ng sinigang ang kapatid niyang si Jo sa unit 1412. Walang sumagot. Iniwan ang tupperware sa pinto. Hindi pa niya alam na tatlong buwan nang lumipat si Jo.',
-    clue:'Kinabukasan, sinabi ni Jo sa text: "ha? tatlong buwan na akong wala sa 1412. kanino mo iniwan yung sinigang?"',
+    clue:'The next morning, Jo texted: "ha? tatlong buwan na akong wala sa 1412. kanino mo iniwan yung sinigang?"',
     seen:'yakap-yakap ng player ang isang batang lalaki na naka-school uniform, parehong umiiyak, sa loob ng mismong elevator',
-    pro:['Dinalhan mo ng sinigang ang kapatid mong si Jo sa unit 1412.','Kumatok ka nang tatlong beses. Walang sumagot. Bukas ang ilaw sa ilalim ng pinto.','Iniwan mo ang tupperware sa doorknob.','Sa elevator mo lang naalala: ilang linggo na kayong hindi nag-uusap.']},
-  rider:{title:'Ang Delivery Rider',meta:'25 · pick-up sa 9F',
-    blurb:'Pick-up sa sarado nang spa sa 9th floor. Ang drop-off address: "Galvez Tower, Elevator 2."',
+    pro:['You brought sinigang to your sibling Jo in unit 1412.','You knocked three times. No answer. The light under the door was on.','You left the tupperware hanging on the doorknob.','Only in the elevator did you remember: you two haven\'t really talked in weeks.']},
+  rider:{title:'The Delivery Rider',meta:'25 · pick-up on 9F',
+    blurb:'A pick-up at a spa on the 9th floor that was already closed. The drop-off address: "Galvez Tower, Elevator 2."',
     belief:'Delivery rider. Order: dalawang milk tea, pick-up sa Serenity Wellness (9F), para kay "Paolo". Drop-off: "Galvez Tower, Elevator 2". Sarado ang spa pero nandoon ang milk tea, pawis pa ang baso.',
-    clue:'Ang order mo ay para kay "Paolo". Drop-off: Galvez Tower, Elevator 2. Wala nang record ang order sa app kinabukasan.',
+    clue:'Your order was for "Paolo". Drop-off: Galvez Tower, Elevator 2. By morning, the order was gone from the app.',
     seen:'nakaabot ang player ng milk tea sa isang batang lalaki na naka-uniporme, at ngumiti ang bata at sinabing "salamat, ate/kuya, ang tagal mo"',
-    pro:['Isang order: dalawang milk tea. Pick-up sa Serenity Wellness, 9th floor.','Para kay "Paolo." Drop-off address: Galvez Tower, Elevator 2.','Akala mo typo.','Sarado na ang spa. Patay ang ilaw. Pero nasa counter ang dalawang milk tea, pawis pa ang baso.']}
+    pro:['One order: two milk teas. Pick-up at Serenity Wellness, 9th floor.','For "Paolo." Drop-off address: Galvez Tower, Elevator 2.','You figured it was a typo.','The spa was closed. Lights off. But the two milk teas were on the counter, still sweating.']}
 };
 
 const BIBLE = `ANG TOTOO (lihim, hindi kailanman sasabihin nang diretso):
@@ -414,19 +415,19 @@ function showIntro(){
     I.innerHTML=`<div class="intro-inner">
       <div class="led-panel"><span class="arrow">▼</span><span>11:47</span></div>
       <h1>Elevator Survivors</h1>
-      <p>Pitong estranghero ang sumakay sa Elevator 2 ng Galvez Tower nang 11:47 PM. Lumabas kayo nang 2:47 AM. Walang brownout. Walang record. Walang nakapansin na nawala kayo.</p>
-      <div class="field"><label for="nm">Ano ang pangalan mo?</label><input id="nm" maxlength="20" autocomplete="off" placeholder="Pangalan mo sa GC" value="${esc(S.name)}"></div>
-      <button class="btn" id="go" type="button" disabled>Tuloy</button></div>`;
+      <p>Seven strangers stepped into Elevator 2 of Galvez Tower at 11:47 PM. You stepped out at 2:47 AM. There was no brownout. There is no record. Nobody noticed you were gone.</p>
+      <div class="field"><label for="nm">What's your name?</label><input id="nm" maxlength="20" autocomplete="off" placeholder="Your name in the group chat" value="${esc(S.name)}"></div>
+      <button class="btn" id="go" type="button" disabled>Continue</button></div>`;
     const nm=$('nm'),go=$('go');const upd=()=>go.disabled=!nm.value.trim();nm.oninput=upd;upd();nm.focus();
     nm.onkeydown=e=>{if(e.key==='Enter'&&nm.value.trim())go.click()};
     go.onclick=()=>{S.name=nm.value.trim().slice(0,20);S.stage='origin';save();showIntro()};
   } else if(S.stage==='origin'){
     I.innerHTML=`<div class="intro-inner">
       <div class="led-panel"><span class="arrow">▼</span><span>?</span></div>
-      <h1>Sino ka nang gabing iyon?</h1>
-      <p>Alam mo ang buhay mo. Ang hindi mo alam ay kung ano ang nakita ng iba tungkol sa'yo sa loob ng elevator.</p>
+      <h1>Who were you that night?</h1>
+      <p>You know your own life. What you don't know is what the others saw about you inside that elevator.</p>
       <div class="origins">${Object.entries(ORIGINS).map(([k,o])=>`<button class="origin" type="button" data-k="${k}"><span class="meta">${esc(o.meta)}</span><b>${esc(o.title)}</b><span>${esc(o.blurb)}</span></button>`).join('')}</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="go" type="button" disabled>Tuloy</button><button class="btn ghost" id="bk" type="button">Palitan ang pangalan</button></div></div>`;
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="go" type="button" disabled>Continue</button><button class="btn ghost" id="bk" type="button">Change name</button></div></div>`;
     let pick=S.origin;
     I.querySelectorAll('.origin').forEach(b=>{if(b.dataset.k===pick)b.classList.add('on');b.onclick=()=>{pick=b.dataset.k;I.querySelectorAll('.origin').forEach(x=>x.classList.toggle('on',x===b));$('go').disabled=false}});
     $('go').disabled=!pick;
@@ -436,10 +437,10 @@ function showIntro(){
     if(!S.avatar)S.avatar=JSON.parse(JSON.stringify(DEF_ME));
     I.innerHTML=`<div class="intro-inner">
       <div class="led-panel"><span class="arrow">▼</span><span>L</span></div>
-      <h1>Ano'ng itsura mo?</h1>
-      <p>Ito ang makikita nila sa GC. Mapapalitan mo pa sa Settings.</p>
+      <h1>What do you look like?</h1>
+      <p>This is what they'll see in the group chat. You can change it later in Settings.</p>
       <div id="bld"></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="go" type="button">Pumasok sa elevator</button><button class="btn ghost" id="bk" type="button">Bumalik</button></div></div>`;
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="go" type="button">Step into the elevator</button><button class="btn ghost" id="bk" type="button">Back</button></div></div>`;
     mountBuilder($('bld'),S.avatar);
     $('go').onclick=()=>{S.stage='prologue';save();showIntro()};
     $('bk').onclick=()=>{S.stage='origin';save();showIntro()};
@@ -452,23 +453,23 @@ function prologueLines(){
   const o=ORIGINS[S.origin];
   return [...o.pro.map(t=>({t})),
     {t:'11:47 PM',c:'time'},
-    {t:'Pito kayo sa loob ng Elevator 2, kasama ka.'},
-    {t:'Isang tita na naka-floral blouse, may hawak na rosaryo. Isang lalaking naka-blue polo na amoy-pabango kahit sa dulo ng araw. Isang payat na batang naka-hoodie. Si Manong guard, may flashlight. Isang pogi na naka-cap at earphones, nakasandal sa sulok.'},
-    {t:'At isang babaeng naka-puti na ngumiti sa\'yo, parang kilala ka niya.'},
-    {t:'Namatay ang ilaw.'},
-    {t:'May narinig kang "ding." Pero walang gumagalaw.',c:'quiet'},
-    {t:'Lumamig. Hindi ganung klase ng lamig na galing sa aircon.'},
-    {t:'Sa dilim, may nagbanggit ng pangalan mo. Hindi mo kilala ang boses.'},
-    {t:'May nakita ka sa sulok. Isang batang naka-school uniform, nakaupo, nakatingin sa\'yo.'},
-    {t:'Walo na kayo? Hindi. Pito lang kayo.',c:'quiet'},
+    {t:'Seven of you in Elevator 2, counting yourself.'},
+    {t:'A tita in a floral blouse, rosary in hand. A man in a blue polo who still smelled of cologne at the end of the day. A skinny kid in a hoodie. Manong guard with his flashlight. A good-looking guy in a cap and earphones, leaning in the corner.'},
+    {t:'And a woman in white who smiled at you like she knew you.'},
+    {t:'The lights went out.'},
+    {t:'You heard a "ding." Nothing moved.',c:'quiet'},
+    {t:'It got cold. Not the kind of cold that comes from aircon.'},
+    {t:'In the dark, someone said your name. You didn\'t know the voice.'},
+    {t:'There was someone in the corner. A boy in a school uniform, sitting, looking at you.'},
+    {t:'Eight of you? No. There were only seven.',c:'quiet'},
     {t:'2:47 AM',c:'time'},
-    {t:'Bumukas ang pinto sa lobby. Walang technician. Walang nag-aabang. Normal ang ilaw.'},
-    {t:'Walang tumingin sa\'yo nang diretso.'},
-    {t:'Hindi mo maalala ang tatlong oras na iyon.',c:'quiet'}];
+    {t:'The doors opened onto the lobby. No technician. Nobody waiting. The lights were normal.'},
+    {t:'Nobody would look you in the eye.'},
+    {t:'You can\'t remember those three hours.',c:'quiet'}];
 }
 function playPrologue(){
   const I=$('intro');const L=prologueLines();let i=0;
-  I.innerHTML=`<div class="intro-inner"><div class="prologue" id="pro" role="button" tabindex="0" aria-label="Ituloy"></div><div class="tap" id="tap">Pindutin para ituloy</div><button class="btn ghost" id="skip" type="button">Laktawan</button></div>`;
+  I.innerHTML=`<div class="intro-inner"><div class="prologue" id="pro" role="button" tabindex="0" aria-label="Continue"></div><div class="tap" id="tap">Tap to continue</div><button class="btn ghost" id="skip" type="button">Skip</button></div>`;
   const pro=$('pro');
   const step=()=>{
     if(i>=L.length){finishPrologue();return}
@@ -480,9 +481,9 @@ function playPrologue(){
 }
 function finishPrologue(){
   const I=$('intro');
-  I.innerHTML=`<div class="intro-inner"><p class="pline quiet">Kinabukasan.</p>
-    <div class="notif"><div class="ic">ES</div><div><b>Tita Lorna added you to "Elevator Survivors 🙏"</b><span>37 bagong mensahe</span></div></div>
-    <button class="btn" id="open" type="button">Buksan</button></div>`;
+  I.innerHTML=`<div class="intro-inner"><p class="pline quiet">The next morning.</p>
+    <div class="notif"><div class="ic">ES</div><div><b>Tita Lorna added you to "Elevator Survivors 🙏"</b><span>37 new messages</span></div></div>
+    <button class="btn" id="open" type="button">Open</button></div>`;
   $('open').onclick=startChat;$('open').focus();
 }
 
@@ -564,8 +565,8 @@ function opening(){
 
 function startChat(){
   S.stage='chat';S.startedAt=Date.now();S.lastCatch=Date.now();opening();
-  addClue(ORIGINS[S.origin].clue,'Simula');
-  addClue('Pumasok kayo nang 11:47 PM. Lumabas kayo nang 2:47 AM. Walang brownout ayon sa Meralco.','Simula');
+  addClue(ORIGINS[S.origin].clue,'The beginning');
+  addClue('You went in at 11:47 PM and came out at 2:47 AM. According to Meralco, there was no brownout.','The beginning');
   S.active='gc';save();showApp();
 }
 
@@ -579,20 +580,20 @@ function showApp(){
 function threadTitle(t){return t==='gc'?'Elevator Survivors 🙏':CAST[t].name}
 function avHTML(t,sm){
   if(t==='gc')return `<div class="av gc${sm?' sm':''}">ES</div>`;
-  const c=CAST[t];return `<div class="av${sm?' sm':''}" title="${esc(c.name)}">${avatarSVG(AV[t])}${!sm&&isOnline(t)?'<span class="dot"></span>':''}</div>`;
+  const c=CAST[t];return `<div class="av${sm?' sm':''}" title="${esc(c.name)}">${portrait(t)}${!sm&&isOnline(t)?'<span class="dot"></span>':''}</div>`;
 }
 function isOnline(id){
   const h=new Date().getHours();
   return ({lorna:h>=5&&h<22,jerome:h>=15||h<7,nix:(h>=10&&h<14)||h>=21||h<5,tonyo:h>=6&&h<18&&new Date().getMinutes()<20,bambi:h>=11||h<4,sol:true})[id];
 }
 function lastMsg(t){const a=S.threads[t];return a.length?a[a.length-1]:null}
-function preview(m){if(!m)return 'Wala pang mensahe';if(m.from==='sys')return m.text;const who=m.from==='me'?'Ikaw: ':(S.active!==m.from&&CAST[m.from]&&m.thread!=='pm'?CAST[m.from].short+': ':'');return who+(m.voice?'🎤 Voice message':m.text)}
+function preview(m){if(!m)return 'No messages yet';if(m.from==='sys')return m.text;const who=m.from==='me'?'You: ':(S.active!==m.from&&CAST[m.from]&&m.thread!=='pm'?CAST[m.from].short+': ':'');return who+(m.voice?'🎤 Voice message':m.text)}
 function renderThreads(){
   const order=['gc',...IDS.filter(id=>S.threads[id].length)].sort((a,b)=>((lastMsg(b)||{}).t||0)-((lastMsg(a)||{}).t||0));
   const rest=IDS.filter(id=>!S.threads[id].length);
   $('threads').innerHTML=[...order,...rest].map(t=>{
     const m=lastMsg(t),u=S.unread[t]||0;
-    const pv=t==='gc'?preview(m):(m?(m.from==='me'?'Ikaw: ':'')+(m.voice?'🎤 Voice message':m.text):'Mag-message nang pribado');
+    const pv=t==='gc'?preview(m):(m?(m.from==='me'?'You: ':'')+(m.voice?'🎤 Voice message':m.text):'Send a private message');
     return `<button class="th${S.active===t&&!isNarrow()?' on':''}${u?' unread':''}" type="button" data-t="${t}">${avHTML(t)}<div style="min-width:0"><div class="nm">${esc(threadTitle(t))}</div><div class="pv">${esc(pv)}</div></div><div class="rt">${m?fmtShort(m.t):''}${u?`<span class="badge">${u>99?'99+':u}</span>`:''}</div></button>`;
   }).join('');
   $('threads').querySelectorAll('.th').forEach(b=>b.onclick=()=>openThread(b.dataset.t));
@@ -606,8 +607,8 @@ $('back').onclick=()=>{$('app').classList.remove('in-thread');renderThreads()};
 
 function fmtTime(t){return new Date(t).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'})}
 function dayLabel(t){const d=new Date(t),n=new Date();const a=new Date(d.getFullYear(),d.getMonth(),d.getDate()),b=new Date(n.getFullYear(),n.getMonth(),n.getDate());const diff=Math.round((b-a)/DAY);
-  if(diff===0)return 'Ngayon';if(diff===1)return 'Kahapon';return ['Linggo','Lunes','Martes','Miyerkules','Huwebes','Biyernes','Sabado'][d.getDay()]+', '+d.toLocaleDateString('en-PH',{month:'short',day:'numeric'})}
-function fmtShort(t){const l=dayLabel(t);return l==='Ngayon'?fmtTime(t):l==='Kahapon'?'Kahapon':l.split(',')[0]}
+  if(diff===0)return 'Today';if(diff===1)return 'Yesterday';return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()]+', '+d.toLocaleDateString('en-PH',{month:'short',day:'numeric'})}
+function fmtShort(t){const l=dayLabel(t);return l==='Today'?fmtTime(t):l==='Yesterday'?'Yesterday':l.split(',')[0]}
 
 function renderChat(scroll){
   const t=S.active;const box=$('msgs');
@@ -618,7 +619,7 @@ function renderChat(scroll){
   let html='',lastDay='',lastFrom='',shownNew=false;
   for(const m of S.threads[t]){
     const dl=dayLabel(m.t);if(dl!==lastDay){html+=`<div class="day">${dl}</div>`;lastDay=dl;lastFrom=''}
-    if(nf&&!shownNew&&m.t>=nf&&m.from!=='me'){html+=`<div class="newline">Bagong mensahe</div>`;shownNew=true;lastFrom=''}
+    if(nf&&!shownNew&&m.t>=nf&&m.from!=='me'){html+=`<div class="newline">New messages</div>`;shownNew=true;lastFrom=''}
     if(m.from==='sys'){html+=`<div class="sys">${esc(m.text)}</div>`;lastFrom='';continue}
     const me=m.from==='me',c=CAST[m.from];
     const first=m.from!==lastFrom;lastFrom=m.from;
@@ -626,8 +627,8 @@ function renderChat(scroll){
     html+=`<div class="row${me?' me':''}">${me?'':`<div class="avs">${first?avHTML(m.from,true):''}</div>`}<div class="stack">${!me&&first&&t==='gc'?`<div class="who" style="color:${c.color}">${esc(c.name)}</div>`:''}<div class="b" tabindex="-1">${body}<span class="tm">${fmtTime(m.t)}</span></div></div></div>`;
   }
   if(t!=='gc'&&Object.keys(CALLS).some(k=>CALLS[k].from===t&&(S.calls||{})[k]&&S.calls[k].state==='missed'))
-    html+=`<div class="callback">Tumawag si ${esc(CAST[t].short)} kanina.<button type="button" id="cbBtn">Tawagan pabalik</button></div>`;
-  if(!S.threads[t].length)html=`<div class="sys" style="margin-top:30vh">Pribadong usapan ninyo ni ${esc(CAST[t].name)}. Walang ibang makakabasa nito.</div>`;
+    html+=`<div class="callback">${esc(CAST[t].short)} tried to call you.<button type="button" id="cbBtn">Call back</button></div>`;
+  if(!S.threads[t].length)html=`<div class="sys" style="margin-top:30vh">This is your private chat with ${esc(CAST[t].name)}. Nobody else can read it.</div>`;
   box.innerHTML=html;
   const cb=$('cbBtn');if(cb)cb.onclick=()=>callBack(t);
   box.querySelectorAll('.voice').forEach(v=>{v.onclick=()=>playVoice(v);v.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();playVoice(v)}}});
@@ -639,11 +640,11 @@ function renderChat(scroll){
 function voiceHTML(m){
   const n=26,seed=m.id.length+m.text.length;let bars='';
   for(let i=0;i<n;i++){const h=5+Math.abs(Math.sin(seed*1.7+i*1.3))*15;bars+=`<i style="height:${h.toFixed(0)}px"></i>`}
-  const d=m.voice|0;return `<div class="voice${speakingId===m.id?' playing':''}" role="button" tabindex="0" data-id="${m.id}" data-from="${m.from}" aria-label="Voice message ni ${esc(CAST[m.from].short)}. Pindutin para pakinggan."><div class="wave"><span class="play" style="background:${CAST[m.from].color}">${speakingId===m.id?'■':'▶'}</span><span class="bars">${bars}</span><span class="dur">${Math.floor(d/60)}:${String(d%60).padStart(2,'0')}</span></div><div class="tx" hidden>"${esc(m.text)}"</div></div>`;
+  const d=m.voice|0;return `<div class="voice${speakingId===m.id?' playing':''}" role="button" tabindex="0" data-id="${m.id}" data-from="${m.from}" aria-label="Voice message from ${esc(CAST[m.from].short)}. Tap to play."><div class="wave"><span class="play" style="background:${CAST[m.from].color}">${speakingId===m.id?'■':'▶'}</span><span class="bars">${bars}</span><span class="dur">${Math.floor(d/60)}:${String(d%60).padStart(2,'0')}</span></div><div class="tx" hidden>"${esc(m.text)}"</div></div>`;
 }
 function renderComposer(){
   const w=$('composerWrap');const t=S.active;
-  w.innerHTML=`<div class="composer"><textarea id="box" rows="1" placeholder="${t==='gc'?'Mag-message sa GC…':'Mag-message kay '+esc(CAST[t].short)+'…'}" aria-label="Mensahe"></textarea><button id="send" type="button" aria-label="Ipadala">➤</button></div>`;
+  w.innerHTML=`<div class="composer"><textarea id="box" rows="1" placeholder="${t==='gc'?'Message the group…':'Message '+esc(CAST[t].short)+'…'}" aria-label="Message"></textarea><button id="send" type="button" aria-label="Send">➤</button></div>`;
   const box=$('box'),send=$('send');
   const draft=(S.drafts||{})[t];if(draft)box.value=draft;
   const grow=()=>{box.style.height='auto';box.style.height=Math.min(box.scrollHeight,120)+'px'};grow();
@@ -666,7 +667,7 @@ function playVoice(v){
   if(!ttsFn){tx.hidden=!tx.hidden;return}
   tx.hidden=false;
   speakingId=id;markVoices();
-  ttsFn.speak(speechText(m.text),VOICE[m.from]||{}).catch(e=>{if(e&&e.code==='not_granted'){ttsFn=null;setNotice('Naka-off ang boses. Basahin na lang ang transcript.');setTimeout(()=>setNotice(''),8000)}}).finally(()=>{if(speakingId===id){speakingId=null;markVoices()}});
+  ttsFn.speak(speechText(m.text),VOICE[m.from]||{}).catch(e=>{if(e&&e.code==='not_granted'){ttsFn=null;setNotice('Voice playback is off here. The transcript is still there.');setTimeout(()=>setNotice(''),8000)}}).finally(()=>{if(speakingId===id){speakingId=null;markVoices()}});
 }
 
 // ------------------------------------------------- recorded audio + scripted calls
@@ -716,29 +717,67 @@ const CALLS={
       busy:{a:'call-tonyo-busy',t:'Ay, sige po, sige po. Pasensya na po sa abala. Ingat po.',end:true}
     },
     onEnd(path){
-      if(path.includes('n3')){addClue('Ayon kay Mang Tonyo: noong 2009, may batang naka-uniporme na sumakay sa Elevator 2 at hindi na lumabas. Siya ang naka-duty. Pinatahimik siya ng management.');
+      if(path.includes('n3')){addClue('Mang Tonyo says that in 2009, a boy in a school uniform got into Elevator 2 and never came out. Tonyo was on duty. Management told him to keep quiet.');
         S.notes.push('Tinawagan ni Mang Tonyo ang player at ikinuwento ang batang nawala sa Elevator 2 noong 2009. Binalaan niya ang player na huwag sumama kahit kanino na mag-aayang bumalik sa elevator nang gabi, "lalo na ikaw".')}
-      if(path.includes('n4'))addClue('Nakita raw ni Mang Tonyo kung "sino ang kasama" ninyo sa loob ng elevator. Ayaw niyang sabihin.');
+      if(path.includes('n4'))addClue('Mang Tonyo saw "who was with us" inside the elevator. He won\'t say who.');
       if(path.includes('n5k'))S.notes.push('Tinanong ng player si Mang Tonyo kung okay lang siya. Naantig si Tonyo; "anak" na ang tawag niya sa player.');
       if(path.includes('busy'))S.notes.push('Tumawag si Mang Tonyo pero sinabi ng player na busy siya. Nahiya si Tonyo at hindi na tumawag ulit.');
+    }}
+  ,bambi1:{from:'bambi',
+    when(){const h=new Date().getHours();return dayNum()>=3&&(S.rel.bambi||0)>=3&&(h>=23||h<4)},
+    start:'start',
+    nodes:{
+      start:{a:'call-bambi-1-start',t:'Hello? Uy... HAHA. Teka. Ikaw yung... shet. Hindi ikaw yung tatawagan ko. Pero sige na, andito ka na eh. Gising ka pa pala?',
+        c:[{t:'Lasing ka ba, Bambi?',n:'lasing'},{t:'Sino ba dapat tatawagan mo? 👀',n:'sino',r:1},{t:'Matulog ka na, uy.',n:'kj',r:-1}]},
+      lasing:{a:'call-bambi-2-lasing',t:'Konti lang. Galing ako sa kasal sa Tagaytay, ako yung host. Libre yung alak, kasalanan ko ba yun? Naglalakad na lang ako pauwi. Wala nang Grab, surge pricing. Puta.',
+        c:[{t:'Delikado yan. Nasaan ka na?',n:'care',r:2},{t:'Sino ba talaga tatawagan mo?',n:'sino'}]},
+      care:{a:'call-bambi-3-care',t:'Uy... ayos lang ako. Malapit na ako sa amin. Pero salamat. Ikaw pa lang nagtanong niyan ngayong gabi. Gusto mo malaman kung bakit talaga ako nandun nung gabing yun?',
+        c:[{t:'Sige, kwento.',n:'sino',r:1},{t:'Next time na. Umuwi ka muna.',n:'nanay',r:1}]},
+      sino:{a:'call-bambi-2-sino',t:'Wala. Yung... yung ka-date ko sana nung gabing yun. Sa 14th floor. Hindi sumipot. Ay, shet. Hindi ko dapat sinabi yun.',
+        c:[{t:'Ka-date? Sino?',n:'marco',r:1},{t:'Okay lang. Hindi ako magtatanong.',n:'tatay',r:3}]},
+      marco:{a:'call-bambi-3-marco',t:'Si Marco. Oo. Lalaki. Ayan, alam mo na. Sana hindi ka ma-weirdo.',
+        c:[{t:'Bakit naman ako ma-weirdo?',n:'tatay',r:2},{t:'Alam na ba ng iba sa GC?',n:'secret'}]},
+      tatay:{a:'call-bambi-4-tatay',t:'...Salamat. Alam mo, sa elevator, nakita ko yung tatay ko. Yung gabing nakita niya akong naka-lipstick ni Mama. Siyam na taon ako. Tapos nakita niyo rin pala yun. Lahat kayo.',
+        c:[{t:'Hindi ka nag-iisa dun.',n:'warm',r:2},{t:'Kaya ka ba maingay sa GC?',n:'sampal',r:1}]},
+      secret:{a:'call-bambi-4-secret',t:'Hindi. At wag mo munang sasabihin, ha. Lalo na kay Jerome. Ayoko makita yung mukha niya. Sige na, malapit na ako. Goodnight.',end:true},
+      kj:{a:'call-bambi-end-kj',t:'KJ mo naman! Sige na nga. Goodnight, ha. Wag kang mananaginip ng elevator.',end:true},
+      warm:{a:'call-bambi-end-warm',t:'Ang drama ko na. Sige na. Malapit na ako sa amin. Uy... salamat. Seryoso.',end:true},
+      sampal:{a:'call-bambi-end-sampal',t:'...Siguro. Pag tahimik kasi, naririnig ko ulit yung sampal. Ay, tama na. Lasing lang ako. Goodnight.',end:true},
+      nanay:{a:'call-bambi-end-nanay',t:'Yes po, nanay. Sige. Goodnight. Ikaw lang yung hindi nakakainis sa GC, alam mo yun?',end:true}
+    },
+    onEnd(path){
+      if(path.includes('sino')){addClue('Bambi was at Galvez Tower that night for a date on the 14th floor. His date never showed up.');
+        S.notes.push('Sa lasing na tawag, inamin ni Bambi sa player na may ka-date siyang taga-14F nung gabi ng insidente na hindi sumipot.')}
+      if(path.includes('marco'))S.notes.push('Umamin si Bambi sa player na bading siya (Marco ang pangalan ng ka-date). Sikreto pa ito sa GC, lalo na kay Jerome. Walang ibang character ang dapat magbunyag nito.');
+      if(path.includes('tatay')){addClue('In the elevator, Bambi saw his father on the night he was caught wearing his mother\'s lipstick. He was nine. All of you saw it too.');
+        S.notes.push('Ikinuwento ni Bambi sa player ang nakita niya sa elevator: ang tatay niya, na sinampal siya noong siyam na taon siya dahil sa lipstick.')}
+      if(path.includes('kj'))S.notes.push('Tumawag si Bambi nang lasing nang 2AM; pinatulog lang siya ng player. Medyo napahiya si Bambi pero tinatawanan niya.');
+      if(!path.includes('kj')&&!path.includes('hangup')){
+        const now=Date.now();
+        S.queue.push({due:now+3*MIN,thread:'pm',from:'bambi',text:'sorry sa tawag kanina. lasing lang 🙃'});
+        S.queue.push({due:now+4*MIN,thread:'pm',from:'bambi',text:'teka'});
+        S.queue.push({due:now+4.5*MIN,thread:'pm',from:'bambi',text:'bakit "Paolo" yung naka-save na pangalan mo sa phone ko'});
+        S.queue.push({due:now+5*MIN,thread:'pm',from:'bambi',text:'hindi ko yun ginawa promise'});
+        addClue('Bambi\'s phone has your number saved under the name "Paolo". He swears he didn\'t do that.');
+      }
     }}
 };
 let CALL=null;
 function fmtDur(ms){const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
 function callShell(c,status){
   const el=$('call');const ch=CAST[c.from];
-  el.innerHTML=`<div class="call-top"><div class="call-av">${avatarSVG(AV[c.from])}</div><div class="call-name">${esc(ch.name)}</div><div class="call-status" id="cStatus">${esc(status)}</div></div>
+  el.innerHTML=`<div class="call-top"><div class="call-av">${portrait(c.from)}</div><div class="call-name">${esc(ch.name)}</div><div class="call-status" id="cStatus">${esc(status)}</div></div>
     <div class="call-mid"><div class="call-sub dim" id="cSub"></div><div class="call-choices" id="cCh"></div></div><div class="call-btns" id="cBtns"></div>`;
   el.hidden=false;
 }
 function ring(id,opts={}){
   const c=CALLS[id];if(!c||CALL)return;
   CALL={id,c,path:[],started:0,replay:false};
-  callShell(c,opts.back?'Tumatawag…':'Incoming call…');
+  callShell(c,opts.back?'Calling…':'Incoming call…');
   $('call').classList.add('ringing');
   $('cSub').textContent=opts.back?'':'Elevator Survivors 🙏';
   if(opts.back){$('cBtns').innerHTML='';setTimeout(()=>answer(),2200);return}
-  $('cBtns').innerHTML=`<div class="cbtn-wrap"><button class="cbtn no" id="cNo" type="button" aria-label="Tanggihan">✕</button>Decline</div><div class="cbtn-wrap"><button class="cbtn ok" id="cOk" type="button" aria-label="Sagutin">✆</button>Accept</div>`;
+  $('cBtns').innerHTML=`<div class="cbtn-wrap"><button class="cbtn no" id="cNo" type="button" aria-label="Decline">✕</button>Decline</div><div class="cbtn-wrap"><button class="cbtn ok" id="cOk" type="button" aria-label="Accept">✆</button>Accept</div>`;
   $('cOk').onclick=answer;$('cNo').onclick=()=>miss('declined');$('cOk').focus();
   ringTone(true);
   CALL.ringTO=setTimeout(()=>miss('missed'),32000);
@@ -746,12 +785,12 @@ function ring(id,opts={}){
 function miss(kind){
   if(!CALL)return;const {id,c}=CALL;ringTone(false);clearTimeout(CALL.ringTO);
   S.calls=S.calls||{};S.calls[id]={state:'missed',t:Date.now()};
-  push(c.from,{id:nid(),from:'sys',text:'📞 '+(kind==='declined'?'Tinanggihan mo ang tawag ni ':'Missed call mula kay ')+CAST[c.from].name,t:Date.now()});
+  push(c.from,{id:nid(),from:'sys',text:'📞 '+(kind==='declined'?'You declined a call from ':'Missed call from ')+CAST[c.from].name,t:Date.now()});
   closeCall();
 }
 function answer(){
   if(!CALL)return;ringTone(false);clearTimeout(CALL.ringTO);
-  $('call').classList.remove('ringing');$('cBtns').innerHTML=`<div class="cbtn-wrap"><button class="cbtn no" id="cEnd" type="button" aria-label="Ibaba">✕</button>End</div>`;
+  $('call').classList.remove('ringing');$('cBtns').innerHTML=`<div class="cbtn-wrap"><button class="cbtn no" id="cEnd" type="button" aria-label="End call">✕</button>End</div>`;
   $('cEnd').onclick=()=>hangUp();
   CALL.started=Date.now();CALL.tick=setInterval(()=>{const st=$('cStatus');if(st&&CALL)st.textContent=fmtDur(Date.now()-CALL.started)},500);
   playNode(CALL.c.start);
@@ -783,11 +822,11 @@ function endCall(){
   const dur=Date.now()-started;
   if(!replay){
     S.calls=S.calls||{};S.calls[id]={state:'done',t:Date.now(),path,dur};
-    push(c.from,{id:nid(),from:'sys',text:'📞 Tawag kay '+CAST[c.from].name+' · '+fmtDur(dur),t:Date.now()});
+    push(c.from,{id:nid(),from:'sys',text:'📞 Call with '+CAST[c.from].name+' · '+fmtDur(dur),t:Date.now()});
     try{c.onEnd(path)}catch(e){}
     save();
   }
-  const st=$('cStatus');if(st)st.textContent='Natapos ang tawag · '+fmtDur(dur);
+  const st=$('cStatus');if(st)st.textContent='Call ended · '+fmtDur(dur);
   $('cCh').innerHTML='';$('cBtns').innerHTML='';
   CALL=null;setTimeout(closeCall,1600);
 }
@@ -796,13 +835,14 @@ function replayCall(id){
   const st=(S.calls||{})[id];if(!st||!st.path||CALL)return;const c=CALLS[id];
   const path=st.path.filter(k=>c.nodes[k]);if(!path.length)return;
   closeDrawer();CALL={id,c,path:[],started:Date.now(),replay:true,replayPath:path.slice(1)};
-  callShell(c,'Replay');$('cBtns').innerHTML=`<div class="cbtn-wrap"><button class="cbtn no" id="cEnd" type="button" aria-label="Itigil">✕</button>Stop</div>`;
+  callShell(c,'Replay');$('cBtns').innerHTML=`<div class="cbtn-wrap"><button class="cbtn no" id="cEnd" type="button" aria-label="Stop">✕</button>Stop</div>`;
   $('cEnd').onclick=hangUp;playNode(path[0]);
 }
 function callBack(from){const id=Object.keys(CALLS).find(k=>CALLS[k].from===from&&(S.calls||{})[k]&&S.calls[k].state==='missed');if(id)ring(id,{back:true})}
 function checkCalls(){
   if(S.stage!=='chat'||CALL||document.hidden||$('app').hidden||!userActed||!$('drawer').hidden)return;
   if(location.hash==='#test-call'&&!(S.calls||{}).tonyo1){ring('tonyo1');return}
+  if(location.hash==='#test-call-2'&&!(S.calls||{}).bambi1){ring('bambi1');return}
   for(const id in CALLS){if((S.calls||{})[id])continue;let ok=false;try{ok=CALLS[id].when()}catch(e){}
     if(ok&&Math.random()<.3){ring(id);return}}
 }
@@ -844,28 +884,28 @@ setInterval(()=>{if(!$('app').hidden)tickFloor()},4000);
 function openDrawer(html){const d=$('drawer');d.innerHTML=`<div class="drawer-in">${html}</div>`;d.hidden=false;d.onclick=e=>{if(e.target===d)closeDrawer()};d.querySelector('[data-close]').onclick=closeDrawer;d.querySelector('[data-close]').focus()}
 function closeDrawer(){$('drawer').hidden=true}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('drawer').hidden)closeDrawer()});
-function relLabel(v){return v<-3?'iwas sa\'yo':v<3?'estranghero pa':v<8?'kakilala':v<15?'palagay ang loob sa\'yo':'tropa na kayo'}
+function relLabel(v){return v<-3?'keeping their distance':v<3?'still a stranger':v<8?'getting to know you':v<15?'comfortable with you':'close friends'}
 $('btnMembers').onclick=()=>{
   const rows=IDS.map(id=>{const c=CAST[id];const out=id==='tonyo'&&!S.tonyoIn;
-    return `<div class="mem">${avHTML(id)}<div style="min-width:0"><b>${esc(c.name)}</b><span>${out?'Umalis sa group':esc(relLabel(S.rel[id]||0))}</span></div>${out?`<button class="add" type="button" data-add="tonyo">Idagdag ulit</button>`:''}</div>`}).join('');
-  openDrawer(`<h3>Members <button type="button" data-close aria-label="Isara">×</button></h3>
-    <div class="mem"><div class="av">${avatarSVG(S.avatar||DEF_ME)}</div><div><b>${esc(S.name)} (ikaw)</b><span>${esc(ORIGINS[S.origin].title)}</span></div></div>${rows}`);
+    return `<div class="mem">${avHTML(id)}<div style="min-width:0"><b>${esc(c.name)}</b><span>${out?'Left the group':esc(relLabel(S.rel[id]||0))}</span></div>${out?`<button class="add" type="button" data-add="tonyo">Add back</button>`:''}</div>`}).join('');
+  openDrawer(`<h3>Members <button type="button" data-close aria-label="Close">×</button></h3>
+    <div class="mem"><div class="av">${avatarSVG(S.avatar||DEF_ME)}</div><div><b>${esc(S.name)} (you)</b><span>${esc(ORIGINS[S.origin].title)}</span></div></div>${rows}`);
   const a=$('drawer').querySelector('[data-add]');if(a)a.onclick=()=>{closeDrawer();addTonyoBack()};
 };
 $('btnClues').onclick=()=>{
-  openDrawer(`<h3>Mga Napansin <button type="button" data-close aria-label="Isara">×</button></h3>
-  <p class="empty">Mga detalyeng hindi tugma, at mga tawag na natanggap mo.</p>
-  ${Object.entries(S.calls||{}).filter(([k,v])=>v.state==='done'&&CALLS[k]).map(([k,v])=>`<div class="clue calllog"><div><small>Tawag · ${esc(dayLabel(v.t))}</small>${esc(CAST[CALLS[k].from].name)} · ${fmtDur(v.dur||0)}</div><button type="button" data-replay="${k}">▶ Pakinggan ulit</button></div>`).join('')}
-  ${S.clues.length?S.clues.slice().reverse().map(c=>`<div class="clue"><small>${esc(c.when)}</small>${esc(c.text)}</div>`).join(''):'<p class="empty">Wala pa.</p>'}`);
+  openDrawer(`<h3>Clues <button type="button" data-close aria-label="Close">×</button></h3>
+  <p class="empty">Details that don't add up, and the calls you've taken.</p>
+  ${Object.entries(S.calls||{}).filter(([k,v])=>v.state==='done'&&CALLS[k]).map(([k,v])=>`<div class="clue calllog"><div><small>Call · ${esc(dayLabel(v.t))}</small>${esc(CAST[CALLS[k].from].name)} · ${fmtDur(v.dur||0)}</div><button type="button" data-replay="${k}">▶ Replay</button></div>`).join('')}
+  ${S.clues.length?S.clues.slice().reverse().map(c=>`<div class="clue"><small>${esc(c.when)}</small>${esc(c.text)}</div>`).join(''):'<p class="empty">Nothing yet.</p>'}`);
 };
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-replay]');if(b)replayCall(b.dataset.replay)});
 $('btnSettings').onclick=()=>{
-  openDrawer(`<h3>Settings <button type="button" data-close aria-label="Isara">×</button></h3>
-  <p class="empty">Ikaw si <b>${esc(S.name)}</b>, ${esc(ORIGINS[S.origin].title.toLowerCase())}. Ika-${dayNum()} na araw mula nang insidente.</p>
-  <p class="empty">${sampleFn?'Si Claude ang nagpapatakbo sa kanila. Gumagamit ito ng Claude usage mo tuwing may bagong usapan.':'Para makausap sila nang totoo, buksan ang page na ito sa claude.ai link nito.'}</p>
-  <button class="icon-btn" type="button" id="look" style="align-self:flex-start">Palitan ang itsura ko</button>
-  <button class="danger" type="button" id="reset">Magsimula ulit (buburahin ang lahat)</button>
-  <div id="confirm" hidden style="display:flex;flex-direction:column;gap:8px"><p class="empty">Sigurado ka? Mabubura ang lahat ng usapan.</p><div style="display:flex;gap:8px"><button class="danger" type="button" id="yes">Oo, burahin</button><button class="icon-btn" type="button" id="no">Huwag</button></div></div>`);
+  openDrawer(`<h3>Settings <button type="button" data-close aria-label="Close">×</button></h3>
+  <p class="empty">You are <b>${esc(S.name)}</b>, ${esc(ORIGINS[S.origin].title.toLowerCase())}. Day ${dayNum()} since the incident.</p>
+  <p class="empty">${sampleFn?'Claude plays every character. Each new exchange uses some of your Claude usage.':'Open this page from its claude.ai link to chat with them for real.'}</p>
+  <button class="icon-btn" type="button" id="look" style="align-self:flex-start">Change my look</button>
+  <button class="danger" type="button" id="reset">Start over (erases everything)</button>
+  <div id="confirm" hidden style="display:flex;flex-direction:column;gap:8px"><p class="empty">Are you sure? Every conversation will be erased.</p><div style="display:flex;gap:8px"><button class="danger" type="button" id="yes">Yes, erase it</button><button class="icon-btn" type="button" id="no">Cancel</button></div></div>`);
   $('look').onclick=openLook;
   $('reset').onclick=()=>{$('confirm').hidden=false;$('reset').hidden=true};
   $('no').onclick=()=>{$('confirm').hidden=true;$('reset').hidden=false};
@@ -873,12 +913,12 @@ $('btnSettings').onclick=()=>{
 };
 function openLook(){
   const a=JSON.parse(JSON.stringify(S.avatar||DEF_ME));
-  openDrawer(`<h3>Itsura mo <button type="button" data-close aria-label="Isara">×</button></h3><div id="bld2"></div><button class="btn" type="button" id="saveLook">I-save</button>`);
+  openDrawer(`<h3>Your look <button type="button" data-close aria-label="Close">×</button></h3><div id="bld2"></div><button class="btn" type="button" id="saveLook">Save</button>`);
   $('drawer').querySelector('.drawer-in').style.width='min(480px,100%)';
   mountBuilder($('bld2'),a);
   $('saveLook').onclick=()=>{S.avatar=a;save();closeDrawer();renderChat(false)};
 }
-function addClue(text,when){if(!text)return;if(S.clues.some(c=>c.text===text))return;S.clues.push({text,when:when||('Araw '+dayNum()),t:Date.now()});if(S.clues.length>60)S.clues.shift()}
+function addClue(text,when){if(!text)return;if(S.clues.some(c=>c.text===text))return;S.clues.push({text,when:when||('Day '+dayNum()),t:Date.now()});if(S.clues.length>60)S.clues.shift()}
 function dayNum(){if(!S.startedAt)return 1;const a=new Date(S.startedAt),b=new Date();return 1+Math.round((new Date(b.getFullYear(),b.getMonth(),b.getDate())-new Date(a.getFullYear(),a.getMonth(),a.getDate()))/DAY)}
 
 // ------------------------------------------------- scripted world events
@@ -997,7 +1037,7 @@ JSON lang, walang ibang text:
 - "now": mga mensaheng darating ngayon (para sa reply mode). "backlog": para sa catchup mode lang. "later": 0 hanggang 3 mensaheng darating sa susunod na 5 hanggang 180 minuto (follow-up, bagong usapan, isang PM), para buhay ang chat kahit hindi nagta-type ang player.
 - thread "pm" = pribadong mensahe ng "from" sa player.
 - "rel": pagbabago ng tiwala (-3 hanggang +3) ng mga character na naapektuhan ng ginawa ng player ngayon; {} kung wala.
-- "clue": isang pangungusap kung may bagong mahalagang detalye na natuklasan ng player ngayon, kung hindi null. Bihira lang.
+- "clue": isang pangungusap IN ENGLISH (UI ito ng player) kung may bagong mahalagang detalye na natuklasan ng player ngayon, kung hindi null. Bihira lang.
 - "tonyo": "leave" o "join" kung umalis o bumalik si Tonyo sa GC ngayon, kung hindi null.
 - ids: lorna, jerome, nix, tonyo, bambi, sol.`;
 }
@@ -1056,9 +1096,9 @@ async function applyResult(res,mode){
 }
 function handleErr(e){
   const c=e&&e.code;
-  if(c==='not_granted'||c==='sampling_disabled'||c==='capability_disabled'||c==='capability_removed'||c==='not_declared'){sampleFn=null;setNotice('Hindi pinayagan si Claude sa page na ito, kaya hindi sila makakasagot ngayon. Pwede mo itong buksan ulit para payagan.')}
-  else if(c==='rate_limited'||c==='queue_overflow'){setNotice('Ang dami nilang chika. Teka lang, subukan mo ulit mamaya.');setTimeout(()=>setNotice(''),15000)}
-  else{setNotice('Nawala ang signal sa elevator. Subukan ulit mag-send.');setTimeout(()=>setNotice(''),12000)}
+  if(c==='not_granted'||c==='sampling_disabled'||c==='capability_disabled'||c==='capability_removed'||c==='not_declared'){sampleFn=null;setNotice('Claude isn\'t allowed on this page, so they can\'t reply right now. Reopen the page to allow it.')}
+  else if(c==='rate_limited'||c==='queue_overflow'){setNotice('They\'re all talking at once. Try again in a bit.');setTimeout(()=>setNotice(''),15000)}
+  else{setNotice('Lost signal in the elevator. Try sending again.');setTimeout(()=>setNotice(''),12000)}
 }
 
 let catching=false;
@@ -1069,7 +1109,7 @@ async function catchUp(){
   const gapMin=Math.round(gap/MIN);
   const gapText=gapMin<120?gapMin+' minuto':gapMin<2880?Math.round(gapMin/60)+' oras':Math.round(gapMin/1440)+' araw';
   const count=Math.max(4,Math.min(28,Math.round(4+gapMin/25)));
-  setNotice('Nagkukwentuhan sila habang wala ka…');
+  setNotice('Catching up on what they said while you were away…');
   try{const res=await callCast(buildPrompt('catchup',null,{gapText,gapMin:Math.min(gapMin,10080),count}));S.lastCatch=Date.now();setNotice('');await applyResult(res,'catchup')}
   catch(e){handleErr(e)}
   finally{catching=false;save()}
@@ -1080,13 +1120,13 @@ let dbDoc=null,dbBusy=false;
 async function saveRemote(){if(!dbDoc||dbBusy)return;dbBusy=true;try{await dbDoc.set(JSON.parse(JSON.stringify(S)))}catch(e){if(e&&['revoked','invalid_argument','not_granted','quota_exceeded'].includes(e.code))dbDoc=null}finally{dbBusy=false}}
 async function initRuntime(){
   const cl=window.claude;
-  if(!cl||typeof cl.use!=='function'){if(S.stage==='chat')setNotice('Buksan ang claude.ai link ng page na ito para makausap sila nang totoo.');return}
+  if(!cl||typeof cl.use!=='function'){if(S.stage==='chat')setNotice('Open this page from its claude.ai link to chat with them for real.');return}
   const [smp,usr,db,tts]=await Promise.all([cl.use('sample'),cl.use('user'),cl.use('db'),cl.use('tts')]);
   sampleFn=smp||null;ttsFn=tts||null;
   if(db&&usr){try{const id=await usr.id();if(id){dbDoc=db.doc('data/users/'+id+'/elevator');const snap=await dbDoc.get();
     if(snap.exists){const o=JSON.parse(JSON.stringify(snap.data()));if(o&&o.v===1&&(o.lastSeen||0)>(S.lastSeen||0)+5000){S=o;IDS.forEach(id=>{S.threads[id]=S.threads[id]||[]});boot()}}
     await saveRemote()}}catch(e){dbDoc=null}}
-  if(!sampleFn&&S.stage==='chat')setNotice('Buksan ang claude.ai link ng page na ito para makausap sila nang totoo.');
+  if(!sampleFn&&S.stage==='chat')setNotice('Open this page from its claude.ai link to chat with them for real.');
   if(sampleFn)catchUp();
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden){save();saveRemote()}else if(S.stage==='chat'){deliverDue();catchUp();if(!$('app').hidden){renderChat(false);renderThreads()}}});
@@ -1096,6 +1136,12 @@ addEventListener('resize',()=>{if(!$('app').hidden&&!isNarrow())$('app').classLi
 function boot(){
   if(S.stage!=='chat'){showIntro();return}
   worldEvents();deliverDue();showApp();updateTitle();
+  for(const c of S.clues){
+    if(c.when==='Simula'){c.when='The beginning';c.text=c.text.startsWith('Pumasok kayo')?'You went in at 11:47 PM and came out at 2:47 AM. According to Meralco, there was no brownout.':ORIGINS[S.origin].clue}
+    else if(/^Araw \d+/.test(c.when))c.when=c.when.replace('Araw','Day');
+    if(c.text.startsWith('Ayon kay Mang Tonyo: noong 2009'))c.text='Mang Tonyo says that in 2009, a boy in a school uniform got into Elevator 2 and never came out. Tonyo was on duty. Management told him to keep quiet.';
+    if(c.text.startsWith('Nakita raw ni Mang Tonyo'))c.text='Mang Tonyo saw "who was with us" inside the elevator. He won\'t say who.';
+  }
   for(const m of S.threads.gc){if(m.from!=='tonyo'||m.audio)continue;
     if(m.text.startsWith('...hello? Lorna')){m.audio='vm-tonyo-hello';m.voice=17}
     else if(m.text.startsWith('Salamat po sa inyong lahat')){m.audio='vm-tonyo-bye';m.voice=10;m.text=TONYO_BYE}}
