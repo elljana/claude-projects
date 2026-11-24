@@ -12,7 +12,8 @@ Group chat na horror-misteryo at found family. Pito kayong na-stuck sa Elevator 
 - **GC at PM:** iba ang tao sa group at sa private
 - **Tiwala:** may hidden na relationship tracker. Ang trato mo sa kanila ang magbubukas ng mga lihim nila
 - **Mga Napansin:** listahan ng mga detalyeng hindi tugma
-- Tuwing 11:47 PM, tingnan mo ang floor indicator
+- **Music at tunog (synthesized, walang audio files):** elevator muzak na bossa sa araw at mabagal na minor sa gabi, na paminsan-minsang nadi-detune; ugong ng building at buzz ng fluorescent; tunog ng message at ang "ding" ng elevator. May ♪ button sa itaas ng bawat chat
+- Tuwing 11:47 PM, tingnan mo ang floor indicator (at makinig)
 
 **Spoiler warning:** nasa `index.html` ang lihim na story bible. Huwag basahin kung ayaw mong ma-spoil.
 

@@ -209,6 +209,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
       <button class="back" id="back" type="button" aria-label="Back to chats">‹</button>
       <div id="headAv"></div>
       <div class="ti"><b id="headTitle"></b><span id="headSub"></span></div>
+      <button class="icon-btn" id="btnSound" type="button" aria-label="Music and sound">♪ On</button>
       <button class="icon-btn" id="btnMembers" type="button">Members</button>
     </div>
     <div class="notice" id="notice" hidden></div>
@@ -496,7 +497,7 @@ function finishPrologue(){
   I.innerHTML=`<div class="intro-inner"><p class="pline quiet">The next morning.</p>
     <div class="notif"><div class="ic">ES</div><div><b>Tita Lorna added you to "Elevator Survivors 🙏"</b><span>37 new messages</span></div></div>
     <button class="btn" id="open" type="button">Open</button></div>`;
-  $('open').onclick=startChat;$('open').focus();
+  $('open').onclick=()=>{sfx('ding');startChat()};$('open').focus();
 }
 
 // ------------------------------------------------- opening backlog
@@ -587,7 +588,7 @@ let isNarrow=()=>matchMedia('(max-width:760px)').matches;
 function showApp(){
   $('intro').hidden=true;$('app').hidden=false;
   if(isNarrow())$('app').classList.add('in-thread');
-  renderChat(true);renderThreads();tickFloor();
+  renderChat(true);renderThreads();tickFloor();setSound(soundOn());
 }
 function threadTitle(t){return t==='gc'?'Elevator Survivors 🙏':CAST[t].name}
 function avHTML(t,sm){
@@ -707,6 +708,67 @@ function ringTone(on){
   beep();ringTimer=setInterval(beep,2600);
 }
 
+// ------------------------------------------------- music + sound (all synthesized, no files)
+const MUS={timer:null,next:0,step:0,glitchUntil:0,lastBlip:0};
+function soundOn(){return S.sound!==false}
+function ensureAudio(){
+  unlockAudio();if(!actx)return false;
+  if(!MUS.master){
+    const m=actx.createGain();m.gain.value=.9;m.connect(actx.destination);MUS.master=m;
+    MUS.mus=actx.createGain();MUS.mus.gain.value=0;const lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2400;MUS.mus.connect(lp);lp.connect(m);
+    MUS.sfx=actx.createGain();MUS.sfx.gain.value=.55;MUS.sfx.connect(m);
+    MUS.amb=actx.createGain();MUS.amb.gain.value=0;MUS.amb.connect(m);
+    const hum=actx.createOscillator();hum.frequency.value=60;const hg=actx.createGain();hg.gain.value=.035;hum.connect(hg);hg.connect(MUS.amb);hum.start();
+    const buzz=actx.createOscillator();buzz.type='sawtooth';buzz.frequency.value=120;const bf=actx.createBiquadFilter();bf.type='bandpass';bf.frequency.value=3400;bf.Q.value=9;const bg=actx.createGain();bg.gain.value=.0035;buzz.connect(bf);bf.connect(bg);bg.connect(MUS.amb);buzz.start();
+    const buf=actx.createBuffer(1,actx.sampleRate*2,actx.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;MUS.noise=buf;
+    const n=actx.createBufferSource();n.buffer=buf;n.loop=true;const nf=actx.createBiquadFilter();nf.type='lowpass';nf.frequency.value=380;const ng=actx.createGain();ng.gain.value=.025;n.connect(nf);nf.connect(ng);ng.connect(MUS.amb);n.start();
+  }
+  return true;
+}
+function fade(g,v,sec){if(!g||!actx)return;const t=actx.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(v,t+sec)}
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+// day: Fmaj7 Em7 Dm7 Cmaj7 (lobby bossa). night: Am9 Fmaj7#11 Dm9 E7b9 (slower, emptier)
+const PROG={day:{bpm:84,ch:[[53,57,60,64],[52,55,59,62],[50,53,57,60],[48,52,55,59]],bass:[41,40,38,36]},
+  night:{bpm:56,ch:[[57,60,64,71],[53,57,60,66],[50,53,57,64],[52,56,59,65]],bass:[45,41,38,40]}};
+function isNightNow(){const h=new Date().getHours();return h>=22||h<5}
+function tone(t,midi,dur,vol,type,det){const o=actx.createOscillator();o.type=type||'sine';o.frequency.value=mtof(midi);if(det)o.detune.value=det;
+  const g=actx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(MUS.mus);o.start(t);o.stop(t+dur+.05)}
+function brush(t,vol){const sN=actx.createBufferSource();sN.buffer=MUS.noise;const f=actx.createBiquadFilter();f.type='highpass';f.frequency.value=7000;const g=actx.createGain();
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+.05);sN.connect(f);f.connect(g);g.connect(MUS.mus);sN.start(t,Math.random()*1.5);sN.stop(t+.06)}
+function schedule(){
+  const night=isNightNow(),P=night?PROG.night:PROG.day,spb=60/P.bpm/2;
+  while(MUS.next<actx.currentTime+.35){
+    const t=MUS.next,st=MUS.step%16,ci=Math.floor(MUS.step/16)%4,ch=P.ch[ci];
+    const glitch=Date.now()<MUS.glitchUntil,det=glitch?-35-Math.random()*25:0;
+    if((night?[0,6,10]:[0,3,6,10,12]).includes(st))ch.forEach((m,i)=>tone(t+i*.014,m,spb*(night?4:2.2),night?.022:.026,'triangle',det));
+    if(st===0||st===8)tone(t,P.bass[ci]-12,spb*6,.065,'sine',det);
+    if(!night&&st===6)tone(t,P.bass[ci]-5,spb*2,.045,'sine',det);
+    if(!night&&st%2===0)brush(t,.01);
+    if(st%2===0&&Math.random()<(night?.1:.2))tone(t,ch[Math.floor(Math.random()*4)]+12,spb*3,.018,'sine',det);
+    if(glitch&&Math.random()<.18)tone(t,ch[0]+13,spb*5,.02,'sine');
+    MUS.next+=spb;MUS.step++;
+  }
+  if(Date.now()>MUS.glitchUntil+90000&&Math.random()<.0025)MUS.glitchUntil=Date.now()+5000+Math.random()*4000;
+}
+function startMusic(){
+  if(!soundOn()||document.hidden||!ensureAudio()||MUS.timer)return;
+  MUS.next=actx.currentTime+.15;MUS.timer=setInterval(schedule,90);
+  fade(MUS.mus,CALL?.15:.85,1.8);fade(MUS.amb,1,2.5);
+}
+function stopMusic(sec){if(MUS.timer){clearInterval(MUS.timer);MUS.timer=null}fade(MUS.mus,0,sec||.6);fade(MUS.amb,0,sec||.6)}
+function duck(on){if(MUS.timer)fade(MUS.mus,on?.12:.85,.8)}
+function sfx(kind){
+  if(!soundOn()||!ensureAudio()||actx.state!=='running')return;const t=actx.currentTime;
+  const blip=(f,dt,v,type,len)=>{const o=actx.createOscillator();o.type=type||'sine';o.frequency.value=f;const g=actx.createGain();
+    g.gain.setValueAtTime(0,t+dt);g.gain.linearRampToValueAtTime(v,t+dt+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dt+(len||.25));o.connect(g);g.connect(MUS.sfx);o.start(t+dt);o.stop(t+dt+(len||.25)+.05)};
+  if(kind==='in'){if(Date.now()-MUS.lastBlip<700)return;MUS.lastBlip=Date.now();blip(880,0,.07);blip(1320,.07,.05)}
+  if(kind==='out')blip(620,0,.045,'triangle',.18);
+  if(kind==='ding'){blip(1318.5,0,.11,'sine',2.2);blip(1046.5,.45,.11,'sine',2.6)}
+}
+function setSound(on){S.sound=on;save();if(on){startMusic()}else stopMusic();const b=$('btnSound');if(b){b.textContent=on?'♪ On':'♪ Off';b.setAttribute('aria-pressed',on)}}
+addEventListener('pointerdown',()=>startMusic(),{passive:true});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMusic(.2);else startMusic()});
+
 const CALLS={
   tonyo1:{from:'tonyo',
     when(){const h=new Date().getHours();return dayNum()>=2&&(S.flags.tonyoBack||(S.rel.tonyo||0)>=4)&&h>=7&&h<20},
@@ -784,7 +846,7 @@ function callShell(c,status){
 }
 function ring(id,opts={}){
   const c=CALLS[id];if(!c||CALL)return;
-  CALL={id,c,path:[],started:0,replay:false};
+  CALL={id,c,path:[],started:0,replay:false};duck(true);
   callShell(c,opts.back?'Calling…':'Incoming call…');
   $('call').classList.add('ringing');
   $('cSub').textContent=opts.back?'':'Elevator Survivors 🙏';
@@ -842,11 +904,11 @@ function endCall(){
   $('cCh').innerHTML='';$('cBtns').innerHTML='';
   CALL=null;setTimeout(closeCall,1600);
 }
-function closeCall(){ringTone(false);if(CALL){clearInterval(CALL.tick);clearTimeout(CALL.ringTO)}CALL=null;$('call').hidden=true;$('call').classList.remove('ringing');if(!$('app').hidden){renderChat(false);renderThreads()}}
+function closeCall(){ringTone(false);duck(false);if(CALL){clearInterval(CALL.tick);clearTimeout(CALL.ringTO)}CALL=null;$('call').hidden=true;$('call').classList.remove('ringing');if(!$('app').hidden){renderChat(false);renderThreads()}}
 function replayCall(id){
   const st=(S.calls||{})[id];if(!st||!st.path||CALL)return;const c=CALLS[id];
   const path=st.path.filter(k=>c.nodes[k]);if(!path.length)return;
-  closeDrawer();CALL={id,c,path:[],started:Date.now(),replay:true,replayPath:path.slice(1)};
+  closeDrawer();CALL={id,c,path:[],started:Date.now(),replay:true,replayPath:path.slice(1)};duck(true);
   callShell(c,'Replay');$('cBtns').innerHTML=`<div class="cbtn-wrap"><button class="cbtn no" id="cEnd" type="button" aria-label="Stop">✕</button>Stop</div>`;
   $('cEnd').onclick=hangUp;playNode(path[0]);
 }
@@ -873,6 +935,7 @@ function push(thread,msg,opts={}){
   if(arr.length>400)arr.splice(0,arr.length-400);
   const viewing=S.active===thread&&!document.hidden&&!$('app').hidden&&($('app').classList.contains('in-thread')||!isNarrow());
   if(msg.from!=='me'&&msg.from!=='sys'&&!viewing)S.unread[thread]=(S.unread[thread]||0)+1;
+  if(msg.from!=='me'&&msg.from!=='sys'&&!opts.quiet)sfx('in');
   if(!opts.quiet){if(viewing){const box=$('msgs');const near=box.scrollHeight-box.scrollTop-box.clientHeight<160;renderChat(false);if(near||msg.from==='me')box.scrollTop=box.scrollHeight}renderThreads();updateTitle()}
   save();
 }
@@ -884,7 +947,7 @@ let floorN=1;
 function tickFloor(){
   const el=$('floor');const now=new Date();
   const witching=now.getHours()===23&&now.getMinutes()===47;
-  if(witching){el.textContent='■ 13';el.classList.add('glitch');if(!S.flags['ding'+now.toDateString()]){S.flags['ding'+now.toDateString()]=1;document.body.classList.add('flash');setTimeout(()=>document.body.classList.remove('flash'),900);save()}}
+  if(witching){el.textContent='■ 13';el.classList.add('glitch');if(!S.flags['ding'+now.toDateString()]){S.flags['ding'+now.toDateString()]=1;document.body.classList.add('flash');if(MUS.timer){stopMusic(.1);setTimeout(startMusic,9000)}sfx('ding');setTimeout(()=>document.body.classList.remove('flash'),900);save()}}
   else{el.classList.remove('glitch');
     if(Math.random()<.35){const dir=Math.random()<.5?-1:1;floorN=Math.min(22,Math.max(1,floorN+dir));if(floorN===13)floorN+=dir}
     el.textContent=(Math.random()<.5?'▲ ':'▼ ')+floorN;
@@ -897,6 +960,7 @@ function openDrawer(html){const d=$('drawer');d.innerHTML=`<div class="drawer-in
 function closeDrawer(){$('drawer').hidden=true}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('drawer').hidden)closeDrawer()});
 function relLabel(v){return v<-3?'keeping their distance':v<3?'still a stranger':v<8?'getting to know you':v<15?'comfortable with you':'close friends'}
+$('btnSound').onclick=()=>setSound(!soundOn());
 $('btnMembers').onclick=()=>{
   const rows=IDS.map(id=>{const c=CAST[id];const out=id==='tonyo'&&!S.tonyoIn;
     return `<div class="mem">${avHTML(id)}<div style="min-width:0"><b>${esc(c.name)}</b><span>${out?'Left the group':esc(relLabel(S.rel[id]||0))}</span></div>${out?`<button class="add" type="button" data-add="tonyo">Add back</button>`:''}</div>`}).join('');
@@ -916,6 +980,7 @@ $('btnSettings').onclick=()=>{
   <p class="empty">You are <b>${esc(S.name)}</b>, ${esc(ORIGINS[S.origin].title.toLowerCase())}. Day ${dayNum()} since the incident.</p>
   <p class="empty">${sampleFn?'Claude plays every character. Each new exchange uses some of your Claude usage.':'Open this page from its claude.ai link to chat with them for real.'}</p>
   <button class="icon-btn" type="button" id="look" style="align-self:flex-start">Change my look</button>
+  <p class="empty">Music and sound: use the ♪ button at the top of any chat. On iPhone, sound only plays when the silent switch is off.</p>
   <button class="danger" type="button" id="reset">Start over (erases everything)</button>
   <div id="confirm" hidden style="display:flex;flex-direction:column;gap:8px"><p class="empty">Are you sure? Every conversation will be erased.</p><div style="display:flex;gap:8px"><button class="danger" type="button" id="yes">Yes, erase it</button><button class="icon-btn" type="button" id="no">Cancel</button></div></div>`);
   $('look').onclick=openLook;
@@ -985,7 +1050,7 @@ setInterval(deliverDue,8000);
 let sampleFn=null,busy=false;const pendingAsk=new Set();let askTimer=null,askNote={};
 function scheduleAsk(thread,note){if(note)askNote[thread]=(askNote[thread]?askNote[thread]+'\n':'')+note;pendingAsk.add(thread);clearTimeout(askTimer);askTimer=setTimeout(runAsk,2600)}
 function playerSend(thread,text){
-  push(thread,{id:nid(),from:'me',text,t:Date.now()});
+  push(thread,{id:nid(),from:'me',text,t:Date.now()});sfx('out');
   if(!sampleFn){offlineReply(thread,text);return}
   scheduleAsk(thread);
 }
