@@ -41,6 +41,15 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .origin:hover{border-color:#3a4554}
 .origin.on{border-color:var(--led);box-shadow:0 0 0 1px var(--led)}
 .origin b{font-family:var(--display);font-size:18px;font-weight:700}
+.origin{padding:0;overflow:hidden;gap:0}
+.origin .o-img{width:100%;aspect-ratio:1/1;max-width:100%;display:block;object-fit:cover;background:#07090c}
+.origin .o-txt{display:flex;flex-direction:column;gap:6px;padding:12px 14px 14px;min-width:0}
+@media (max-width:520px){.origin{flex-direction:row;align-items:stretch}.origin .o-img{width:108px;flex:none;aspect-ratio:auto;min-height:108px}}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;gap:3px;align-self:flex-start;background:var(--panel)}
+.seg button{background:transparent;border:0;border-radius:999px;padding:6px 14px;font-size:13.5px;color:var(--muted);font-weight:600}
+.seg button.on{background:var(--led);color:#1d1305}
+.me-big{width:160px;height:160px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 1px var(--line),0 14px 30px -14px rgba(0,0,0,.8)}
+.me-big img,.me-big svg{width:100%;height:100%;display:block;object-fit:cover}
 .origin .meta{font-size:12px;color:var(--led);letter-spacing:.6px;text-transform:uppercase;font-weight:600}
 .origin span{color:var(--muted);font-size:14px}
 .prologue{min-height:60vh;display:flex;flex-direction:column;justify-content:center;gap:14px;cursor:pointer}
@@ -426,23 +435,26 @@ function showIntro(){
       <div class="led-panel"><span class="arrow">▼</span><span>?</span></div>
       <h1>Who were you that night?</h1>
       <p>You know your own life. What you don't know is what the others saw about you inside that elevator.</p>
-      <div class="origins">${Object.entries(ORIGINS).map(([k,o])=>`<button class="origin" type="button" data-k="${k}"><span class="meta">${esc(o.meta)}</span><b>${esc(o.title)}</b><span>${esc(o.blurb)}</span></button>`).join('')}</div>
+      <div class="seg" role="group" aria-label="Who you are"><button type="button" data-look="f" class="${lookOf()==='f'?'on':''}">Ate</button><button type="button" data-look="m" class="${lookOf()==='m'?'on':''}">Kuya</button></div>
+      <div class="origins">${Object.entries(ORIGINS).map(([k,o])=>`<button class="origin" type="button" data-k="${k}"><img class="o-img" src="portraits/me-${k}-${lookOf()}.jpg" alt=""><span class="o-txt"><span class="meta">${esc(o.meta)}</span><b>${esc(o.title)}</b><span>${esc(o.blurb)}</span></span></button>`).join('')}</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="go" type="button" disabled>Continue</button><button class="btn ghost" id="bk" type="button">Change name</button></div></div>`;
     let pick=S.origin;
     I.querySelectorAll('.origin').forEach(b=>{if(b.dataset.k===pick)b.classList.add('on');b.onclick=()=>{pick=b.dataset.k;I.querySelectorAll('.origin').forEach(x=>x.classList.toggle('on',x===b));$('go').disabled=false}});
     $('go').disabled=!pick;
+    I.querySelectorAll('[data-look]').forEach(b=>b.onclick=()=>{S.look=b.dataset.look;S.origin=pick;save();showIntro()});
     $('go').onclick=()=>{S.origin=pick;S.stage='avatar';save();showIntro()};
     $('bk').onclick=()=>{S.stage='name';save();showIntro()};
   } else if(S.stage==='avatar'){
     if(!S.avatar)S.avatar=JSON.parse(JSON.stringify(DEF_ME));
+    if(!S.avatarMode)S.avatarMode='portrait';
     I.innerHTML=`<div class="intro-inner">
       <div class="led-panel"><span class="arrow">▼</span><span>L</span></div>
-      <h1>What do you look like?</h1>
-      <p>This is what they'll see in the group chat. You can change it later in Settings.</p>
-      <div id="bld"></div>
+      <h1>This is you.</h1>
+      <p>This is what they'll see in the group chat. Keep the portrait, or make your own. You can change it later in Settings.</p>
+      <div id="lookUI"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="go" type="button">Step into the elevator</button><button class="btn ghost" id="bk" type="button">Back</button></div></div>`;
-    mountBuilder($('bld'),S.avatar);
-    $('go').onclick=()=>{S.stage='prologue';save();showIntro()};
+    mountLook($('lookUI'),S,()=>save());
+    $('go').onclick=()=>{S.stage='prologue';S.flags.lookV2=1;save();showIntro()};
     $('bk').onclick=()=>{S.stage='origin';save();showIntro()};
   } else if(S.stage==='prologue'){
     playPrologue();
@@ -889,7 +901,7 @@ $('btnMembers').onclick=()=>{
   const rows=IDS.map(id=>{const c=CAST[id];const out=id==='tonyo'&&!S.tonyoIn;
     return `<div class="mem">${avHTML(id)}<div style="min-width:0"><b>${esc(c.name)}</b><span>${out?'Left the group':esc(relLabel(S.rel[id]||0))}</span></div>${out?`<button class="add" type="button" data-add="tonyo">Add back</button>`:''}</div>`}).join('');
   openDrawer(`<h3>Members <button type="button" data-close aria-label="Close">×</button></h3>
-    <div class="mem"><div class="av">${avatarSVG(S.avatar||DEF_ME)}</div><div><b>${esc(S.name)} (you)</b><span>${esc(ORIGINS[S.origin].title)}</span></div></div>${rows}`);
+    <div class="mem"><div class="av">${meAvatar()}</div><div><b>${esc(S.name)} (you)</b><span>${esc(ORIGINS[S.origin].title)}</span></div></div>${rows}`);
   const a=$('drawer').querySelector('[data-add]');if(a)a.onclick=()=>{closeDrawer();addTonyoBack()};
 };
 $('btnClues').onclick=()=>{
@@ -911,12 +923,26 @@ $('btnSettings').onclick=()=>{
   $('no').onclick=()=>{$('confirm').hidden=true;$('reset').hidden=false};
   $('yes').onclick=()=>{const nm=S.name;S=fresh();S.name=nm;S.stage='origin';IDS.forEach(id=>S.threads[id]=[]);save();closeDrawer();showIntro()};
 };
+function lookOf(st){return (st||S).look==='m'?'m':'f'}
+function meAvatar(st){st=st||S;return st.avatarMode==='custom'?avatarSVG(st.avatar||DEF_ME):`<img src="portraits/me-${st.origin||'dental'}-${lookOf(st)}.jpg" alt="">`}
+function mountLook(root,st,onChange){
+  const draw=()=>{
+    root.innerHTML=`<div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><div class="seg" role="group" aria-label="Avatar type"><button type="button" data-m="portrait" class="${st.avatarMode!=='custom'?'on':''}">Portrait</button><button type="button" data-m="custom" class="${st.avatarMode==='custom'?'on':''}">Make my own</button></div>
+      ${st.avatarMode!=='custom'?`<div class="seg" role="group" aria-label="Ate or Kuya"><button type="button" data-l="f" class="${lookOf(st)==='f'?'on':''}">Ate</button><button type="button" data-l="m" class="${lookOf(st)==='m'?'on':''}">Kuya</button></div>`:''}</div>
+      ${st.avatarMode==='custom'?'<div id="bldX"></div>':`<div class="me-big">${meAvatar(st)}</div>`}</div>`;
+    root.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{st.avatarMode=b.dataset.m;onChange&&onChange();draw()});
+    root.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{st.look=b.dataset.l;onChange&&onChange();draw()});
+    if(st.avatarMode==='custom'){if(!st.avatar)st.avatar=JSON.parse(JSON.stringify(DEF_ME));mountBuilder($('bldX'),st.avatar)}
+  };
+  draw();
+}
 function openLook(){
-  const a=JSON.parse(JSON.stringify(S.avatar||DEF_ME));
-  openDrawer(`<h3>Your look <button type="button" data-close aria-label="Close">×</button></h3><div id="bld2"></div><button class="btn" type="button" id="saveLook">Save</button>`);
+  const st={look:S.look,avatarMode:S.avatarMode||'portrait',origin:S.origin,avatar:JSON.parse(JSON.stringify(S.avatar||DEF_ME))};
+  openDrawer(`<h3>Your look <button type="button" data-close aria-label="Close">×</button></h3><div id="lk"></div><button class="btn" type="button" id="saveLook">Save</button>`);
   $('drawer').querySelector('.drawer-in').style.width='min(480px,100%)';
-  mountBuilder($('bld2'),a);
-  $('saveLook').onclick=()=>{S.avatar=a;save();closeDrawer();renderChat(false)};
+  mountLook($('lk'),st);
+  $('saveLook').onclick=()=>{S.look=st.look;S.avatarMode=st.avatarMode;S.avatar=st.avatar;S.flags.lookV2=1;save();closeDrawer();renderChat(false)};
 }
 function addClue(text,when){if(!text)return;if(S.clues.some(c=>c.text===text))return;S.clues.push({text,when:when||('Day '+dayNum()),t:Date.now()});if(S.clues.length>60)S.clues.shift()}
 function dayNum(){if(!S.startedAt)return 1;const a=new Date(S.startedAt),b=new Date();return 1+Math.round((new Date(b.getFullYear(),b.getMonth(),b.getDate())-new Date(a.getFullYear(),a.getMonth(),a.getDate()))/DAY)}
@@ -996,7 +1022,7 @@ function buildPrompt(mode,thread,extra){
 ${BIBLE}
 
 ## ANG PLAYER
-Pangalan: ${S.name}. Pinanggalingan: ${o.title}. ${o.belief}
+Pangalan: ${S.name}. ${lookOf()==='m'?'Lalaki (kuya)':'Babae (ate)'}. Pinanggalingan: ${o.title}. ${o.belief}
 ${seenTxt}
 
 ## CAST
@@ -1145,7 +1171,9 @@ function boot(){
   for(const m of S.threads.gc){if(m.from!=='tonyo'||m.audio)continue;
     if(m.text.startsWith('...hello? Lorna')){m.audio='vm-tonyo-hello';m.voice=17}
     else if(m.text.startsWith('Salamat po sa inyong lahat')){m.audio='vm-tonyo-bye';m.voice=10;m.text=TONYO_BYE}}
-  if(!S.avatar){S.avatar=JSON.parse(JSON.stringify(DEF_ME));save();setTimeout(openLook,600)}
+  if(!S.avatar){S.avatar=JSON.parse(JSON.stringify(DEF_ME))}
+  if(!S.avatarMode){S.avatarMode='portrait';save()}
+  if(!S.flags.lookV2){setTimeout(()=>{if($('drawer').hidden&&!CALL)openLook()},700)}
 }
 boot();
 initRuntime();
