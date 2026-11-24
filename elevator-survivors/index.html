@@ -376,11 +376,11 @@ const ORIGINS = {
     seen:'yakap-yakap ng player ang isang batang lalaki na naka-school uniform, parehong umiiyak, sa loob ng mismong elevator',
     pro:['You brought sinigang to your sibling Jo in unit 1412.','You knocked three times. No answer. The light under the door was on.','You left the tupperware hanging on the doorknob.','Only in the elevator did you remember: you two haven\'t really talked in weeks.']},
   rider:{title:'The Delivery Rider',meta:'25 · pick-up on 9F',
-    blurb:'A pick-up at a spa on the 9th floor that was already closed. The drop-off address: "Galvez Tower, Elevator 2."',
-    belief:'Delivery rider. Order: dalawang milk tea, pick-up sa Serenity Wellness (9F), para kay "Paolo". Drop-off: "Galvez Tower, Elevator 2". Sarado ang spa pero nandoon ang milk tea, pawis pa ang baso.',
-    clue:'Your order was for "Paolo". Drop-off: Galvez Tower, Elevator 2. By morning, the order was gone from the app.',
+    blurb:'Easy money: pick-up on the 9th floor, drop-off in the same building. The note to rider said: "Sa Elevator 2 po. Hihintayin ko po kayo."',
+    belief:'Delivery rider. Order: dalawang milk tea, pick-up sa Serenity Wellness (9F), drop-off sa parehong building (Galvez Tower). Recipient: "Paolo". Note to rider: "Sa Elevator 2 po. Hihintayin ko po kayo." Tinanggap niya kasi easy money. Sarado ang spa pero nandoon ang milk tea, pawis pa ang baso. Pumasok siya sa Elevator 2 para hintayin si Paolo. Kinabukasan, wala na ang order sa app.',
+    clue:'The order was for "Paolo", with a note: "Sa Elevator 2 po. Hihintayin ko po kayo." By morning, the order was gone from the app.',
     seen:'nakaabot ang player ng milk tea sa isang batang lalaki na naka-uniporme, at ngumiti ang bata at sinabing "salamat, ate/kuya, ang tagal mo"',
-    pro:['One order: two milk teas. Pick-up at Serenity Wellness, 9th floor.','For "Paolo." Drop-off address: Galvez Tower, Elevator 2.','You figured it was a typo.','The spa was closed. Lights off. But the two milk teas were on the counter, still sweating.']}
+    pro:['One order: two milk teas. Pick-up at Serenity Wellness, 9th floor. Drop-off: same building.','Five minutes, no traffic. Easy money.','Recipient: Paolo. Note to rider: "Sa Elevator 2 po. Hihintayin ko po kayo."','The spa was closed. Lights off. But the two milk teas were on the counter, still sweating.','You stepped into Elevator 2 to wait for Paolo.']}
 };
 
 const BIBLE = `ANG TOTOO (lihim, hindi kailanman sasabihin nang diretso):
@@ -1165,6 +1165,7 @@ function boot(){
   for(const c of S.clues){
     if(c.when==='Simula'){c.when='The beginning';c.text=c.text.startsWith('Pumasok kayo')?'You went in at 11:47 PM and came out at 2:47 AM. According to Meralco, there was no brownout.':ORIGINS[S.origin].clue}
     else if(/^Araw \d+/.test(c.when))c.when=c.when.replace('Araw','Day');
+    if(c.text.startsWith('Your order was for "Paolo"')||c.text.startsWith('Ang order mo ay para kay'))c.text=ORIGINS.rider.clue;
     if(c.text.startsWith('Ayon kay Mang Tonyo: noong 2009'))c.text='Mang Tonyo says that in 2009, a boy in a school uniform got into Elevator 2 and never came out. Tonyo was on duty. Management told him to keep quiet.';
     if(c.text.startsWith('Nakita raw ni Mang Tonyo'))c.text='Mang Tonyo saw "who was with us" inside the elevator. He won\'t say who.';
   }
